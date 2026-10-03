@@ -219,6 +219,15 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # moves 52 at the published decimal. Published grades move, so this is a
 # major version, on the same reasoning as 3.0.0. The corpus median still
 # rolls up to exactly 4.0000.
+#
+# **2026-10-03, every file read (4.1.0).** D220: analyzers handed a file
+# list used to be cut to one command line, so the largest repositories were
+# read in part (FFmpeg's multimetric saw 1,543 of 4,687 files). All 201 rows
+# were re-measured with the list split across runs, and with the scanner
+# fingerprint covering the whole measurement path (D221). Ten rows' analyzer
+# readings moved; no built-in reading did. Every reference and CALIBRATION_C
+# re-derived to the same four decimals, and no repository's score moved at
+# the published decimal or changed grade, so the constants stand as shipped.
 DIMENSION_REFERENCES: dict[str, float] = {
     "file_size": 0.0871,
     "declarations": 0.0929,

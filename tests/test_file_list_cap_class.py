@@ -1,9 +1,8 @@
 """Claim 7: no caller silently RANs past the file-list cap (derived class).
 
-The cap itself shipped on 84ff002 (#5): `expand_files` bounds the file
-list by the real argv budget and logs a truncation instead of dropping
-files silently. That behaviour is pinned in
-`test_analyzer_provenance.py::test_expand_files_states_a_truncation...`.
+The cap shipped on 84ff002 (#5) as a logged truncation at the real argv
+budget. It is now no cap at all: `expand_files` keeps every file and the
+adapter runs once per batch (`test_analyzer_file_lists_are_batched.py`).
 
 This adds the missing half: the *population of callers*. Every adapter
 that turns a directory into an explicit file list goes through the one
@@ -21,10 +20,9 @@ adapter that built its own file list instead would drop out of this set.
 from __future__ import annotations
 
 import ast
-import logging
 from pathlib import Path
 
-from maintainability_audit._metric_adapters import _ARGV_BYTE_BUDGET, expand_files
+from maintainability_audit._metric_adapters import expand_files
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "maintainability_audit"
 
@@ -48,15 +46,19 @@ def test_the_caller_population_is_derived_and_not_empty() -> None:
     )
 
 
-def test_truncation_is_stated_so_no_caller_runs_past_it_silently(tmp_path, caplog) -> None:
-    """The shared guarantee every caller relies on: a truncation is logged."""
+def test_no_caller_is_handed_a_cut_list(tmp_path) -> None:
+    """The shared guarantee every caller relies on: the list is whole.
+
+    It used to be that a truncation was logged; now nothing is
+    truncated and an adapter runs once per batch, so every caller in the
+    derived set reads the whole tree.
+    """
+    from maintainability_audit._runner import _ARGV_BYTE_BUDGET
+
     big = tmp_path / "big"
     (big / "pkg").mkdir(parents=True)
-    for i in range((_ARGV_BYTE_BUDGET // 24) + 500):
+    count = (_ARGV_BYTE_BUDGET // 24) + 500
+    for i in range(count):
         (big / "pkg" / f"f_{i:06d}.py").write_text("x", encoding="utf-8")
-    with caplog.at_level(logging.WARNING, logger="maintainability_audit._metric_adapters"):
-        kept = expand_files(big, ())
-    assert any("truncated" in r.message for r in caplog.records), (
-        "expand_files truncated without stating it; a caller would RAN past the cap silently"
-    )
-    assert kept, "the budget must still yield some files"
+
+    assert len(expand_files(big, ())) == count

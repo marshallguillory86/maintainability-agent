@@ -100,5 +100,10 @@ it, or refreshes its notes on a re-run. There is nothing to do by hand.</p>
 the constants are the anchor for every score the tool emits:</p>
 <pre><code class="language-bash">python3 tools/calibration/measure.py --check
 </code></pre>
+<p>A full re-measure (<code>--with-analyzers</code>) audits every corpus repository and
+takes hours on one core. <code>--jobs N</code> measures N at once with the same rows in
+the same order; each finished repository is saved to a checkpoint in the
+cache directory, so an interrupted run started again with the same
+<code>--cache-dir</code> picks up where it stopped.</p>
 <footer>Rendered from <code>CONTRIBUTING.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
 </main></div></body></html>

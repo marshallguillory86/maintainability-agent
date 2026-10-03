@@ -1,12 +1,12 @@
 {
- "measured_on": "2026-10-02",
+ "measured_on": "2026-10-03",
  "corpus_size": 201,
  "measurements": [
   {
    "repo": "Alamofire",
    "pinned_commit": "0455bfb650893e86ad07ace16e5f2d36dadf46f4",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 452,
    "declarations": 2307,
    "dimensions": {
@@ -74,8 +74,8 @@
   {
    "repo": "Avalonia",
    "pinned_commit": "9d5c2fa81d9c374379ae3ee286c778047a6a5a7e",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 4263,
    "declarations": 34874,
    "dimensions": {
@@ -148,8 +148,8 @@
   {
    "repo": "BaseRecyclerViewAdapterHelper",
    "pinned_commit": "9948068cd95d5386cdb7f3e03d85fe2aede307cd",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 100,
    "declarations": 601,
    "dimensions": {
@@ -223,8 +223,8 @@
   {
    "repo": "Bulk-Crap-Uninstaller",
    "pinned_commit": "608321de98e92297377b1eb69029af55c25504a1",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 497,
    "declarations": 4237,
    "dimensions": {
@@ -294,8 +294,8 @@
   {
    "repo": "Chart.js",
    "pinned_commit": "cb02e1d207bd4c4c40b20c259017f85f26f1e30a",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 891,
    "declarations": 1723,
    "dimensions": {
@@ -368,8 +368,8 @@
   {
    "repo": "Charts",
    "pinned_commit": "1bad5469f57628782110b05996d4fa00473abf06",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 243,
    "declarations": 626,
    "dimensions": {
@@ -442,8 +442,8 @@
   {
    "repo": "FFmpeg",
    "pinned_commit": "9fc8c785e2747c87121ec28f8f10ceab0562384b",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 4715,
    "declarations": 36560,
    "dimensions": {
@@ -530,8 +530,8 @@
   {
    "repo": "Files",
    "pinned_commit": "c3c3fc22e1acc546ace1016460552091d71613e5",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1177,
    "declarations": 7319,
    "dimensions": {
@@ -601,8 +601,8 @@
   {
    "repo": "ILSpy",
    "pinned_commit": "3ef547ca2cb1bb293034c2a309b6514fa0f7124f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1869,
    "declarations": 21519,
    "dimensions": {
@@ -672,8 +672,8 @@
   {
    "repo": "ImHex",
    "pinned_commit": "53dbd48a0ede08885e8ca8ebee2198bc45946610",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 514,
    "declarations": 5375,
    "dimensions": {
@@ -746,8 +746,8 @@
   {
    "repo": "JeecgBoot",
    "pinned_commit": "74364054449efd5852e46d0c10325a1d38c1006a",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1872,
    "declarations": 13489,
    "dimensions": {
@@ -838,8 +838,8 @@
   {
    "repo": "Kingfisher",
    "pinned_commit": "0b5a9e490d68fb08728fb1bb9187d40439a9d52d",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 246,
    "declarations": 1870,
    "dimensions": {
@@ -909,8 +909,8 @@
   {
    "repo": "Lean",
    "pinned_commit": "f24fc0d3df03d6bdbe0e6fc7b8522445f1d900d2",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 4881,
    "declarations": 30482,
    "dimensions": {
@@ -995,8 +995,8 @@
   {
    "repo": "MPAndroidChart",
    "pinned_commit": "12819b2e35ff27c52e507343af1379856fd504b1",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 311,
    "declarations": 2017,
    "dimensions": {
@@ -1070,8 +1070,8 @@
   {
    "repo": "Maccy",
    "pinned_commit": "c376789c5d377b7c520b6f6e91f3f3a1aa28640b",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 124,
    "declarations": 550,
    "dimensions": {
@@ -1139,8 +1139,8 @@
   {
    "repo": "Magisk",
    "pinned_commit": "5b06d817d4ae5a916df88fd9efebf12537f40cdb",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 369,
    "declarations": 3437,
    "dimensions": {
@@ -1231,8 +1231,8 @@
   {
    "repo": "MonitorControl",
    "pinned_commit": "f16d90f29cefbd9fff47e26fc8f99fe7a5280deb",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 31,
    "declarations": 332,
    "dimensions": {
@@ -1302,8 +1302,8 @@
   {
    "repo": "Mos",
    "pinned_commit": "8a2fd112e2af444c37ca5f65f42e9bd19c08a5c2",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 391,
    "declarations": 2512,
    "dimensions": {
@@ -1376,8 +1376,8 @@
   {
    "repo": "NewPipe",
    "pinned_commit": "bbbac9b223f21a1a5a714044353cf0412de57b98",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 563,
    "declarations": 5229,
    "dimensions": {
@@ -1451,8 +1451,8 @@
   {
    "repo": "PHPMailer",
    "pinned_commit": "f2fd6537c8b98fd192c7ca68aa4672bd6f18113f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 144,
    "declarations": 424,
    "dimensions": {
@@ -1525,8 +1525,8 @@
   {
    "repo": "PowerShell",
    "pinned_commit": "6ca24ccf024140ca061580c43751db27605c4815",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1382,
    "declarations": 23751,
    "dimensions": {
@@ -1597,8 +1597,8 @@
   {
    "repo": "PowerToys",
    "pinned_commit": "479924d699a6ca6c53c0bbe68c234e276d8dad9c",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 5734,
    "declarations": 31868,
    "dimensions": {
@@ -1682,8 +1682,8 @@
   {
    "repo": "QuickLook",
    "pinned_commit": "60eea46ae2efaf29c9c3a80c61a618ad774bea20",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 456,
    "declarations": 2309,
    "dimensions": {
@@ -1753,8 +1753,8 @@
   {
    "repo": "Rectangle",
    "pinned_commit": "919fb7861a9f729fbbb9f893f2105a143f4f8540",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 192,
    "declarations": 1768,
    "dimensions": {
@@ -1824,8 +1824,8 @@
   {
    "repo": "RevokeMsgPatcher",
    "pinned_commit": "8360fe2af70ef908dfe514eb78ca75129eacc5cc",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 52,
    "declarations": 235,
    "dimensions": {
@@ -1893,8 +1893,8 @@
   {
    "repo": "RxJava",
    "pinned_commit": "947e681bca8aa5526a52a51e3953c82148ccb36b",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2122,
    "declarations": 28645,
    "dimensions": {
@@ -1981,8 +1981,8 @@
   {
    "repo": "RxSwift",
    "pinned_commit": "3e33f90c1bcd3cdea25bdb49bd4a594a50c3ab84",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1131,
    "declarations": 8015,
    "dimensions": {
@@ -2055,8 +2055,8 @@
   {
    "repo": "ScreenToGif",
    "pinned_commit": "a4d0a67c2131cd048ceec86cd40afc2f1a06f2fd",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 657,
    "declarations": 3587,
    "dimensions": {
@@ -2124,8 +2124,8 @@
   {
    "repo": "ShareX",
    "pinned_commit": "96adbf0c12d54deb6e8778a9287b59bb1f6240fa",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1119,
    "declarations": 9329,
    "dimensions": {
@@ -2193,8 +2193,8 @@
   {
    "repo": "SteamTools",
    "pinned_commit": "d04213147e77a8d73277fa8b86eeecfa444df071",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 937,
    "declarations": 4111,
    "dimensions": {
@@ -2265,8 +2265,8 @@
   {
    "repo": "SwiftyJSON",
    "pinned_commit": "3d2544101a03f22b2217d464dc7d359eeb86e159",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 26,
    "declarations": 229,
    "dimensions": {
@@ -2336,8 +2336,8 @@
   {
    "repo": "TrafficMonitor",
    "pinned_commit": "188b8773b959733bfc0e4f506c762d9a255883d4",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 230,
    "declarations": 2151,
    "dimensions": {
@@ -2406,8 +2406,8 @@
   {
    "repo": "UTM",
    "pinned_commit": "b6f7475be54f9cb542c46b131319454b83489ced",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 309,
    "declarations": 2595,
    "dimensions": {
@@ -2494,8 +2494,8 @@
   {
    "repo": "Ventoy",
    "pinned_commit": "6568972abca37e33e031e1f2651a68a86491082b",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1094,
    "declarations": 5633,
    "dimensions": {
@@ -2582,8 +2582,8 @@
   {
    "repo": "WRF",
    "pinned_commit": "06d4240ae989cc3e50af412bb472df3d9048783c",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2153,
    "declarations": 9328,
    "dimensions": {
@@ -2670,8 +2670,8 @@
   {
    "repo": "WordPress",
    "pinned_commit": "de8fe30e2feaead024c2a52ffe01743c07c52044",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2624,
    "declarations": 19776,
    "dimensions": {
@@ -2740,8 +2740,8 @@
   {
    "repo": "acme.sh",
    "pinned_commit": "807da6498377ee5e0cf43a78091f46f12dc59a89",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 295,
    "declarations": 1564,
    "dimensions": {
@@ -2810,8 +2810,8 @@
   {
    "repo": "act",
    "pinned_commit": "4f411281417e88660bea1c1a1749aa71ae0bd60f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 163,
    "declarations": 1376,
    "dimensions": {
@@ -2884,8 +2884,8 @@
   {
    "repo": "alacritty",
    "pinned_commit": "d692748d3f61253ebe9f5094320120d22f6a046f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 104,
    "declarations": 1731,
    "dimensions": {
@@ -2956,8 +2956,8 @@
   {
    "repo": "angular",
    "pinned_commit": "565dbb2fe5406f2a86d43a5b3c6993434b7124a7",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 8266,
    "declarations": 43509,
    "dimensions": {
@@ -3030,8 +3030,8 @@
   {
    "repo": "anime",
    "pinned_commit": "2c9cf8ea00329f6768c7d7902252ed977d75ce42",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 268,
    "declarations": 1517,
    "dimensions": {
@@ -3100,8 +3100,8 @@
   {
    "repo": "ansible",
    "pinned_commit": "c5ecb46c3f8c135a76ee86584f4b77b50184e5a6",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2142,
    "declarations": 13259,
    "dimensions": {
@@ -3128,7 +3128,7 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07752198654940506
+    "declarations": 0.07765131919296431
    },
    "analyzer_production_dimensions": {
     "declarations": 0.11657117672983694
@@ -3188,8 +3188,8 @@
   {
    "repo": "ant-design",
    "pinned_commit": "ef787d0b8eed12aa5dd3f89233a36d1ce214179c",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 4525,
    "declarations": 5783,
    "dimensions": {
@@ -3262,8 +3262,8 @@
   {
    "repo": "architecture-samples",
    "pinned_commit": "ee66e1526b84c026615df032c705842b7d2a521f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 63,
    "declarations": 304,
    "dimensions": {
@@ -3331,8 +3331,8 @@
   {
    "repo": "aria2",
    "pinned_commit": "9e7273583f83e881e3ec067b523ba88724088d2f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1205,
    "declarations": 7327,
    "dimensions": {
@@ -3415,8 +3415,8 @@
   {
    "repo": "aspnetcore",
    "pinned_commit": "797634df2f3d3e7f16aedf9f81f7d878510ccdf1",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 11869,
    "declarations": 87333,
    "dimensions": {
@@ -3507,8 +3507,8 @@
   {
    "repo": "axios",
    "pinned_commit": "f5e83e49ee32b1004db82dad2b14d1e273a99e07",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 407,
    "declarations": 1002,
    "dimensions": {
@@ -3578,8 +3578,8 @@
   {
    "repo": "bagisto",
    "pinned_commit": "aa544167182b3503c08a3b27981288d1921fbf4d",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 3000,
    "declarations": 7985,
    "dimensions": {
@@ -3652,8 +3652,8 @@
   {
    "repo": "bat",
    "pinned_commit": "7323a7514f7601737640e7172be115127d6db08c",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 191,
    "declarations": 2214,
    "dimensions": {
@@ -3724,8 +3724,8 @@
   {
    "repo": "bevy",
    "pinned_commit": "62d1ab3ac4a6fc64a85afcfffae216e5a9fb3db7",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2080,
    "declarations": 25936,
    "dimensions": {
@@ -3802,8 +3802,8 @@
   {
    "repo": "bitcoin",
    "pinned_commit": "4519933391dd23dbf1a4eceec6dd53d2e9e71cc3",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2388,
    "declarations": 17659,
    "dimensions": {
@@ -3830,7 +3830,7 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.10314721512871834
+    "declarations": 0.10319897853544067
    },
    "analyzer_production_dimensions": {
     "declarations": 0.10997402597402597
@@ -3890,8 +3890,8 @@
   {
    "repo": "brew",
    "pinned_commit": "71f6877d19f2179cf47caea84565083cdc950cc2",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2082,
    "declarations": 8907,
    "dimensions": {
@@ -3978,8 +3978,8 @@
   {
    "repo": "caddy",
    "pinned_commit": "e05f57dc7a324f7ecd6e8e8b72b944672920d495",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 363,
    "declarations": 3310,
    "dimensions": {
@@ -4052,8 +4052,8 @@
   {
    "repo": "calculator",
    "pinned_commit": "4fd3fc53bade573ea2ac1e1ebad9bf603713f85e",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 311,
    "declarations": 2986,
    "dimensions": {
@@ -4126,8 +4126,8 @@
   {
    "repo": "chatwoot",
    "pinned_commit": "c9f1867369ea87580adac3df9f2058bc63da1ef2",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 3740,
    "declarations": 14037,
    "dimensions": {
@@ -4212,8 +4212,8 @@
   {
    "repo": "code-server",
    "pinned_commit": "313bf0359b4d391ba18f1fa131aad8a583bc2919",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 126,
    "declarations": 333,
    "dimensions": {
@@ -4286,8 +4286,8 @@
   {
    "repo": "coil",
    "pinned_commit": "71c0a96a6e0908478fa5ed41083e55b88c218018",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 540,
    "declarations": 2611,
    "dimensions": {
@@ -4360,8 +4360,8 @@
   {
    "repo": "compose-multiplatform",
    "pinned_commit": "1bfc0d9e6e9751d6b1e3d90233b4ccd5bafb380d",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1755,
    "declarations": 10912,
    "dimensions": {
@@ -4438,8 +4438,8 @@
   {
    "repo": "compose-samples",
    "pinned_commit": "fe26402fbf3f0e389792188dffc06dd8ccd11046",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 404,
    "declarations": 1518,
    "dimensions": {
@@ -4510,8 +4510,8 @@
   {
    "repo": "composer",
    "pinned_commit": "85ae0251528d5f155548868e637ef6c68ed5be6b",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 631,
    "declarations": 4845,
    "dimensions": {
@@ -4580,8 +4580,8 @@
   {
    "repo": "cp2k",
    "pinned_commit": "375a5ce9d028a60d4c3291b2b3eb10053932e6a3",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1933,
    "declarations": 2487,
    "dimensions": {
@@ -4670,8 +4670,8 @@
   {
    "repo": "curl",
    "pinned_commit": "e26f6e408a80dc0adcb704b0e2c408e240f482cc",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2028,
    "declarations": 7317,
    "dimensions": {
@@ -4744,8 +4744,8 @@
   {
    "repo": "dbeaver",
    "pinned_commit": "65c782e56bc4a48f0154d65dea9ed79d990609d4",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 6590,
    "declarations": 59132,
    "dimensions": {
@@ -4790,15 +4790,13 @@
      "lizard",
      "multimetric",
      "near-duplicates",
-     "pmd",
      "risk-patterns"
     ],
     "versions": {
      "checkstyle": "Checkstyle version: 14.0.0",
      "jscpd": "cpd 5.1.1",
      "lizard": "1.24.0",
-     "multimetric": "multimetric 2.4.4",
-     "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
+     "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
      "documentation",
@@ -4822,8 +4820,8 @@
   {
    "repo": "deno",
    "pinned_commit": "60e01b1dabc1fce03ccd819a01796b52496671a4",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 6182,
    "declarations": 54755,
    "dimensions": {
@@ -4896,8 +4894,8 @@
   {
    "repo": "devdocs",
    "pinned_commit": "0f9111bcde14522af5bbc3372ed6d4a96392fe77",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 962,
    "declarations": 4834,
    "dimensions": {
@@ -4966,8 +4964,8 @@
   {
    "repo": "devise",
    "pinned_commit": "372b295fe6f63b4af3269f5dcd51a18c0bc2016c",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 206,
    "declarations": 1010,
    "dimensions": {
@@ -5036,8 +5034,8 @@
   {
    "repo": "django",
    "pinned_commit": "c9eb16a87e60c305fb3651459639f647cce498db",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 3084,
    "declarations": 41731,
    "dimensions": {
@@ -5064,7 +5062,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.03389384704687273
+    "declarations": 0.03390291684806269
    },
    "analyzer_production_dimensions": {
     "declarations": 0.06439235384400725
@@ -5122,8 +5120,8 @@
   {
    "repo": "dubbo",
    "pinned_commit": "5553cb77bd26b717c8cbaf83079765ac05d7d164",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 4069,
    "declarations": 35281,
    "dimensions": {
@@ -5200,8 +5198,8 @@
   {
    "repo": "duckdb",
    "pinned_commit": "9c21294d984dfe9a1da5d055b5fce3e8a0d634b2",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 4240,
    "declarations": 49662,
    "dimensions": {
@@ -5228,7 +5226,7 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.08477327833672417
+    "declarations": 0.08478024581254703
    },
    "analyzer_production_dimensions": {
     "declarations": 0.08689368620720803
@@ -5288,8 +5286,8 @@
   {
    "repo": "echarts",
    "pinned_commit": "30076aedcd7b7f65d8dd8e8d9ece46ce778133a3",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1451,
    "declarations": 4364,
    "dimensions": {
@@ -5359,8 +5357,8 @@
   {
    "repo": "electron",
    "pinned_commit": "4cf22168dc6c2161ce6ff6a7917099dd27eda5d3",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2218,
    "declarations": 8994,
    "dimensions": {
@@ -5447,8 +5445,8 @@
   {
    "repo": "elmerfem",
    "pinned_commit": "a70ee422cbb75b9b9a45070f9328c695ca625f55",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 3473,
    "declarations": 15886,
    "dimensions": {
@@ -5533,8 +5531,8 @@
   {
    "repo": "excalidraw",
    "pinned_commit": "4872083c044491b6d5c96ae134a75464f96d6831",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 682,
    "declarations": 3927,
    "dimensions": {
@@ -5604,8 +5602,8 @@
   {
    "repo": "express",
    "pinned_commit": "a3714473feb3d2908add734d340e7755fd85e0a3",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 157,
    "declarations": 185,
    "dimensions": {
@@ -5674,8 +5672,8 @@
   {
    "repo": "fastapi",
    "pinned_commit": "4ea76759a615754a070b08eb218c66e1ee1b12c6",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2844,
    "declarations": 5681,
    "dimensions": {
@@ -5762,8 +5760,8 @@
   {
    "repo": "fastlane",
    "pinned_commit": "3a4fc36716dec206b3f5441f19f0a5193733c828",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1551,
    "declarations": 9001,
    "dimensions": {
@@ -5840,8 +5838,8 @@
   {
    "repo": "fd",
    "pinned_commit": "bb80489efb9fe2bdeabe1844feb5ee0af6fc9b1c",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 37,
    "declarations": 377,
    "dimensions": {
@@ -5912,8 +5910,8 @@
   {
    "repo": "fds",
    "pinned_commit": "4d9aa5502c65f0df46268bed1e5d788c21f59d83",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 623,
    "declarations": 1461,
    "dimensions": {
@@ -6000,8 +5998,8 @@
   {
    "repo": "filament",
    "pinned_commit": "46600114fd4089605605530a8b9171dfdfd6dab1",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 6106,
    "declarations": 15475,
    "dimensions": {
@@ -6074,8 +6072,8 @@
   {
    "repo": "firefly-iii",
    "pinned_commit": "9e9d6f493218bc7a0652210735febe713b22df87",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1669,
    "declarations": 9892,
    "dimensions": {
@@ -6148,8 +6146,8 @@
   {
    "repo": "flask",
    "pinned_commit": "6a2f545bfd8ed31e19066a299296917e034aca58",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 112,
    "declarations": 1628,
    "dimensions": {
@@ -6236,8 +6234,8 @@
   {
    "repo": "fpm",
    "pinned_commit": "9a4433dd19183b548cd67afbd32992f53dc2b987",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 272,
    "declarations": 1340,
    "dimensions": {
@@ -6312,8 +6310,8 @@
   {
    "repo": "framework",
    "pinned_commit": "0aa8d7ecd7e5d887e1603d5f8608cab667b4a3be",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 3117,
    "declarations": 33742,
    "dimensions": {
@@ -6386,8 +6384,8 @@
   {
    "repo": "freeCodeCamp",
    "pinned_commit": "f67426be7505cdb3072c72b3d254888e2bbaacd6",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 18037,
    "declarations": 2566,
    "dimensions": {
@@ -6460,8 +6458,8 @@
   {
    "repo": "frp",
    "pinned_commit": "832df8dff66d1b0caa0d776c450418f982756df1",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 419,
    "declarations": 2658,
    "dimensions": {
@@ -6534,8 +6532,8 @@
   {
    "repo": "fzf",
    "pinned_commit": "ad151d84154632a6abec67b40fe326c1ea2c9481",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 115,
    "declarations": 1436,
    "dimensions": {
@@ -6608,8 +6606,8 @@
   {
    "repo": "ghidra",
    "pinned_commit": "2035b8153afaf7ce2edde24a2c80b62bbcf5127f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 16726,
    "declarations": 221689,
    "dimensions": {
@@ -6636,14 +6634,13 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.04993472584856397
+    "declarations": 0.049936272629403686
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.05242207698937087
+    "declarations": 0.052423872450445275
    },
    "analyzer_coverage": {
     "tools": [
-     "checkstyle",
      "competing-libraries",
      "complexipy",
      "dead-code",
@@ -6663,7 +6660,6 @@
      "vulture"
     ],
     "versions": {
-     "checkstyle": "Checkstyle version: 14.0.0",
      "complexipy": "complexipy 8.0.1",
      "jscpd": "cpd 5.1.1",
      "lizard": "1.24.0",
@@ -6696,8 +6692,8 @@
   {
    "repo": "gin",
    "pinned_commit": "dcaa4296d111981ffb31ac3eba90bb63e1eb5ab9",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 107,
    "declarations": 1437,
    "dimensions": {
@@ -6766,8 +6762,8 @@
   {
    "repo": "git",
    "pinned_commit": "3cb9185f65410273787f74333cc027d2ea5daada",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2327,
    "declarations": 16236,
    "dimensions": {
@@ -6852,8 +6848,8 @@
   {
    "repo": "github-readme-stats",
    "pinned_commit": "54a7985aeefda00d5eadb55b80c17c7f976c37d2",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 91,
    "declarations": 164,
    "dimensions": {
@@ -6938,8 +6934,8 @@
   {
    "repo": "go",
    "pinned_commit": "38d1265e1a015add1d0b8651f5c2ea3f06199765",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 10425,
    "declarations": 87478,
    "dimensions": {
@@ -7026,8 +7022,8 @@
   {
    "repo": "googletest",
    "pinned_commit": "283c17563fe7a1111cd7f581aa5d541e8baeff2f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 219,
    "declarations": 6443,
    "dimensions": {
@@ -7100,8 +7096,8 @@
   {
    "repo": "grpc",
    "pinned_commit": "f0358aedb97f0f1a564c6af1410a9699bc85589c",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 6913,
    "declarations": 64751,
    "dimensions": {
@@ -7128,10 +7124,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.032753512184306534
+    "declarations": 0.03276862918993006
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.028658981074003078
+    "declarations": 0.028679230000809956
    },
    "analyzer_coverage": {
     "tools": [
@@ -7192,8 +7188,8 @@
   {
    "repo": "guzzle",
    "pinned_commit": "93939470950a9b11e2e84204166ef5e048c55fe4",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 157,
    "declarations": 3027,
    "dimensions": {
@@ -7262,8 +7258,8 @@
   {
    "repo": "hackingtool",
    "pinned_commit": "9b92b6156ddc5ff87bf0fa592d81c333a88d1c78",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 92,
    "declarations": 899,
    "dimensions": {
@@ -7350,8 +7346,8 @@
   {
    "repo": "halo",
    "pinned_commit": "4e7e5850b01640515323dcd4f08a1b42ff033147",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2494,
    "declarations": 12418,
    "dimensions": {
@@ -7426,8 +7422,8 @@
   {
    "repo": "helix",
    "pinned_commit": "079a789e8cb08ead67f19e1971a1b7438b37354b",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 362,
    "declarations": 4732,
    "dimensions": {
@@ -7504,8 +7500,8 @@
   {
    "repo": "hoppscotch",
    "pinned_commit": "1acb8a3a7581e4db32ba0d529170c4669a2e1053",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1246,
    "declarations": 5695,
    "dimensions": {
@@ -7578,8 +7574,8 @@
   {
    "repo": "huginn",
    "pinned_commit": "83e75d5796fd8c735bdf0ca44aa4b5e1f72c5081",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 496,
    "declarations": 2180,
    "dimensions": {
@@ -7652,8 +7648,8 @@
   {
    "repo": "hugo",
    "pinned_commit": "857120b72b01745d94bcc16fe08dfa859e161f55",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2092,
    "declarations": 9603,
    "dimensions": {
@@ -7726,8 +7722,8 @@
   {
    "repo": "iTerm2-Color-Schemes",
    "pinned_commit": "db67f636eaeeabc74f0c90ff73e083d790882fe2",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2820,
    "declarations": 8470,
    "dimensions": {
@@ -7814,8 +7810,8 @@
   {
    "repo": "iina",
    "pinned_commit": "bb978b9ba10e8c4a1684e312f9c27609af2883ed",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 287,
    "declarations": 3873,
    "dimensions": {
@@ -7888,8 +7884,8 @@
   {
    "repo": "imgui",
    "pinned_commit": "5316e7061425524682cafbafe8e0b86494a70470",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 121,
    "declarations": 2904,
    "dimensions": {
@@ -7976,8 +7972,8 @@
   {
    "repo": "jQuery-File-Upload",
    "pinned_commit": "0e92a4d4613d4ed5231ee0d8513519f2e04f99ba",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 34,
    "declarations": 330,
    "dimensions": {
@@ -8060,8 +8056,8 @@
   {
    "repo": "jadx",
    "pinned_commit": "8f7ea4e2c4bb82ca935aaeee98d9e8d3f3f3fba8",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2009,
    "declarations": 17859,
    "dimensions": {
@@ -8135,8 +8131,8 @@
   {
    "repo": "java-design-patterns",
    "pinned_commit": "41625d8d354cdf6b6f10a82e29c2392b3efd5d20",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2565,
    "declarations": 7580,
    "dimensions": {
@@ -8213,8 +8209,8 @@
   {
    "repo": "jekyll",
    "pinned_commit": "74d751339d3e534aa51d5d7b0640e9bd743509e4",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 422,
    "declarations": 1334,
    "dimensions": {
@@ -8283,8 +8279,8 @@
   {
    "repo": "jellyfin",
    "pinned_commit": "1ccec11b918ebeaac7db0f785548e41b484adb87",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2130,
    "declarations": 9727,
    "dimensions": {
@@ -8355,8 +8351,8 @@
   {
    "repo": "jq",
    "pinned_commit": "9d241e277204b83c4a7ddc7d733e5c72f99ef500",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 63,
    "declarations": 699,
    "dimensions": {
@@ -8443,8 +8439,8 @@
   {
    "repo": "jquery",
    "pinned_commit": "1183ba16fe38ebac23db3b885080e864f494954e",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 292,
    "declarations": 1452,
    "dimensions": {
@@ -8513,8 +8509,8 @@
   {
    "repo": "json",
    "pinned_commit": "19386dd14af178fecd4a4a65549b07e240e092a9",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 781,
    "declarations": 4467,
    "dimensions": {
@@ -8598,8 +8594,8 @@
   {
    "repo": "keras",
    "pinned_commit": "5f5bf6f3ebfdbd3cc08c72f4ed16591263cbc9bd",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 861,
    "declarations": 16982,
    "dimensions": {
@@ -8686,8 +8682,8 @@
   {
    "repo": "kotlinx.coroutines",
    "pinned_commit": "bd2e9a1b90400fb7b2fa4f8731e7d8148799ab73",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1039,
    "declarations": 7208,
    "dimensions": {
@@ -8778,8 +8774,8 @@
   {
    "repo": "ktor",
    "pinned_commit": "1d177d32df5de4df0dfee67cee159e01e226419f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2644,
    "declarations": 16856,
    "dimensions": {
@@ -8856,8 +8852,8 @@
   {
    "repo": "lapack",
    "pinned_commit": "cee01836dc867f79d8fbbb1d9bc00bcdda6c0585",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 6528,
    "declarations": 7064,
    "dimensions": {
@@ -8943,8 +8939,8 @@
   {
    "repo": "lazygit",
    "pinned_commit": "c07f4d381b90419583b7ce04f87379654d983ebc",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1164,
    "declarations": 5400,
    "dimensions": {
@@ -9015,8 +9011,8 @@
   {
    "repo": "leakcanary",
    "pinned_commit": "6d4a192c484437cb31299d756156f672834bcd82",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 784,
    "declarations": 4729,
    "dimensions": {
@@ -9093,8 +9089,8 @@
   {
    "repo": "lede",
    "pinned_commit": "9262b55e09d9dc74024a8effb2b26512b100ef96",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 3083,
    "declarations": 38531,
    "dimensions": {
@@ -9179,8 +9175,8 @@
   {
    "repo": "livewire",
    "pinned_commit": "76c76760242aa690abd0db451cd7a32b4c360adb",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1049,
    "declarations": 6281,
    "dimensions": {
@@ -9253,8 +9249,8 @@
   {
    "repo": "localstack",
    "pinned_commit": "8b9a79f05846835cf4dff63ab7eefdde9df83783",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2022,
    "declarations": 34439,
    "dimensions": {
@@ -9281,10 +9277,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.07821275649224267
+    "declarations": 0.07822665851081577
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.05119520193303417
+    "declarations": 0.05125992405937176
    },
    "analyzer_coverage": {
     "tools": [
@@ -9343,8 +9339,8 @@
   {
    "repo": "lodash",
    "pinned_commit": "a666ba591064c8011988275790ad7d625279f09c",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 39,
    "declarations": 849,
    "dimensions": {
@@ -9413,8 +9409,8 @@
   {
    "repo": "lottie-ios",
    "pinned_commit": "8384dfbc429a5b3748e51d2744cbaad9ecb7a6fe",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 332,
    "declarations": 1969,
    "dimensions": {
@@ -9484,8 +9480,8 @@
   {
    "repo": "mall",
    "pinned_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 537,
    "declarations": 14904,
    "dimensions": {
@@ -9562,8 +9558,8 @@
   {
    "repo": "manim",
    "pinned_commit": "01030ac5d23bc294ccb93cbfcda260f2d20dda62",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 112,
    "declarations": 2224,
    "dimensions": {
@@ -9642,8 +9638,8 @@
   {
    "repo": "mastodon",
    "pinned_commit": "a6d857ad28fdd66ff38fdeb7e98a2382753ac21c",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 4260,
    "declarations": 14060,
    "dimensions": {
@@ -9713,8 +9709,8 @@
   {
    "repo": "material-ui",
    "pinned_commit": "81e94061ca393d4eaf238e6f77c283b2edd9ef7e",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 6626,
    "declarations": 9553,
    "dimensions": {
@@ -9784,8 +9780,8 @@
   {
    "repo": "matomo",
    "pinned_commit": "dba9340eb17bceae7858fe638a5d096cb48bbb2f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 4300,
    "declarations": 35723,
    "dimensions": {
@@ -9858,8 +9854,8 @@
   {
    "repo": "meilisearch",
    "pinned_commit": "a088ecc354a0002d551acbc41bd87e4e72e7a8d8",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 733,
    "declarations": 8152,
    "dimensions": {
@@ -9930,8 +9926,8 @@
   {
    "repo": "mermaid",
    "pinned_commit": "3d521b1ee5fc9079fe0659e776a1b2cdc37174b1",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1309,
    "declarations": 3584,
    "dimensions": {
@@ -10004,8 +10000,8 @@
   {
    "repo": "minio",
    "pinned_commit": "7aac2a2c5b7c882e68c1ce017d8256be2feea27f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 956,
    "declarations": 8970,
    "dimensions": {
@@ -10092,8 +10088,8 @@
   {
    "repo": "moby",
    "pinned_commit": "275015b0e7d1e17941df3dad1503263d653588e5",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2332,
    "declarations": 15377,
    "dimensions": {
@@ -10174,8 +10170,8 @@
   {
    "repo": "models",
    "pinned_commit": "4d7bdd8c170ee90850f2f9ccef0f6d19b817de35",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 3073,
    "declarations": 23939,
    "dimensions": {
@@ -10202,10 +10198,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.11328319416026102
+    "declarations": 0.11333849471879666
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.14955256259604086
+    "declarations": 0.14964295399078006
    },
    "analyzer_coverage": {
     "tools": [
@@ -10260,8 +10256,8 @@
   {
    "repo": "monica",
    "pinned_commit": "e08e91734170b6bbd582cb578532c3948196124e",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1604,
    "declarations": 6341,
    "dimensions": {
@@ -10334,8 +10330,8 @@
   {
    "repo": "monolog",
    "pinned_commit": "147f303310f06334f03f409e49d7ad1e275ff05a",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 241,
    "declarations": 1787,
    "dimensions": {
@@ -10404,8 +10400,8 @@
   {
    "repo": "mpv",
    "pinned_commit": "f5bcfb195412e0ca733eac2e850879cd3b1ded18",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 657,
    "declarations": 7943,
    "dimensions": {
@@ -10492,8 +10488,8 @@
   {
    "repo": "n8n",
    "pinned_commit": "9d9e9bf97e8ae5382a930cd662637a9cf7046ef9",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 19636,
    "declarations": 62831,
    "dimensions": {
@@ -10580,8 +10576,8 @@
   {
    "repo": "nest",
    "pinned_commit": "c3bc75c973813969aa676793e20a7cba12a9daf5",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1778,
    "declarations": 5538,
    "dimensions": {
@@ -10654,8 +10650,8 @@
   {
    "repo": "netdata",
    "pinned_commit": "c5ac56f6602253185a2feca50ba650e37126eb9b",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 8844,
    "declarations": 59157,
    "dimensions": {
@@ -10742,8 +10738,8 @@
   {
    "repo": "nwchem",
    "pinned_commit": "76d77c1e7c9c06779932133a845bcd94d936772d",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 18431,
    "declarations": 43675,
    "dimensions": {
@@ -10834,8 +10830,8 @@
   {
    "repo": "obs-studio",
    "pinned_commit": "ecebe28a1ea87c30f652b5d06fcaf893c787108d",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1704,
    "declarations": 15800,
    "dimensions": {
@@ -10920,8 +10916,8 @@
   {
    "repo": "ohmyzsh",
    "pinned_commit": "4d4cfc287e9d887b81242c0e431b5f49f9cec5c1",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 808,
    "declarations": 1244,
    "dimensions": {
@@ -11008,8 +11004,8 @@
   {
    "repo": "okhttp",
    "pinned_commit": "e9eae50d36e938603811a41f9e2ab04182bcb515",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 749,
    "declarations": 7985,
    "dimensions": {
@@ -11086,8 +11082,8 @@
   {
    "repo": "opencv",
    "pinned_commit": "3a718750a4d4bcde78bc93bcaf18b0303e956e55",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 4712,
    "declarations": 59706,
    "dimensions": {
@@ -11114,10 +11110,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.13216865887298043
+    "declarations": 0.13220806515171418
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.14016943639481932
+    "declarations": 0.1402063989591342
    },
    "analyzer_coverage": {
     "tools": [
@@ -11178,8 +11174,8 @@
   {
    "repo": "openfast",
    "pinned_commit": "2895884d2be01862173c88d70f86b358d2f1a50a",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 481,
    "declarations": 4648,
    "dimensions": {
@@ -11264,8 +11260,8 @@
   {
    "repo": "php-src",
    "pinned_commit": "0bf872bebf511f0c69f15bf5d9b86eb7176fd0eb",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2560,
    "declarations": 26163,
    "dimensions": {
@@ -11352,8 +11348,8 @@
   {
    "repo": "pi-hole",
    "pinned_commit": "f47b8ede5a8e38f9c703202d324a074dbdba4ca9",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 24,
    "declarations": 194,
    "dimensions": {
@@ -11422,8 +11418,8 @@
   {
    "repo": "playwright",
    "pinned_commit": "c973356ee9e3906260f60da5e3e04442e069a0d4",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2274,
    "declarations": 11217,
    "dimensions": {
@@ -11514,8 +11510,8 @@
   {
    "repo": "postal",
    "pinned_commit": "d038eaa8c763d3cafa797ccd6f773d53470bd336",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 285,
    "declarations": 1131,
    "dimensions": {
@@ -11588,8 +11584,8 @@
   {
    "repo": "powerlevel10k",
    "pinned_commit": "d05a1b00f9a61f9578bf9dc19b8451942dde8734",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 63,
    "declarations": 621,
    "dimensions": {
@@ -11662,8 +11658,8 @@
   {
    "repo": "prometheus",
    "pinned_commit": "7f48230f675e7c459398bf1d0f055f6f55caf90a",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1083,
    "declarations": 11012,
    "dimensions": {
@@ -11736,8 +11732,8 @@
   {
    "repo": "protobuf",
    "pinned_commit": "065d6fabf7345bd469844f5ed472664602570bc5",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 2255,
    "declarations": 40510,
    "dimensions": {
@@ -11828,8 +11824,8 @@
   {
    "repo": "pyenv",
    "pinned_commit": "42c75f3c53f7fb3cd265cd844f2f8e193f96a628",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 34,
    "declarations": 192,
    "dimensions": {
@@ -11916,8 +11912,8 @@
   {
    "repo": "qBittorrent",
    "pinned_commit": "af5a6b6cb301f1dae707b351621fef3f2d6cccf3",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 913,
    "declarations": 7786,
    "dimensions": {
@@ -12004,8 +12000,8 @@
   {
    "repo": "rails",
    "pinned_commit": "e970c80fd668f3f4ee08201bbbbcadfb2f29b1df",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 3700,
    "declarations": 43131,
    "dimensions": {
@@ -12078,8 +12074,8 @@
   {
    "repo": "raylib",
    "pinned_commit": "9b2efc45522bdce8cb9462ccaf3b1f5a25888e54",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 408,
    "declarations": 10358,
    "dimensions": {
@@ -12152,8 +12148,8 @@
   {
    "repo": "redis",
    "pinned_commit": "ceadaab2be6770d6c5faab1e0b4f57f0d5130cc4",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 968,
    "declarations": 9373,
    "dimensions": {
@@ -12240,8 +12236,8 @@
   {
    "repo": "retrofit",
    "pinned_commit": "e27d855b7b029e7f907dfc52205fdb3e9c603c16",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 957,
    "declarations": 2925,
    "dimensions": {
@@ -12315,8 +12311,8 @@
   {
    "repo": "reveal.js",
    "pinned_commit": "a3b940695648aa1c5b0680bc9a5b905cf43020e5",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 132,
    "declarations": 566,
    "dimensions": {
@@ -12386,8 +12382,8 @@
   {
    "repo": "ripgrep",
    "pinned_commit": "3fce3b5bb0236da2df6d99672afb8a719642eca7",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 137,
    "declarations": 2639,
    "dimensions": {
@@ -12460,8 +12456,8 @@
   {
    "repo": "ruby",
    "pinned_commit": "3f2e039ca7290940e03e6b4e09f68481f98fef55",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 8618,
    "declarations": 100129,
    "dimensions": {
@@ -12548,8 +12544,8 @@
   {
    "repo": "rufus",
    "pinned_commit": "2368e49a82e854d3e702f824648cc723953dbb53",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 490,
    "declarations": 2853,
    "dimensions": {
@@ -12636,8 +12632,8 @@
   {
    "repo": "rustdesk",
    "pinned_commit": "e8eead571516dac0669e64b186208979d79282eb",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 425,
    "declarations": 5869,
    "dimensions": {
@@ -12724,8 +12720,8 @@
   {
    "repo": "rustlings",
    "pinned_commit": "a650509c789da1656f813392b16aa1fa043b7f3e",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 265,
    "declarations": 936,
    "dimensions": {
@@ -12796,8 +12792,8 @@
   {
    "repo": "scrapy",
    "pinned_commit": "1bd839b57ddb614664a179b6213f49579bdfd3da",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 495,
    "declarations": 7038,
    "dimensions": {
@@ -12884,8 +12880,8 @@
   {
    "repo": "scrcpy",
    "pinned_commit": "2926c06c5dc3064ae6d8db706f1a98a37cfcf3f0",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 325,
    "declarations": 1306,
    "dimensions": {
@@ -12962,8 +12958,8 @@
   {
    "repo": "shadowsocks-android",
    "pinned_commit": "ae28fd91931fe4d2d5aab044de9ceaf9ed07ad56",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 132,
    "declarations": 884,
    "dimensions": {
@@ -13048,8 +13044,8 @@
   {
    "repo": "specfem3d",
    "pinned_commit": "7a1c76454396f8dd2f5a67ea524ca372e2c91993",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1982,
    "declarations": 5579,
    "dimensions": {
@@ -13136,8 +13132,8 @@
   {
    "repo": "spring-boot",
    "pinned_commit": "87cacdaabd38be0b8c0bc4a9809fbea35c9e48f8",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 8943,
    "declarations": 65634,
    "dimensions": {
@@ -13214,8 +13210,8 @@
   {
    "repo": "spring-framework",
    "pinned_commit": "136dddb67d1de65f91fabcde6d92799797feed89",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 9651,
    "declarations": 108847,
    "dimensions": {
@@ -13289,8 +13285,8 @@
   {
    "repo": "starship",
    "pinned_commit": "864500b26904cd3cc01fc2a19d3ad068bd1517a2",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 715,
    "declarations": 2304,
    "dimensions": {
@@ -13363,8 +13359,8 @@
   {
    "repo": "stats",
    "pinned_commit": "60e65d1454c647d9592550447757e509b01d5ebb",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 147,
    "declarations": 2429,
    "dimensions": {
@@ -13451,8 +13447,8 @@
   {
    "repo": "stb",
    "pinned_commit": "2c980bb59875b0d32144a71867fbdebb2f77cd20",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 106,
    "declarations": 2594,
    "dimensions": {
@@ -13521,8 +13517,8 @@
   {
    "repo": "stdlib",
    "pinned_commit": "9a15c7772f1a76a6c497b9f3abb793841fc81f74",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 489,
    "declarations": 1415,
    "dimensions": {
@@ -13611,8 +13607,8 @@
   {
    "repo": "strapi",
    "pinned_commit": "0a8a9b40d0642b221c1841ae72295f830352e8ce",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 5166,
    "declarations": 13033,
    "dimensions": {
@@ -13685,8 +13681,8 @@
   {
    "repo": "svelte",
    "pinned_commit": "26786e92985842a6d563c67049a43bc5857bf792",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 4035,
    "declarations": 5632,
    "dimensions": {
@@ -13756,8 +13752,8 @@
   {
    "repo": "symfony",
    "pinned_commit": "8ab8bf67ccf6bf103f1260dbc401308b4e57d7d7",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 11974,
    "declarations": 64772,
    "dimensions": {
@@ -13830,8 +13826,8 @@
   {
    "repo": "syncthing",
    "pinned_commit": "ed8d87f251bbb2e3551c6c14e3c308e6aaf86a14",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 630,
    "declarations": 4642,
    "dimensions": {
@@ -13904,8 +13900,8 @@
   {
    "repo": "tabby",
    "pinned_commit": "14e2d60b9b6dee84a53c37f05eefeb803787de04",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 347,
    "declarations": 2157,
    "dimensions": {
@@ -13975,8 +13971,8 @@
   {
    "repo": "tailwindcss",
    "pinned_commit": "46df7ee2fc4ae822d414d35bbd48be024e5cb1c0",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 432,
    "declarations": 1218,
    "dimensions": {
@@ -14046,8 +14042,8 @@
   {
    "repo": "tauri",
    "pinned_commit": "406feea75283545496ef7398c5e2f0fb9b306b64",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 637,
    "declarations": 4821,
    "dimensions": {
@@ -14120,8 +14116,8 @@
   {
    "repo": "terminal",
    "pinned_commit": "62711fd73ef9733fa83108bfa7cea22528d2dbb9",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1368,
    "declarations": 10450,
    "dimensions": {
@@ -14205,8 +14201,8 @@
   {
    "repo": "termux-app",
    "pinned_commit": "3b66f8799635a4dba4a206563048ff0e6792c487",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 211,
    "declarations": 2650,
    "dimensions": {
@@ -14283,8 +14279,8 @@
   {
    "repo": "tesseract",
    "pinned_commit": "fb87a84b6e3384b424b2169c76de9031046861e9",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 611,
    "declarations": 6709,
    "dimensions": {
@@ -14375,8 +14371,8 @@
   {
    "repo": "thunderbird-android",
    "pinned_commit": "63eb38ef558c85642fbb25e47728973aeecdc41b",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 3943,
    "declarations": 18500,
    "dimensions": {
@@ -14467,8 +14463,8 @@
   {
    "repo": "tmux",
    "pinned_commit": "9fa390aee696f7c3886bc9146e4051cbbe9593cb",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 365,
    "declarations": 1026,
    "dimensions": {
@@ -14541,8 +14537,8 @@
   {
    "repo": "traefik",
    "pinned_commit": "d48621ce0b6fd221b20bdb6c22e652e7498e5db6",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1162,
    "declarations": 6213,
    "dimensions": {
@@ -14615,8 +14611,8 @@
   {
    "repo": "transformers",
    "pinned_commit": "e8ea728a3eeeb903e77c7d1bd29267c80a1be71f",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 5532,
    "declarations": 60641,
    "dimensions": {
@@ -14643,10 +14639,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.10392792944612965
+    "declarations": 0.10397005954387148
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.15323773390778728
+    "declarations": 0.15331811459070158
    },
    "analyzer_coverage": {
     "tools": [
@@ -14703,8 +14699,8 @@
   {
    "repo": "typst",
    "pinned_commit": "26e924d311367d69e819a62bfd505ed6787b4537",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 423,
    "declarations": 7258,
    "dimensions": {
@@ -14772,8 +14768,8 @@
   {
    "repo": "uBlock",
    "pinned_commit": "a873fd2b290461cb6efffe6e67ac7dc1fbde21e2",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 414,
    "declarations": 4238,
    "dimensions": {
@@ -14860,8 +14856,8 @@
   {
    "repo": "uamp",
    "pinned_commit": "9498d991ab84b708e2130b6217483d4cccd4bbfd",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 44,
    "declarations": 232,
    "dimensions": {
@@ -14938,8 +14934,8 @@
   {
    "repo": "v2rayN",
    "pinned_commit": "fed59a7313239479e81425164638050be0b4752d",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 283,
    "declarations": 2031,
    "dimensions": {
@@ -15010,8 +15006,8 @@
   {
    "repo": "v2rayNG",
    "pinned_commit": "a4dd3d08de80958701247b00a8a979131192d1b4",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 225,
    "declarations": 1464,
    "dimensions": {
@@ -15082,8 +15078,8 @@
   {
    "repo": "vagrant",
    "pinned_commit": "dc55920a284544919340b975098b4ac9005b08b0",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1507,
    "declarations": 6704,
    "dimensions": {
@@ -15156,8 +15152,8 @@
   {
    "repo": "vapor",
    "pinned_commit": "630763c5e0de50b2ac8c7e9a20d6c3ec5709a4c8",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 261,
    "declarations": 1910,
    "dimensions": {
@@ -15228,8 +15224,8 @@
   {
    "repo": "vaultwarden",
    "pinned_commit": "a6c3bd6d1826fb527822df4a2655f34fd440d7d4",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 110,
    "declarations": 2121,
    "dimensions": {
@@ -15316,8 +15312,8 @@
   {
    "repo": "vite",
    "pinned_commit": "57fea001d154e7dd8d5d74d3082731f1dcfd31be",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1990,
    "declarations": 3048,
    "dimensions": {
@@ -15390,8 +15386,8 @@
   {
    "repo": "webpack",
    "pinned_commit": "788ffe08cc0bff1ee42071e00475d545a952d9e6",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 12816,
    "declarations": 12111,
    "dimensions": {
@@ -15461,8 +15457,8 @@
   {
    "repo": "x64dbg",
    "pinned_commit": "3ff04481f6a9b8efdefcd66a4996a7e7891dc854",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1302,
    "declarations": 7578,
    "dimensions": {
@@ -15549,8 +15545,8 @@
   {
    "repo": "xtb",
    "pinned_commit": "a45f05d397268fd683b5f9f824ed59912c5490b5",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 394,
    "declarations": 2853,
    "dimensions": {
@@ -15639,8 +15635,8 @@
   {
    "repo": "youtube-dl",
    "pinned_commit": "956b8c585591b401a543e409accb163eeaaa1193",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 922,
    "declarations": 5786,
    "dimensions": {
@@ -15727,8 +15723,8 @@
   {
    "repo": "yt-dlp",
    "pinned_commit": "5d6b8c8cd19785c3086ae3a9ec618c45e25eb3bc",
-   "tool_version": "3.12.0",
-   "scanner_fingerprint": "798d6377cc8eb70e",
+   "tool_version": "4.0.1",
+   "scanner_fingerprint": "f735bdd9bc604d93",
    "files": 1138,
    "declarations": 9440,
    "dimensions": {

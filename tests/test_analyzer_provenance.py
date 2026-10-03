@@ -289,23 +289,16 @@ def test_first_party_code_under_a_classified_name_still_reports(tmp_path: Path) 
     assert kept == [str(root / "src" / "lib" / "owned.py")]
 
 
-def test_expand_files_states_a_truncation_instead_of_dropping_it_silently(
-    tmp_path: Path, caplog,
-) -> None:
-    """A file list too long for the command line is stated, not silent (#5).
+def test_expand_files_keeps_every_file_and_leaves_the_split_to_batches(tmp_path) -> None:
+    """A file list too long for one command line is split, never cut (#5).
 
     The old fixed cap of 400 dropped files from any larger tree without a
-    word, so the analyzer measured a fraction and the report claimed the
-    whole. The budget is now the real argv limit, and a truncation is
-    logged rather than hidden.
+    word. Its replacement cut at the real argv budget and logged the cut,
+    which was stated but still a partial reading. The list is now kept
+    whole and `_runner.batches` splits it across runs.
     """
-    from maintainability_audit._metric_adapters import _ARGV_BYTE_BUDGET, expand_files
-
-    small = tmp_path / "small"
-    (small / "pkg").mkdir(parents=True)
-    for i in range(20):
-        (small / "pkg" / f"m{i}.py").write_text("x", encoding="utf-8")
-    assert len(expand_files(small, ())) == 20, "a tree under budget keeps every file"
+    from maintainability_audit._metric_adapters import expand_files
+    from maintainability_audit._runner import _ARGV_BYTE_BUDGET, batches
 
     big = tmp_path / "big"
     (big / "pkg").mkdir(parents=True)
@@ -313,11 +306,7 @@ def test_expand_files_states_a_truncation_instead_of_dropping_it_silently(
     for i in range(count):
         (big / "pkg" / f"file_{i:06d}.py").write_text("x", encoding="utf-8")
 
-    import logging
-    with caplog.at_level(logging.WARNING, logger="maintainability_audit._metric_adapters"):
-        kept = expand_files(big, ())
+    kept = expand_files(big, ())
 
-    assert len(kept) < count, "a tree over the argv budget is truncated"
-    assert any("truncated" in record.message for record in caplog.records), (
-        "truncation must be stated, not silent"
-    )
+    assert len(kept) == count, "every file survives the list"
+    assert len(batches(kept)) > 1, "and the split falls to batches"

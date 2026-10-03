@@ -12,6 +12,38 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.1.0 - 2026-10-03
+
+**No published number moves.** The analyzers now read every file of a large
+repository, and the whole calibration corpus was re-measured to prove what
+that changes: ten of the 201 repositories read differently, every scoring
+constant came out identical to four decimals, and no repository's score moved
+at the published decimal or changed grade. Re-measuring took 61 minutes with
+`--jobs 12`, against about five hours one at a time.
+
+### Fixed
+
+- Analyzers that are handed a file list — complexipy, multimetric, cohesion,
+  pydocstyle, PMD and Checkstyle — read every file of a large repository.
+  The list used to be cut to fit one command line, so FFmpeg's analyzers saw
+  1,543 of 4,687 files; it is now split across runs and merged, and a batch
+  that fails is reported as the tool's failure (D220).
+- The calibration's scanner fingerprint covers every module a measurement
+  passes through; it missed eight language scanners and most of their
+  imports, so `--reuse` could keep rows an older scanner produced (D221).
+- A corpus measurement saves each row as it goes and a restarted run picks
+  up where it stopped, and `--jobs N` measures N repositories at once with
+  the same rows in the same order. The calibration noise check takes
+  `--jobs` too, with the same result for the same seed.
+- The security run's time limit was a hard-coded 300 seconds, and a full
+  secure-code-agent run on a large repository takes longer, so the pillar
+  came back unmeasured. The default is now 900 seconds, and
+  `security.timeout_seconds` in `maintainability-agent.json` sets it, held
+  to 1–3600 like the analyzer limit.
+- cohesion on a repository with no Python is reported not applicable rather
+  than failed; it used to be spawned with no files and exit with a usage
+  error (D223).
+
 ## 4.0.1 - 2026-10-02
 
 ### Security — a repository could run code on the auditing machine (D222)

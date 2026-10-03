@@ -12,6 +12,15 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.1.0 - 2026-10-03
+
+**No published number moves.** The analyzers now read every file of a large
+repository, and the whole calibration corpus was re-measured to prove what
+that changes: ten of the 201 repositories read differently, every scoring
+constant came out identical to four decimals, and no repository's score moved
+at the published decimal or changed grade. Re-measuring took 61 minutes with
+`--jobs 12`, against about five hours one at a time.
+
 ### Fixed
 
 - Analyzers that are handed a file list — complexipy, multimetric, cohesion,

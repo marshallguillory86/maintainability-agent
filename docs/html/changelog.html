@@ -4,7 +4,8 @@
 <div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
-<li><a href="#unreleased">Unreleased</a><ul>
+<li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#410-2026-10-03">4.1.0 - 2026-10-03</a><ul>
 <li><a href="#fixed">Fixed</a></li>
 </ul>
 </li>
@@ -520,6 +521,13 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="410-2026-10-03">4.1.0 - 2026-10-03</h2>
+<p><strong>No published number moves.</strong> The analyzers now read every file of a large
+repository, and the whole calibration corpus was re-measured to prove what
+that changes: ten of the 201 repositories read differently, every scoring
+constant came out identical to four decimals, and no repository's score moved
+at the published decimal or changed grade. Re-measuring took 61 minutes with
+<code>--jobs 12</code>, against about five hours one at a time.</p>
 <h3 id="fixed">Fixed</h3>
 <ul>
 <li>Analyzers that are handed a file list — complexipy, multimetric, cohesion,

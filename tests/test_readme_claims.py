@@ -391,3 +391,19 @@ def test_the_readme_opens_with_the_corpus_size_in_bold() -> None:
 
     assert f"**Calibrated against {CORPUS_SIZE} mature open-source repositories" in opening
     assert f"in {words.get(len(CORPUS_LANGUAGES), len(CORPUS_LANGUAGES))} languages" in opening
+
+
+def test_the_readme_states_the_security_runs_actual_limit() -> None:
+    """The README tells a reader how long the security run may take.
+
+    That sentence names a number the code owns, so it is held to
+    `DEFAULT_TIMEOUT_SECONDS` the way the corpus headline is held to
+    `CORPUS_SIZE`: a default raised in code cannot leave the README promising
+    the old one.
+    """
+    from maintainability_audit._security_delegate import DEFAULT_TIMEOUT_SECONDS
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert f"up to {DEFAULT_TIMEOUT_SECONDS // 60} minutes" in readme
+    assert "security.timeout_seconds" in readme

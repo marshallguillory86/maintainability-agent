@@ -14,6 +14,11 @@ Version **4.1.0**.
 > taste, each pinned to the exact commit it was measured at, so anyone can
 > re-run the calibration and get the same numbers. The median of that corpus
 > scores a **B**. [How the corpus is chosen and measured](docs/standard.md#the-reference-corpus).
+>
+> So your grade places your code against those 201: a **B** means you are at
+> the median of mature, widely used open source. The corpus is re-measured
+> whenever the instrument changes — in 4.1.0 every file of even the largest
+> repositories was read, and the scale came back unchanged to four decimals.
 
 **Languages parsed:** Python, Java, Kotlin, C, C++, C#, Go, Rust, PHP, Ruby,
 Swift, Shell, COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
@@ -51,7 +56,10 @@ you what it could not measure.
 **Install secure-code-agent for the security pillar.** Every audit runs it; it is
 installed alongside rather than as a dependency, so the two tools release
 independently. Without it the report says the security pillar was not measured
-and gives this command. Its scanners decide what it can grade — see
+and gives this command. A full security run can take several minutes on a
+large repository; the audit waits up to 15 minutes for it, and
+`security.timeout_seconds` in `maintainability-agent.json` changes that. Its
+scanners decide what it can grade — see
 [machine setup](docs/machine-setup.md#3-toolchain) for which to install, and
 don't add its `[mcp]` extra to this environment (it pins `mcp<2`).
 
@@ -313,6 +321,11 @@ signals on:
   (Class 5, default off — the one place the agent may execute the tree)
 - an ISO/IEC 25010-inspired 0–5 estimate per category, and a verified grade —
   or a disclosed withholding when the evidence is thin.
+
+**Large repositories are measured whole.** Every file is handed to the
+analyzers, split across as many runs as the command line needs, so a big
+codebase is read rather than sampled — FFmpeg's 4,687 files, not the first
+1,543 that fitted on one command line before 4.1.0.
 
 The analyzer is intentionally conservative and under-reports rather than
 over-reports: an unrecognized declaration costs one missed finding, never a

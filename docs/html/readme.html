@@ -43,6 +43,10 @@ picked: 201 repositories, selected by a published query rather than by
 taste, each pinned to the exact commit it was measured at, so anyone can
 re-run the calibration and get the same numbers. The median of that corpus
 scores a <strong>B</strong>. <a href="standard.html#the-reference-corpus">How the corpus is chosen and measured</a>.</p>
+<p>So your grade places your code against those 201: a <strong>B</strong> means you are at
+the median of mature, widely used open source. The corpus is re-measured
+whenever the instrument changes — in 4.1.0 every file of even the largest
+repositories was read, and the scale came back unchanged to four decimals.</p>
 </blockquote>
 <p><strong>Languages parsed:</strong> Python, Java, Kotlin, C, C++, C#, Go, Rust, PHP, Ruby,
 Swift, Shell, COBOL, Fortran (free-form <em>and</em> fixed-form), and the JS/TS/HTML family — each
@@ -73,7 +77,10 @@ you what it could not measure.</p>
 <p><strong>Install secure-code-agent for the security pillar.</strong> Every audit runs it; it is
 installed alongside rather than as a dependency, so the two tools release
 independently. Without it the report says the security pillar was not measured
-and gives this command. Its scanners decide what it can grade — see
+and gives this command. A full security run can take several minutes on a
+large repository; the audit waits up to 15 minutes for it, and
+<code>security.timeout_seconds</code> in <code>maintainability-agent.json</code> changes that. Its
+scanners decide what it can grade — see
 <a href="machine-setup.html#3-toolchain">machine setup</a> for which to install, and
 don't add its <code>[mcp]</code> extra to this environment (it pins <code>mcp&lt;2</code>).</p>
 <pre><code class="language-bash">pip install 'secure-code-agent&gt;=0.12.10'
@@ -286,6 +293,10 @@ signals on:</p>
 <li>an ISO/IEC 25010-inspired 0–5 estimate per category, and a verified grade —
   or a disclosed withholding when the evidence is thin.</li>
 </ul>
+<p><strong>Large repositories are measured whole.</strong> Every file is handed to the
+analyzers, split across as many runs as the command line needs, so a big
+codebase is read rather than sampled — FFmpeg's 4,687 files, not the first
+1,543 that fitted on one command line before 4.1.0.</p>
 <p>The analyzer is intentionally conservative and under-reports rather than
 over-reports: an unrecognized declaration costs one missed finding, never a
 cascade of false ones. Pair it with native tools (ESLint, Ruff, Radon, Semgrep,

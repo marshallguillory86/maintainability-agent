@@ -209,6 +209,9 @@ class PydocstyleAdapter(BaseAdapter):
             exclude_flag="--match-dir", exclude_separator="|", exclude_dialect="files",
         )
 
+    def target_files(self, root: Path, excludes: Sequence[str] = ()) -> tuple[str, ...]:
+        return expand_files(root, excludes, suffixes=(".py",))
+
     def invocation(
         self, root: Path, paths: Iterable[str] | None = None,
         excludes: Sequence[str] = (),
@@ -226,7 +229,7 @@ class PydocstyleAdapter(BaseAdapter):
         an include regex sitting beside an explicit file list can only
         narrow it further in ways nobody asked for.
         """
-        targets = tuple(paths) if paths else expand_files(root, excludes, suffixes=(".py",))
+        targets = tuple(paths) if paths else self.target_files(root, excludes)
         return Invocation(
             argv=(self.executable, *self.extra_args, *targets),
             findings_exit_codes=self.findings_exit_codes,

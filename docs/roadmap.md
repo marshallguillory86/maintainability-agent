@@ -122,7 +122,17 @@ anchored Kotlin and Shell — fifteen and six repositories. `CALIBRATION_C`
 moved 4.2565 to 4.3092. On the 180 shared rows the new pins alone would
 change 4 grades and adding the two languages changes 9 (8 B→C, 1 C→B), so
 it is a major, on 3.0.0's reasoning. COBOL is now the only unanchored
-language. Next is the smaller foundation work.
+language.
+
+**The foundation work behind the pause is done** — the re-pin (3.12.0),
+the recalibration (4.0.0), and the loose ends that came with them. Language
+support stays paused until the maintainer decides otherwise. What came next
+was found by using the tool on itself and on the corpus: analyzers handed a
+file list read only part of a large repository (D220), the calibration's
+scanner fingerprint missed most of the measurement path (D221), and cohesion
+was recorded as failed wherever there was no Python (D223). Those ship
+together with a corpus re-measure, because D220 changes the readings of the
+largest repositories.
 
 **What was next is language support, and that was the whole list.** The
 audit itself is finished for the job it claims: sixteen languages
@@ -138,7 +148,7 @@ release:
 
 | Language | Why this one |
 |---|---|
-| ~~**Kotlin**~~ | ~~the largest real gap. Android and modern JVM services; the analyzer catalog already maps it~~ — **shipped in 3.8.0.** The catalog did *not* map it: lizard reads Kotlin and the row never said so, which is the Fortran stale-row defect again and was fixed alongside. Kotlin is parsed and not yet anchored, and [its page](languages/kotlin.md) says what it misses |
+| ~~**Kotlin**~~ | ~~the largest real gap. Android and modern JVM services; the analyzer catalog already maps it~~ — **shipped in 3.8.0.** The catalog did *not* map it: lizard reads Kotlin and the row never said so, which is the Fortran stale-row defect again and was fixed alongside. Kotlin is parsed and, since 4.0.0, anchored in the corpus, and [its page](languages/kotlin.md) says what it misses |
 | ~~**Shell**~~ | ~~in nearly every repository, audited by nobody, and where a great deal of operational risk actually lives~~ — **shipped in 3.9.0**, parsed by default. No analyzer in the catalog measures shell complexity, so the built-in reader is checked against the POSIX and bash grammars instead of a second implementation, and [its page](languages/shell.md) says what it misses |
 | **Objective-C** | completes iOS beside Swift, which shipped in 2.4.0 |
 | **Scala** | completes the JVM beside Java and Kotlin |

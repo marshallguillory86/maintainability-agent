@@ -114,3 +114,9 @@ the constants are the anchor for every score the tool emits:
 ```bash
 python3 tools/calibration/measure.py --check
 ```
+
+A full re-measure (`--with-analyzers`) audits every corpus repository and
+takes hours on one core. `--jobs N` measures N at once with the same rows in
+the same order; each finished repository is saved to a checkpoint in the
+cache directory, so an interrupted run started again with the same
+`--cache-dir` picks up where it stopped.

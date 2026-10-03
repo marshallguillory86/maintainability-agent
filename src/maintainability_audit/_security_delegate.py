@@ -88,7 +88,29 @@ SUPPORTED_CEILING = (1,)
 REQUIREMENT = "secure-code-agent>=0.12.10,<1"
 
 #: How long the child may run before the pillar is reported as unmeasured.
-DEFAULT_TIMEOUT_SECONDS = 300
+#: 300 until a full run on this repository took about 8½ minutes and both
+#: audits of it reported the pillar unmeasured; 900 is about twice that.
+#: Configurable as `security.timeout_seconds`, through `security_timeout`.
+DEFAULT_TIMEOUT_SECONDS = 900
+
+
+def security_timeout(config: dict[str, Any]) -> int:
+    """The configured limit for the security run, held to the analyzer band.
+
+    A repository naming a number is naming how long this host waits, so it
+    gets the clamp `analyzers.timeout_seconds` has (D40's family): 1 second
+    to 1 hour, and the default for anything that is not an integer.
+    """
+    from ._catalog import MAX_TIMEOUT_SECONDS, MIN_TIMEOUT_SECONDS
+
+    configured = (config.get("security") or {}).get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)
+    if isinstance(configured, bool):
+        return DEFAULT_TIMEOUT_SECONDS
+    try:
+        seconds = int(configured)
+    except (TypeError, ValueError):
+        return DEFAULT_TIMEOUT_SECONDS
+    return max(MIN_TIMEOUT_SECONDS, min(seconds, MAX_TIMEOUT_SECONDS))
 
 _ENTRY = "import sys; from secure_code_audit.cli import main; sys.exit(main())"
 

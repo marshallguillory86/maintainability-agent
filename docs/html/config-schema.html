@@ -8,6 +8,7 @@
 <li><a href="#common-fields">Common Fields</a></li>
 <li><a href="#configuration-locations-and-precedence">Configuration locations and precedence</a></li>
 <li><a href="#analyzer-policy-analyzers">Analyzer policy (analyzers)</a></li>
+<li><a href="#security-pillar-security">Security pillar (security)</a></li>
 <li><a href="#economic-context">Economic context</a></li>
 <li><a href="#semantic-policy">Semantic policy</a></li>
 <li><a href="#validation">Validation</a></li>
@@ -90,6 +91,19 @@ python tools/resolve_pool.py --explain pylint   # why is one tool in or out?
 python tools/resolve_pool.py --depth all        # what-if, without editing the file
 </code></pre>
 <p>A slug that is not in the catalog is a config error, not a silent no-op.</p>
+<h2 id="security-pillar-security">Security pillar (<code>security</code>)</h2>
+<p>The security pillar is measured by <code>secure-code-agent</code>, which this tool runs
+for you. A full run can take several minutes on a large repository.</p>
+<pre><code class="language-json">&quot;security&quot;: {
+  &quot;timeout_seconds&quot;: 900
+}
+</code></pre>
+<ul>
+<li><code>timeout_seconds</code>: how long <code>secure-code-agent</code> may run before the pillar is
+  reported unmeasured, with the reason. Default 900; held to 1–3600, like
+  <code>analyzers.timeout_seconds</code>, and a value that is not a whole number falls
+  back to the default.</li>
+</ul>
 <h2 id="economic-context">Economic context</h2>
 <p>ADR 004 v1. Optional. The audit CLI reads these keys
 (<code>tests/test_economic_context.py</code>).</p>

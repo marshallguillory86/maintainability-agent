@@ -22,7 +22,7 @@ from ._economics import economic_context_from, economic_impact, reorder_by_expos
 from ._metrics_types import FileMetric, FunctionMetric
 from ._pillars import pillar_report
 from ._practice import practice_level
-from ._security_delegate import run_security_delegate
+from ._security_delegate import run_security_delegate, security_timeout
 from ._security_work_order import KEY as SECURITY_WORK_ORDER
 from ._security_work_order import carried as carried_work_order
 from ._semantic import semantic_findings
@@ -414,7 +414,7 @@ def _attach_semantics(
 
 def _pillars_with_delegation(
     report: dict[str, Any], root: Path, pillar_path: str | None = None,
-    changed_revspec: str | None = None,
+    changed_revspec: str | None = None, config: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """The pillar block, with the delegated security pillar measured.
 
@@ -443,7 +443,8 @@ def _pillars_with_delegation(
         work_order = None
         work_order_data = None
     else:
-        run = run_security_delegate(root, changed_revspec=changed_revspec)
+        run = run_security_delegate(root, changed_revspec=changed_revspec,
+                                    timeout_seconds=security_timeout(config or {}))
         handed_over, reason, work_order = run.document, run.reason, run.work_order
         work_order_data = run.work_order_data
         if run.environment:
@@ -529,7 +530,7 @@ def build_report(
     report["score"] = score_report(report, analyzer["pressures"])
     # Condition rolls up aspects; practice stays a separate axis (ADR 007).
     report["practice"] = practice_level(root, config).as_dict()
-    report["pillars"] = _pillars_with_delegation(report, root, security_pillar, changed_revspec)
+    report["pillars"] = _pillars_with_delegation(report, root, security_pillar, changed_revspec, config)
     _attach_semantics(report, root, config, {p.relative_to(root).as_posix() for p in source_files})
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.

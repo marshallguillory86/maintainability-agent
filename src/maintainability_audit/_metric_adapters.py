@@ -13,8 +13,6 @@ from __future__ import annotations
 import csv
 import io
 import json
-import logging
-import os
 import re
 import tempfile
 from collections.abc import Iterable, Sequence
@@ -31,16 +29,6 @@ def _rows(text: str) -> list[list[str]]:
 
 SOURCE_SUFFIXES = (".py", ".js", ".mjs", ".cjs", ".ts", ".java", ".c", ".cpp",
                    ".h", ".go", ".rb", ".php")
-# A file list has to fit on a command line. The old fixed cap of 400 was
-# arbitrary and silent -- ~20 KB against an ARG_MAX of a megabyte -- so it
-# truncated ordinary trees for no OS reason and said nothing (e88b429 #5).
-# The budget is a quarter of the real ARG_MAX (room left for the exe, flags
-# and env); beyond it a single invocation genuinely cannot name every file,
-# and `expand_files` states the truncation through the logger, not silently.
-_ARG_MAX = os.sysconf("SC_ARG_MAX") if hasattr(os, "sysconf") else 262144
-_ARGV_BYTE_BUDGET = max(_ARG_MAX // 4, 131072)
-
-logger = logging.getLogger(__name__)
 
 
 def expand_files(
@@ -74,22 +62,8 @@ def expand_files(
         and not any(part in skip for part in path.parts)
         and not covers(path.relative_to(root).as_posix())
     ]
-    kept: list[str] = []
-    used = 0
-    for name in eligible:
-        used += len(name.encode("utf-8")) + 1  # +1 for the argv separator
-        if used > _ARGV_BYTE_BUDGET and kept:
-            break
-        kept.append(name)
-    if len(kept) < len(eligible):
-        # Stated, not silent: a shortened file list is a shortened audit,
-        # and the reader has to know the tool saw only part of the tree.
-        logger.warning(
-            "file list for %s truncated to %d of %d files (%d-byte argv budget); "
-            "the remaining %d were not handed to the analyzer",
-            root, len(kept), len(eligible), _ARGV_BYTE_BUDGET, len(eligible) - len(kept),
-        )
-    return tuple(kept)
+    return tuple(eligible)
+
 
 
 
@@ -224,6 +198,9 @@ class ComplexipyAdapter(BaseAdapter):
         )
         self._work = Path(tempfile.mkdtemp(prefix="complexipy-"))
 
+    def target_files(self, root: Path, excludes: Sequence[str] = ()) -> tuple[str, ...]:
+        return expand_files(root.resolve(), excludes)
+
     def invocation(
         self, root: Path, paths: Iterable[str] | None = None,
         excludes: Sequence[str] = (),
@@ -231,7 +208,7 @@ class ComplexipyAdapter(BaseAdapter):
         # complexipy has no exclusion flag, so the filtering is done by
         # naming files rather than handing it a directory. Without this it
         # walks .venv and attributes vendored complexity to the user.
-        targets = tuple(paths) if paths else expand_files(root.resolve(), excludes)
+        targets = tuple(paths) if paths else self.target_files(root, excludes)
         return Invocation(
             argv=(self.executable, *targets, "--output-format", "json", "--quiet"),
             findings_exit_codes=self.findings_exit_codes,
@@ -287,11 +264,14 @@ class MultimetricAdapter(BaseAdapter):
             version_flag="--help", distribution="multimetric",
         )
 
+    def target_files(self, root: Path, excludes: Sequence[str] = ()) -> tuple[str, ...]:
+        return expand_files(root, excludes)
+
     def invocation(
         self, root: Path, paths: Iterable[str] | None = None,
         excludes: Sequence[str] = (),
     ) -> Invocation:
-        targets = tuple(paths) if paths else expand_files(root, excludes)
+        targets = tuple(paths) if paths else self.target_files(root, excludes)
         return Invocation(argv=(self.executable, *targets))
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -347,6 +327,17 @@ class CohesionAdapter(BaseAdapter):
             distribution="cohesion",
         )
 
+    def has_targets(self, root: Path, excludes: Sequence[str] = ()) -> bool:
+        """Whether any .py file survives the exclusions.
+
+        With none, cohesion was spawned with an empty `--files` and exited 2,
+        so every repository without Python recorded it as failed.
+        """
+        return bool(self.target_files(root, excludes))
+
+    def target_files(self, root: Path, excludes: Sequence[str] = ()) -> tuple[str, ...]:
+        return expand_files(root, excludes, suffixes=(".py",))
+
     def invocation(
         self, root: Path, paths: Iterable[str] | None = None,
         excludes: Sequence[str] = (),
@@ -354,7 +345,7 @@ class CohesionAdapter(BaseAdapter):
         # Explicit files: cohesion has no exclude flag, so what it must
         # not read is excluded by never being named — the same rule as
         # complexipy and multimetric.
-        targets = tuple(paths) if paths else expand_files(root, excludes, suffixes=(".py",))
+        targets = tuple(paths) if paths else self.target_files(root, excludes)
         return Invocation(argv=(self.executable, "--files", *targets))
 
     def _read(self, result: ToolResult) -> Extraction:

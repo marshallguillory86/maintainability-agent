@@ -25,6 +25,7 @@ should not cost an hour of network first.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import subprocess
 import sys
@@ -156,3 +157,118 @@ def test_a_candidate_the_scanner_refuses_is_rejected_and_named_not_fatal(tmp_pat
     assert [r["name"] for r in written["repos"]] == ["fine"]
     rejected = written["verification"]["rejected"]
     assert rejected[0]["full_name"] == "o/refused" and "not a regular file" in rejected[0]["reason"]
+
+
+def _fake_measuring(monkeypatch, tmp_path: Path, measured: list[str]) -> None:
+    def fake_measure(path: Path, repo: dict, *, with_analyzers: bool = False) -> dict:
+        measured.append(repo["name"])
+        return {"repo": repo["name"], "pinned_commit": repo["commit"],
+                "scanner_fingerprint": measure.scanner_fingerprint(),
+                "files": 1, "dimensions": {}, "analyzer_dimensions": {"x": 1.0}}
+
+    monkeypatch.setattr(measure, "clone", lambda repo, cache: tmp_path / repo["name"])
+    monkeypatch.setattr(measure, "measure", fake_measure)
+
+
+def test_a_restarted_run_resumes_from_its_checkpoint(tmp_path: Path, monkeypatch) -> None:
+    """A full corpus run is hours long and wrote nothing until the end.
+
+    One interruption cost every row measured so far, and the 4.0.0 run had
+    to be restarted to escape a two-hour limit it would have hit at row 100.
+    Each row is now appended to a checkpoint in the cache directory as it is
+    measured, and a restarted run takes back the rows that still match.
+    """
+    manifest = {"repos": [{"name": n, "commit": "c"} for n in ("a", "b", "c")]}
+    args = measure._parser().parse_args(["--with-analyzers", "--cache-dir", str(tmp_path)])
+    measured: list[str] = []
+    _fake_measuring(monkeypatch, tmp_path, measured)
+
+    # The first run is interrupted after "a" and "b".
+    calls = {"n": 0}
+    real = measure.measure
+
+    def interrupted(path, repo, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 3:
+            raise KeyboardInterrupt
+        return real(path, repo, **kwargs)
+
+    monkeypatch.setattr(measure, "measure", interrupted)
+    with contextlib.suppress(KeyboardInterrupt):
+        measure._collect(manifest, tmp_path, args)
+
+    measured.clear()
+    monkeypatch.setattr(measure, "measure", real)
+    rows, resumed = measure._collect(manifest, tmp_path, args)
+
+    assert measured == ["c"]
+    assert [r["repo"] for r in rows] == ["a", "b", "c"] and resumed == 2
+
+
+def test_a_checkpoint_from_another_scanner_is_measured_again(tmp_path: Path, monkeypatch) -> None:
+    manifest = {"repos": [{"name": "a", "commit": "c"}]}
+    args = measure._parser().parse_args(["--with-analyzers", "--cache-dir", str(tmp_path)])
+    (tmp_path / measure.CHECKPOINT).write_text(json.dumps(
+        {"repo": "a", "pinned_commit": "c", "scanner_fingerprint": "stale",
+         "analyzer_dimensions": {"x": 1.0}}) + "\n", encoding="utf-8")
+    measured: list[str] = []
+    _fake_measuring(monkeypatch, tmp_path, measured)
+
+    rows, resumed = measure._collect(manifest, tmp_path, args)
+
+    assert measured == ["a"] and resumed == 0
+
+
+def test_measuring_in_parallel_gives_the_same_rows_in_corpus_order(tmp_path: Path, monkeypatch) -> None:
+    """A full corpus run took five hours on one core of sixteen.
+
+    The repositories are independent, so `--jobs N` measures N at once.
+    What it may not change is the result: the same rows as one at a time,
+    in the manifest's order whatever order they finish in, each saved to
+    the checkpoint as it lands.
+    """
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    manifest = {"repos": [{"name": n, "commit": "c"} for n in ("slow", "b", "c", "d")]}
+    measured: list[str] = []
+    _fake_measuring(monkeypatch, tmp_path, measured)
+    real = measure.measure
+
+    def uneven(path, repo, **kwargs):
+        if repo["name"] == "slow":
+            time.sleep(0.2)  # finishes last, listed first
+        return real(path, repo, **kwargs)
+
+    monkeypatch.setattr(measure, "measure", uneven)
+    serial_args = measure._parser().parse_args(["--with-analyzers", "--cache-dir", str(tmp_path / "s")])
+    parallel_args = measure._parser().parse_args(
+        ["--with-analyzers", "--cache-dir", str(tmp_path / "p"), "--jobs", "4"])
+    (tmp_path / "s").mkdir()
+    (tmp_path / "p").mkdir()
+
+    serial, _ = measure._collect(manifest, tmp_path / "s", serial_args)
+    parallel, _ = measure._collect(manifest, tmp_path / "p", parallel_args, pool=ThreadPoolExecutor)
+
+    assert parallel == serial
+    assert [r["repo"] for r in parallel] == ["slow", "b", "c", "d"]
+    assert len(measure._checkpointed(tmp_path / "p")) == 4
+
+
+def test_the_noise_check_in_parallel_fits_the_same_constants(monkeypatch) -> None:
+    """`sampling_error.py` ran 2,000 sequential fits and outlived a 30-minute limit.
+
+    The resamples are independent, so `--jobs` fits them at once. The draws
+    are taken from the seeded generator in this process, in the order the
+    one-at-a-time version took them, so a seed still means one result.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    import sampling_error
+
+    rows = json.loads((ROOT / "tools" / "calibration" / "measurements.json").read_text())["measurements"]
+
+    serial = sampling_error.bootstrap(rows, 3, seed=7)
+    parallel = sampling_error.bootstrap(rows, 3, seed=7, jobs=3, pool=ThreadPoolExecutor)
+
+    assert parallel == serial and len(serial) == 3

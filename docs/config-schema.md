@@ -96,6 +96,22 @@ python tools/resolve_pool.py --depth all        # what-if, without editing the f
 
 A slug that is not in the catalog is a config error, not a silent no-op.
 
+## Security pillar (`security`)
+
+The security pillar is measured by `secure-code-agent`, which this tool runs
+for you. A full run can take several minutes on a large repository.
+
+```json
+"security": {
+  "timeout_seconds": 900
+}
+```
+
+- `timeout_seconds`: how long `secure-code-agent` may run before the pillar is
+  reported unmeasured, with the reason. Default 900; held to 1–3600, like
+  `analyzers.timeout_seconds`, and a value that is not a whole number falls
+  back to the default.
+
 ## Economic context
 
 ADR 004 v1. Optional. The audit CLI reads these keys

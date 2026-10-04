@@ -9,7 +9,8 @@
 <li><a href="#1-commit-identity">1. Commit identity</a></li>
 <li><a href="#2-commit-signing">2. Commit signing</a></li>
 <li><a href="#3-toolchain">3. Toolchain</a></li>
-<li><a href="#4-before-the-first-push-from-a-new-machine">4. Before the first push from a new machine</a></li>
+<li><a href="#4-sonarcloud-token">4. SonarCloud token</a></li>
+<li><a href="#5-before-the-first-push-from-a-new-machine">5. Before the first push from a new machine</a></li>
 </ul>
 </div>
 </aside>
@@ -142,7 +143,28 @@ repository cannot supply scanners for that repository's own audit.</p>
 the Linux-resolved closure the gates run against (D89). A macOS machine
 may resolve differently; that is expected, and it is why the constraints
 file is generated on a runner rather than on a laptop.</p>
-<h2 id="4-before-the-first-push-from-a-new-machine">4. Before the first push from a new machine</h2>
+<h2 id="4-sonarcloud-token">4. SonarCloud token</h2>
+<p>CI's SonarCloud scan reads the GitHub Actions secret <code>SONAR_TOKEN</code>. A
+GitHub secret can be written and never read back, and SonarCloud shows a
+token once, at creation — so a machine that needs SonarCloud's API (to
+mark a reviewed false positive, say) cannot borrow CI's copy. Without one
+of its own, every such step became a manual click in the SonarCloud UI.</p>
+<p>One token serves both, kept in two places. Generate it in SonarCloud under
+<strong>My Account → Security → Personal Tokens</strong> as <code>maintainability-agent</code>,
+expiry never, and save it in <strong>Keychain Access</strong> (File → New Password Item)
+as <code>sonarcloud-token</code>. Then copy it into the GitHub secret from the
+Keychain, so the value never passes through a terminal, a file or a chat:</p>
+<pre><code class="language-bash">security find-generic-password -s sonarcloud-token -w \
+  | gh secret set SONAR_TOKEN --repo marshallguillory86/maintainability-agent
+</code></pre>
+<p>Use it by reading it into a variable, never by printing it:</p>
+<pre><code class="language-bash">T=$(security find-generic-password -s sonarcloud-token -w)
+curl -s -u &quot;$T:&quot; https://sonarcloud.io/api/authentication/validate   # {&quot;valid&quot;:true}
+unset T
+</code></pre>
+<p>Rotating the token means doing both again: a revoked token left in the
+secret fails CI's scan, and one left in the Keychain fails the API.</p>
+<h2 id="5-before-the-first-push-from-a-new-machine">5. Before the first push from a new machine</h2>
 <p>Run the gate as its own command, never chained to a commit:</p>
 <pre><code class="language-bash">python3 -m ruff check src tests tools
 python3 -m pytest -q --cov=maintainability_audit --cov-fail-under=92

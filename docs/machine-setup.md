@@ -179,7 +179,37 @@ the Linux-resolved closure the gates run against (D89). A macOS machine
 may resolve differently; that is expected, and it is why the constraints
 file is generated on a runner rather than on a laptop.
 
-## 4. Before the first push from a new machine
+## 4. SonarCloud token
+
+CI's SonarCloud scan reads the GitHub Actions secret `SONAR_TOKEN`. A
+GitHub secret can be written and never read back, and SonarCloud shows a
+token once, at creation — so a machine that needs SonarCloud's API (to
+mark a reviewed false positive, say) cannot borrow CI's copy. Without one
+of its own, every such step became a manual click in the SonarCloud UI.
+
+One token serves both, kept in two places. Generate it in SonarCloud under
+**My Account → Security → Personal Tokens** as `maintainability-agent`,
+expiry never, and save it in **Keychain Access** (File → New Password Item)
+as `sonarcloud-token`. Then copy it into the GitHub secret from the
+Keychain, so the value never passes through a terminal, a file or a chat:
+
+```bash
+security find-generic-password -s sonarcloud-token -w \
+  | gh secret set SONAR_TOKEN --repo marshallguillory86/maintainability-agent
+```
+
+Use it by reading it into a variable, never by printing it:
+
+```bash
+T=$(security find-generic-password -s sonarcloud-token -w)
+curl -s -u "$T:" https://sonarcloud.io/api/authentication/validate   # {"valid":true}
+unset T
+```
+
+Rotating the token means doing both again: a revoked token left in the
+secret fails CI's scan, and one left in the Keychain fails the API.
+
+## 5. Before the first push from a new machine
 
 Run the gate as its own command, never chained to a commit:
 

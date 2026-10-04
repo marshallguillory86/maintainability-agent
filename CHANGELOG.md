@@ -12,6 +12,30 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.2.0 - 2026-10-03
+
+**A committed docs site no longer counts twice.** Every repository is meant to
+commit an HTML site rendered from its Markdown, and the audit scored it as
+source on the default configuration: duplicate blocks doubled and debt
+markers were reported again in pages nobody may edit. No published number
+moves for a repository without one.
+
+### Added
+
+- `paths.exclude_additional` adds exclusions to the defaults instead of
+  replacing them; setting `paths.exclude_patterns` to skip one directory
+  discarded every default exclusion (D224).
+
+### Fixed
+
+- A committed docs site rendered from Markdown is no longer scored as source:
+  `tools/render_docs.py` stamps each page `@generated`, which discovery
+  honours. Each document used to count twice — duplicate blocks doubled and
+  debt markers were reported again in pages nobody may edit (D224, #292).
+- Reading a file no longer fails on Windows for want of `os.O_NONBLOCK`
+  (D225).
+- CI runs secure-code-agent 0.12.11.
+
 ## 4.1.0 - 2026-10-03
 
 **No published number moves.** The analyzers now read every file of a large

@@ -161,10 +161,27 @@ def load_config(path: str | None) -> dict[str, Any]:
         return config
     config["analyzers"]["run"] = True
     if user_tier is not None:
-        deep_update(config, user_tier)
+        _merge_tier(config, user_tier)
     if path:
-        deep_update(config, _host_authority_stripped(_configured(Path(path))))
+        _merge_tier(config, _host_authority_stripped(_configured(Path(path))))
     return config
+
+
+def _merge_tier(config: dict[str, Any], tier: dict[str, Any]) -> None:
+    """One tier over the ones before it, with `exclude_additional` appended.
+
+    `deep_update` replaces lists, so setting `paths.exclude_patterns` to add
+    one directory discarded every default exclusion and froze a copy that
+    drifts on the next release (#292). `exclude_additional` adds to whatever
+    the earlier tiers produced instead, so a repository can add without
+    restating.
+    """
+    added = list((tier.get("paths") or {}).get("exclude_additional") or [])
+    deep_update(config, tier)
+    paths = config["paths"]
+    paths.pop("exclude_additional", None)
+    paths["exclude_patterns"] = [*paths["exclude_patterns"],
+                                 *(p for p in added if p not in paths["exclude_patterns"])]
 
 
 #: The one key a repository may state and this tool will not act on,

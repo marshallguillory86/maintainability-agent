@@ -55,7 +55,9 @@ def open_regular_file(path: Path, why: str) -> int:
     """
     import stat as stat_module
 
-    handle = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+    # Windows has no `O_NONBLOCK` and no POSIX FIFO in the tree to guard
+    # against; using the flag unconditionally killed every read there.
+    handle = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
     if not stat_module.S_ISREG(os.fstat(handle).st_mode):
         os.close(handle)
         raise PathNotAllowed(f"{path} is not a regular file. {why}")

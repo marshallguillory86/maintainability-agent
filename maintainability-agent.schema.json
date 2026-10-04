@@ -234,6 +234,13 @@
           "items": {
             "type": "string"
           }
+        },
+        "exclude_additional": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Exclusions added to the defaults and to any earlier tier's, rather than replacing them as exclude_patterns does."
         }
       },
       "additionalProperties": false

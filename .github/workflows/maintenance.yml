@@ -46,7 +46,7 @@ jobs:
           python3 -m pip install --constraint constraints/analyzers.txt \
             cohesion complexipy flake8 fortitude-lint interrogate lizard \
             multimetric mypy pydocstyle pylint radon ruff vulture
-          python3 -m pip install 'secure-code-agent==0.12.10'
+          python3 -m pip install 'secure-code-agent==0.12.11'
       - name: Tests
         run: python3 -m pytest -q -n auto
       - name: Keep one standing issue while this check fails

@@ -21,6 +21,7 @@ from typing import Any
 
 from ._calibration import CALIBRATION_C
 from ._catalog import PRESENTATIONS
+from ._changed_code_policy import failures as policy_failures
 from ._grant_ledger import (
     ALLOWED_ROOTS_ENV as ALLOWED_ROOTS_ENV,  # noqa: PLC0414 - re-export
 )
@@ -396,7 +397,8 @@ def _top_level_result(report: dict[str, Any], root: Path, status: str,
         "audit_ran": True,
         "source_commit": probe_git(["rev-parse", "HEAD"], root) or None,
         "worktree_dirty": bool(status),
-        "gate_passed": not report["hard_gate_failures"],
+        # The changed-code policy is a gate too (Decision 15); the CLI reads both.
+        "gate_passed": not (report["hard_gate_failures"] or policy_failures(report)),
         # Stated at the top level so a caller cannot mistake an audit that
         # ran six built-in detectors for one that ran ten tools. Two
         # reports with different coverage are not comparable (P8).

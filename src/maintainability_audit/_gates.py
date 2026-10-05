@@ -18,6 +18,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from ._changed_code_policy import failures as policy_failures
 from .baseline import findings_not_in_baseline
 from .git_tools import added_lines, changed_paths, removed_lines
 
@@ -147,7 +148,7 @@ def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
         root = Path(report["root"])
         if findings_not_in_baseline(report, args.baseline, root):
             return 1
-    if args.fail_on_gate and report["hard_gate_failures"]:
+    if args.fail_on_gate and (report["hard_gate_failures"] or policy_failures(report)):
         return 1
     conformance = _conformance_exit(args, report)
     if conformance:

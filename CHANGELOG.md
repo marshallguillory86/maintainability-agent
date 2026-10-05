@@ -12,6 +12,19 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+### Added — code a change touches meets a stricter bar (Decision 15)
+
+- `policy.changed_code` in `maintainability-agent.json` sets stricter
+  function limits — `max_function_lines`, `max_complexity`,
+  `max_cognitive_complexity` — for the functions a change touches. On a run
+  with `--changed-only REV`, a function the change added or altered a line in
+  is held to them; untouched code is judged by the standard as before, so a
+  team can gate new work without first fixing every old function.
+- A policy only tightens: a limit looser than the standard is refused when
+  the configuration loads. It decides the gate, never the grade — breaches
+  fail `--fail-on-gate` and `gate_passed`, and are listed under
+  *Changed-code policy* in every report format, while the score is unchanged.
+
 ## 4.2.0 - 2026-10-03
 
 **A committed docs site no longer counts twice.** Every repository is meant to

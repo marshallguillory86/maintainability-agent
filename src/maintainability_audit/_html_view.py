@@ -318,15 +318,36 @@ def _work_order_section(report: dict[str, Any]) -> list[str]:
 
 def _hard_gate_section(report: dict[str, Any]) -> list[str]:
     failures = report.get("hard_gate_failures") or []
+    rows: list[str] = []
+    if failures:
+        rows = [
+            "<h2>Hard gates</h2>",
+            "<table><tr><th>Severity</th><th>Gate</th></tr>",
+        ]
+        rows.extend(
+            f"<tr><td class='sev-Severe'>Severe</td><td>{escape(str(gate))}</td></tr>"
+            for gate in failures
+        )
+        rows.append("</table>")
+    return rows + _policy_section(report)
+
+
+def _policy_section(report: dict[str, Any]) -> list[str]:
+    """The changed-code policy beside the gates, as the markdown prints it (Decision 15)."""
+    policy = report.get("policy")
+    failures = (policy or {}).get("failures") or []
     if not failures:
         return []
     rows = [
-        "<h2>Hard gates</h2>",
-        "<table><tr><th>Severity</th><th>Gate</th></tr>",
+        "<h2>Changed-code policy</h2>",
+        f"<p class='muted'>Functions touched by {escape(str(policy.get('revspec')))} are held to "
+        "this repository's stricter limits. The grade is unaffected.</p>",
+        "<table><tr><th>Location</th><th>Function</th><th>Measure</th><th>Value</th><th>Limit</th></tr>",
     ]
     rows.extend(
-        f"<tr><td class='sev-Severe'>Severe</td><td>{escape(str(gate))}</td></tr>"
-        for gate in failures
+        f"<tr><td>{escape(str(f['path']))}:{f['start_line']}</td><td>{escape(str(f['name']))}</td>"
+        f"<td>{escape(str(f['measure']))}</td><td>{f['value']}</td><td>{f['limit']}</td></tr>"
+        for f in failures
     )
     rows.append("</table>")
     return rows

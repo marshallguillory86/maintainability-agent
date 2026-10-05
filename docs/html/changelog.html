@@ -5,7 +5,10 @@
 <div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
-<li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#unreleased">Unreleased</a><ul>
+<li><a href="#added-code-a-change-touches-meets-a-stricter-bar-decision-15">Added — code a change touches meets a stricter bar (Decision 15)</a></li>
+</ul>
+</li>
 <li><a href="#420-2026-10-03">4.2.0 - 2026-10-03</a><ul>
 <li><a href="#added">Added</a></li>
 <li><a href="#fixed">Fixed</a></li>
@@ -527,6 +530,19 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h3 id="added-code-a-change-touches-meets-a-stricter-bar-decision-15">Added — code a change touches meets a stricter bar (Decision 15)</h3>
+<ul>
+<li><code>policy.changed_code</code> in <code>maintainability-agent.json</code> sets stricter
+  function limits — <code>max_function_lines</code>, <code>max_complexity</code>,
+  <code>max_cognitive_complexity</code> — for the functions a change touches. On a run
+  with <code>--changed-only REV</code>, a function the change added or altered a line in
+  is held to them; untouched code is judged by the standard as before, so a
+  team can gate new work without first fixing every old function.</li>
+<li>A policy only tightens: a limit looser than the standard is refused when
+  the configuration loads. It decides the gate, never the grade — breaches
+  fail <code>--fail-on-gate</code> and <code>gate_passed</code>, and are listed under
+  <em>Changed-code policy</em> in every report format, while the score is unchanged.</li>
+</ul>
 <h2 id="420-2026-10-03">4.2.0 - 2026-10-03</h2>
 <p><strong>A committed docs site no longer counts twice.</strong> Every repository is meant to
 commit an HTML site rendered from its Markdown, and the audit scored it as

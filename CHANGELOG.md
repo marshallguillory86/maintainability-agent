@@ -12,6 +12,12 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.3.0 - 2026-10-04
+
+**Code a change touches can be held to a stricter bar, and three analyzers
+that silently contributed nothing now run.** No published number moves for a
+repository that sets no policy.
+
 ### Fixed — three analyzers were lost to every audit (D226)
 
 - **pylint** analysed nothing: exclude globs were passed to its

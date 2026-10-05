@@ -142,13 +142,20 @@ scanner fingerprint missed most of the measurement path (D221), and cohesion
 was recorded as failed wherever there was no Python (D223). Those ship
 together with a corpus re-measure, because D220 changes the readings of the
 largest repositories.</p>
+<p><strong>Shipped as 4.1.0 and 4.2.0 on 2026-10-03.</strong> 4.1.0 carried D220, D221 and
+D223 with the corpus re-measure: ten repositories read differently, every
+constant re-derived identical, and no score or grade moved. 4.2.0 stopped a
+committed docs site counting as source (D224, #292), added
+<code>paths.exclude_additional</code>, fixed reads on Windows for want of a flag
+(D225), and moved CI to secure-code-agent 0.12.11. Nothing is scheduled
+next; the maintainer chooses it.</p>
 <p><strong>What was next is language support, and that was the whole list.</strong> The
 audit itself is finished for the job it claims: sixteen languages
 parsed, the rubric calibrated against 201 repositories, the evidence
 model migrated, the report contract stable. Nothing on this page
 proposes making it do a different job.</p>
-<p>Five languages, in the order they are worth doing — two shipped, three
-left — each on the terms
+<p>Five languages were listed, in the order they were worth doing — two
+shipped, one withdrawn, two left — each on the terms
 <a href="decisions.html">ADR 006</a> already sets — a scanner of its own, a
 documented list of what it misses, tests that pin them, one per minor
 release:</p>
@@ -169,8 +176,8 @@ release:</p>
 <td>~~in nearly every repository, audited by nobody, and where a great deal of operational risk actually lives~~ — <strong>shipped in 3.9.0</strong>, parsed by default. No analyzer in the catalog measures shell complexity, so the built-in reader is checked against the POSIX and bash grammars instead of a second implementation, and <a href="languages-shell.html">its page</a> says what it misses</td>
 </tr>
 <tr>
-<td><strong>Objective-C</strong></td>
-<td>completes iOS beside Swift, which shipped in 2.4.0</td>
+<td>~~<strong>Objective-C</strong>~~</td>
+<td>~~completes iOS beside Swift, which shipped in 2.4.0~~ — <strong>withdrawn 2026-10-02, by the maintainer's decision.</strong> What exists is legacy iOS code being migrated to Swift, which is already parsed; few new users would arrive for it. Not deferred: off the list, so it is not re-proposed. <code>.m</code> and <code>.mm</code> files are still recognised as source, so a report names them as unread rather than staying silent</td>
 </tr>
 <tr>
 <td><strong>Scala</strong></td>
@@ -184,8 +191,9 @@ release:</p>
 </table></div>
 <p>Below those the audience thins faster than the work shrinks — Dart,
 Elixir and Zig are real languages this tool would serve few people by
-parsing. The list stops at five on purpose, and a language is not added
-to it because someone asked.</p>
+parsing. The list stopped at five on purpose, and is four now that
+Objective-C is withdrawn; a language is not added to it because someone
+asked.</p>
 <p><strong>The rest of "next" is maintenance, and each piece now speaks for
 itself.</strong> A tool that stops being built still ages in three places, none
 of which announced themselves until 3.9.0:</p>

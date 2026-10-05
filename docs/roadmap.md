@@ -134,14 +134,22 @@ was recorded as failed wherever there was no Python (D223). Those ship
 together with a corpus re-measure, because D220 changes the readings of the
 largest repositories.
 
+**Shipped as 4.1.0 and 4.2.0 on 2026-10-03.** 4.1.0 carried D220, D221 and
+D223 with the corpus re-measure: ten repositories read differently, every
+constant re-derived identical, and no score or grade moved. 4.2.0 stopped a
+committed docs site counting as source (D224, #292), added
+`paths.exclude_additional`, fixed reads on Windows for want of a flag
+(D225), and moved CI to secure-code-agent 0.12.11. Nothing is scheduled
+next; the maintainer chooses it.
+
 **What was next is language support, and that was the whole list.** The
 audit itself is finished for the job it claims: sixteen languages
 parsed, the rubric calibrated against 201 repositories, the evidence
 model migrated, the report contract stable. Nothing on this page
 proposes making it do a different job.
 
-Five languages, in the order they are worth doing — two shipped, three
-left — each on the terms
+Five languages were listed, in the order they were worth doing — two
+shipped, one withdrawn, two left — each on the terms
 [ADR 006](decisions.md) already sets — a scanner of its own, a
 documented list of what it misses, tests that pin them, one per minor
 release:
@@ -150,14 +158,15 @@ release:
 |---|---|
 | ~~**Kotlin**~~ | ~~the largest real gap. Android and modern JVM services; the analyzer catalog already maps it~~ — **shipped in 3.8.0.** The catalog did *not* map it: lizard reads Kotlin and the row never said so, which is the Fortran stale-row defect again and was fixed alongside. Kotlin is parsed and, since 4.0.0, anchored in the corpus, and [its page](languages/kotlin.md) says what it misses |
 | ~~**Shell**~~ | ~~in nearly every repository, audited by nobody, and where a great deal of operational risk actually lives~~ — **shipped in 3.9.0**, parsed by default. No analyzer in the catalog measures shell complexity, so the built-in reader is checked against the POSIX and bash grammars instead of a second implementation, and [its page](languages/shell.md) says what it misses |
-| **Objective-C** | completes iOS beside Swift, which shipped in 2.4.0 |
+| ~~**Objective-C**~~ | ~~completes iOS beside Swift, which shipped in 2.4.0~~ — **withdrawn 2026-10-02, by the maintainer's decision.** What exists is legacy iOS code being migrated to Swift, which is already parsed; few new users would arrive for it. Not deferred: off the list, so it is not re-proposed. `.m` and `.mm` files are still recognised as source, so a report names them as unread rather than staying silent |
 | **Scala** | completes the JVM beside Java and Kotlin |
 | **PowerShell** | completes the Windows and enterprise side, beside the COBOL and mainframe reading |
 
 Below those the audience thins faster than the work shrinks — Dart,
 Elixir and Zig are real languages this tool would serve few people by
-parsing. The list stops at five on purpose, and a language is not added
-to it because someone asked.
+parsing. The list stopped at five on purpose, and is four now that
+Objective-C is withdrawn; a language is not added to it because someone
+asked.
 
 **The rest of "next" is maintenance, and each piece now speaks for
 itself.** A tool that stops being built still ages in three places, none

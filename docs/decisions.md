@@ -305,6 +305,52 @@ copies of scanner knowledge drift, which is the reason this project reads
    D222's neutral `--config` is that case: it uses a flag the delegate
    already has, and the delegate gains a mode of its own to replace it.
 
+### Decision 15: Policy-as-code tightens the gate, never the grade
+
+- Recorded: 2026-10-04
+- Status: **Accepted, chosen by the maintainer 2026-10-04.** The first slice, changed-code limits, is built (`policy.changed_code`).
+
+The roadmap named four parts of policy-as-code: new-code thresholds,
+changed-file thresholds, required tests for changed API files, and
+architecture boundary rules. Some of it already exists in pieces —
+`--fail-on-new` against a baseline stops new findings, the ratchet stops a
+dimension regressing, `--changed-only` scopes a run to a change — and what
+is missing is a way for a repository to say *code you touch must meet a
+higher bar than code you leave alone*, which is how a team adopts a quality
+gate on a codebase it cannot fix all at once.
+
+1. **The first slice is changed-code limits.** A repository may set stricter
+   limits for the code a change touches; untouched code is judged by the
+   standard as before. Required tests for changed public modules follow as a
+   later slice.
+2. **A policy only tightens, and it never moves the grade.** It may set a
+   limit stricter than the standard and never looser, and it decides the
+   pass/fail gate and the work order — not the published score. Grades stay
+   comparable across repositories, and per-repository rubric overrides stay
+   refused.
+3. **Architecture boundaries are adapters, not built-in rules.** import-linter,
+   dependency-cruiser and ArchUnit already enforce boundaries by path; they
+   join the analyzer pool rather than being re-implemented, the same rule as
+   every other detector.
+
+### Decision 16: Shell is measured by ShellCheck
+
+- Recorded: 2026-10-04
+- Status: **Accepted, chosen by the maintainer 2026-10-04.** Not yet built.
+
+Shell has been parsed and scored since 3.9.0 and anchored since 4.0.0, but
+no analyzer in the pool reads it: eight of its nine concepts are reported
+unexamined for any repository with shell scripts, and unexamined aspects
+price at zero for the grade. secure-code-agent audits clean and grades C
+partly for this reason, and nothing in that repository can move it.
+
+The gap is closed with evidence, not by re-labelling it: a ShellCheck
+adapter joins the pool under the same rules as every other — version
+pinned, availability probed with a flag it has, output parsed, exclusions
+honoured. Reporting a language's areas as not applicable when no catalog
+tool reads it was considered and not chosen; it would change the evidence
+rules rather than add evidence.
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

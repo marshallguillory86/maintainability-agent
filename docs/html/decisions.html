@@ -17,6 +17,8 @@
 <li><a href="#decision-12-writable-oracle-three-homes">Decision 12: Writable oracle, three homes</a></li>
 <li><a href="#decision-13-the-ask-beside-the-diff">Decision 13: The ask beside the diff</a></li>
 <li><a href="#decision-14-secure-code-agents-behaviour-is-built-there">Decision 14: secure-code-agent's behaviour is built there</a></li>
+<li><a href="#decision-15-policy-as-code-tightens-the-gate-never-the-grade">Decision 15: Policy-as-code tightens the gate, never the grade</a></li>
+<li><a href="#decision-16-shell-is-measured-by-shellcheck">Decision 16: Shell is measured by ShellCheck</a></li>
 </ul>
 </li>
 <li><a href="#statuses">Statuses</a></li>
@@ -384,6 +386,50 @@ copies of scanner knowledge drift, which is the reason this project reads
    D222's neutral <code>--config</code> is that case: it uses a flag the delegate
    already has, and the delegate gains a mode of its own to replace it.</li>
 </ol>
+<h3 id="decision-15-policy-as-code-tightens-the-gate-never-the-grade">Decision 15: Policy-as-code tightens the gate, never the grade</h3>
+<ul>
+<li>Recorded: 2026-10-04</li>
+<li>Status: <strong>Accepted, chosen by the maintainer 2026-10-04.</strong> The first slice, changed-code limits, is built (<code>policy.changed_code</code>).</li>
+</ul>
+<p>The roadmap named four parts of policy-as-code: new-code thresholds,
+changed-file thresholds, required tests for changed API files, and
+architecture boundary rules. Some of it already exists in pieces —
+<code>--fail-on-new</code> against a baseline stops new findings, the ratchet stops a
+dimension regressing, <code>--changed-only</code> scopes a run to a change — and what
+is missing is a way for a repository to say <em>code you touch must meet a
+higher bar than code you leave alone</em>, which is how a team adopts a quality
+gate on a codebase it cannot fix all at once.</p>
+<ol>
+<li><strong>The first slice is changed-code limits.</strong> A repository may set stricter
+   limits for the code a change touches; untouched code is judged by the
+   standard as before. Required tests for changed public modules follow as a
+   later slice.</li>
+<li><strong>A policy only tightens, and it never moves the grade.</strong> It may set a
+   limit stricter than the standard and never looser, and it decides the
+   pass/fail gate and the work order — not the published score. Grades stay
+   comparable across repositories, and per-repository rubric overrides stay
+   refused.</li>
+<li><strong>Architecture boundaries are adapters, not built-in rules.</strong> import-linter,
+   dependency-cruiser and ArchUnit already enforce boundaries by path; they
+   join the analyzer pool rather than being re-implemented, the same rule as
+   every other detector.</li>
+</ol>
+<h3 id="decision-16-shell-is-measured-by-shellcheck">Decision 16: Shell is measured by ShellCheck</h3>
+<ul>
+<li>Recorded: 2026-10-04</li>
+<li>Status: <strong>Accepted, chosen by the maintainer 2026-10-04.</strong> Not yet built.</li>
+</ul>
+<p>Shell has been parsed and scored since 3.9.0 and anchored since 4.0.0, but
+no analyzer in the pool reads it: eight of its nine concepts are reported
+unexamined for any repository with shell scripts, and unexamined aspects
+price at zero for the grade. secure-code-agent audits clean and grades C
+partly for this reason, and nothing in that repository can move it.</p>
+<p>The gap is closed with evidence, not by re-labelling it: a ShellCheck
+adapter joins the pool under the same rules as every other — version
+pinned, availability probed with a flag it has, output parsed, exclusions
+honoured. Reporting a language's areas as not applicable when no catalog
+tool reads it was considered and not chosen; it would change the evidence
+rules rather than add evidence.</p>
 <h2 id="statuses">Statuses</h2>
 <ul>
 <li><strong>Proposed</strong> — written up with options; not yet decided. May be edited freely.</li>

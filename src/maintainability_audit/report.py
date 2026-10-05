@@ -16,6 +16,8 @@ from typing import Any
 
 from ._analyzer_sections import analyzer_sections
 from ._built_ins import record_built_in_counts
+from ._changed_code_policy import changed_code_limits
+from ._changed_code_policy import evaluate as evaluate_changed_code_policy
 from ._delegated_pillar import read_delegated
 from ._discovery import Provenance, discover
 from ._economics import economic_context_from, economic_impact, reorder_by_exposure
@@ -36,7 +38,7 @@ from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
 from .duplication import duplicate_blocks, risk_findings
 from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY
-from .git_tools import probe_git, worktree_status
+from .git_tools import added_lines, probe_git, worktree_status
 from .history import history_section
 from .idioms import divergent_idioms
 from .metrics import (
@@ -463,6 +465,32 @@ def _pillars_with_delegation(
     return pillars
 
 
+def _attach_economics(report: dict[str, Any], config: dict[str, Any]) -> None:
+    """ADR 004 v1, after scoring on purpose.
+
+    Nothing money-shaped exists until the score document is final, so no
+    path from these numbers into the estimate or the grade can exist to be
+    misused.
+    """
+    context = economic_context_from(config)
+    if context is not None:
+        report["economic_impact"] = economic_impact(report, context)
+        reorder_by_exposure(report)
+
+
+def _attach_policy(report: dict[str, Any], root: Path, config: dict[str, Any],
+                   function_metrics: list[FunctionMetric], changed_revspec: str | None) -> None:
+    """The changed-code policy, beside the score and never inside it (Decision 15).
+
+    Only a repository that set a policy pays for the diff; without one
+    nothing new runs.
+    """
+    if not (changed_revspec and changed_code_limits(config)):
+        return
+    touched = {path: {n for n, _ in rows} for path, rows in added_lines(root, changed_revspec).items()}
+    report["policy"] = evaluate_changed_code_policy(function_metrics, touched, config, changed_revspec)
+
+
 def build_report(
     root: Path,
     config: dict[str, Any],
@@ -528,6 +556,7 @@ def build_report(
     report["tdd_structure"] = describe_tdd(root, file_metrics, function_metrics, source)
     _attach_test_suite(report, root, config)
     report["score"] = score_report(report, analyzer["pressures"])
+    _attach_policy(report, root, config, function_metrics, changed_revspec)
     # Condition rolls up aspects; practice stays a separate axis (ADR 007).
     report["practice"] = practice_level(root, config).as_dict()
     report["pillars"] = _pillars_with_delegation(report, root, security_pillar, changed_revspec, config)
@@ -535,11 +564,5 @@ def build_report(
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.
     report["work_order"] = work_order(report, thresholds=config["thresholds"])
-    # ADR 004 v1, after scoring on purpose: nothing money-shaped exists
-    # until the score document is final, so no path from these numbers
-    # into the estimate or the grade can exist to be misused.
-    context = economic_context_from(config)
-    if context is not None:
-        report["economic_impact"] = economic_impact(report, context)
-        reorder_by_exposure(report)
+    _attach_economics(report, config)
     return report

@@ -118,6 +118,36 @@ def _format_default(_base: Path, tree: str) -> tuple[str, ...]:
     return (tree, f"{tree}/**")
 
 
+_REGEX_DIALECTS = frozenset({"regex", "rel_regex"})
+
+
+def _name_as_regex(pattern: str) -> str:
+    """A shell-style name as a regex that finds it as a path component anywhere.
+
+    `*` and `?` stay inside one component, as they do for the built-in
+    scan's own matcher; the name matches at the start of the path or after
+    a `/`, and ends at a `/` or the end, so `.venv/` is not `venv_tools.py`.
+    Works for `re.match` on an absolute path (pylint) and `re.search` on a
+    relative one (mypy) alike.
+    """
+    body = "".join("[^/]*" if ch == "*" else "[^/]" if ch == "?" else re.escape(ch)
+                   for ch in pattern.strip("/"))
+    return f"(?:^|.*/){body}(?:/|$)"
+
+
+def _names_as_paths(excludes: Sequence[str], root: Path) -> tuple[str, ...]:
+    """Plain path names as absolute paths under the root; wildcards dropped.
+
+    A path dialect (interrogate's `--exclude`) names locations, so
+    `calibration/.corpus/` becomes `<root>/calibration/.corpus`. A wildcard
+    such as `*.min.js` names no location and cannot be spelled here; it is
+    left out, which can only under-exclude — the scan's own filter still
+    applies it to what the tool reports.
+    """
+    return tuple(str(root / pattern.strip("/")) for pattern in excludes
+                 if not any(ch in pattern for ch in "*?["))
+
+
 _TREE_FORMATTERS = {
     "fnmatch": _format_fnmatch,
     "regex": _format_regex,
@@ -267,7 +297,7 @@ class BaseAdapter:
         """
         if not self.exclude_flag:
             return ()
-        entries = tuple(excludes) + self.tree_patterns(
+        entries = self.operator_patterns(excludes, root) + self.tree_patterns(
             getattr(excludes, "trees", ()), root
         )
         if not entries:
@@ -278,6 +308,21 @@ class BaseAdapter:
                 repeated.extend((self.exclude_flag, entry))
             return tuple(repeated)
         return (self.exclude_flag, self.exclude_separator.join(entries))
+
+    def operator_patterns(self, excludes: Sequence[str], root: Path | None = None) -> tuple[str, ...]:
+        """The operator's exclude names, spelled for this tool's matcher.
+
+        They are shell-style names — `.venv/`, `*.egg-info/` — and for most
+        dialects they pass through as written. A regex dialect compiles
+        them: pylint's `--ignore-paths` refused `*.egg-info` ("nothing to
+        repeat"), exited with an argument error, and analysed nothing, on
+        every repository whose config carried a glob (the default does).
+        """
+        if self.exclude_dialect == "abspath":
+            return _names_as_paths(excludes, Path(root) if root is not None else Path("."))
+        if self.exclude_dialect not in _REGEX_DIALECTS:
+            return tuple(excludes)
+        return tuple(_name_as_regex(pattern) for pattern in excludes)
 
     def tree_patterns(
         self, trees: Sequence[str], root: Path | None = None

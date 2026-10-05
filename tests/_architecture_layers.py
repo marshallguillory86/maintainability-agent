@@ -89,7 +89,11 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
                # import nothing internal. `_catalog` is analyzer selection
                # data -- a leaf that reads the shipped catalog and nothing
                # else.
-               "_runner", "_catalog"}
+               "_runner", "_catalog",
+               # Decision 15's changed-code limits: validated when config
+               # loads and evaluated by `report`, importing only `_catalog`
+               # for its refusal. A rule over measurements, not a measurer.
+               "_changed_code_policy"}
 # `_xml` reads analyzer XML and refuses what it will not parse — a
 # parser with no internal imports, so it sits with the other
 # parsers rather than with the adapters that call it (D46).

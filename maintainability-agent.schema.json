@@ -245,6 +245,31 @@
       },
       "additionalProperties": false
     },
+    "policy": {
+      "description": "Repository policy (Decision 15). `changed_code` holds the functions a change touches to stricter limits than the standard; it may only tighten, and it decides the gate, never the grade. Applies on a run given --changed-only.",
+      "type": "object",
+      "properties": {
+        "changed_code": {
+          "type": "object",
+          "properties": {
+            "max_function_lines": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_complexity": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_cognitive_complexity": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "presentation": {
       "description": "Written by first-run setup: the report skin this user chose.",
       "type": "object",

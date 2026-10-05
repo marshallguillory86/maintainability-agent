@@ -7,6 +7,7 @@ from typing import Any
 # Re-exported: the defaults live in `_config_defaults`, this module is
 # still the door every caller comes through.
 from . import __version__ as _package_version
+from ._changed_code_policy import validate as validate_changed_code_policy
 from ._config_defaults import DEFAULT_CONFIG, DEFAULT_IDIOM_GROUPS
 from ._operator_reads import (
     MAX_OPERATOR_FILE_BYTES as MAX_OPERATOR_FILE_BYTES,
@@ -164,6 +165,7 @@ def load_config(path: str | None) -> dict[str, Any]:
         _merge_tier(config, user_tier)
     if path:
         _merge_tier(config, _host_authority_stripped(_configured(Path(path))))
+    validate_changed_code_policy(config)
     return config
 
 

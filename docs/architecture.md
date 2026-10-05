@@ -171,6 +171,7 @@ flowchart TB
     instructions["instructions"]
     _runner["_runner"]
     _catalog["_catalog"]
+    _changed_code_policy["_changed_code_policy"]
     _semantic_policy["_semantic_policy"]
   end
 

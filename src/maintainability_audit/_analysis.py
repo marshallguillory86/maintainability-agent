@@ -447,6 +447,7 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
         )
 
     result, parsed = _run_batches(adapter, root, excludes, timeout)
+    result = _silent_failure(adapter.slug, result, parsed)
     # Filtered before the counts are taken, not after. Recording 48
     # measurements and reporting 6 describes an activity rather than a
     # result, which is the defect this project keeps finding.
@@ -498,6 +499,24 @@ def _run_batches(adapter: Any, root: Path, excludes: Sequence[str],
     if len(results) == 1:
         return results[0], parsed[0]
     return _merged_result(results, len(invocations)), _merged_extraction(parsed)
+
+
+def _silent_failure(slug: str, result: ToolResult, parsed: Extraction) -> ToolResult:
+    """A tool that wrote nothing failed, whatever its exit code says.
+
+    pylint's argument error exits 2, which is also its "error messages
+    issued" bit, so a run that analysed nothing counted as one that worked
+    and its empty output was reported as unreadable JSON while stderr held
+    the reason. secure-code-agent recorded the same class as its D30: let
+    the output decide, and let the failure carry what the tool said.
+    """
+    if not (parsed.parse_error and result.usable and not (result.stdout or "").strip()):
+        return result
+    said = " ".join((result.stderr or "").split())[:400]
+    if not said:
+        return result
+    return replace(result, outcome=Outcome.FAILED,
+                   detail=f"{slug} exited {result.exit_code} and wrote no output; it said: {said}")
 
 
 def _merged_result(results: list[ToolResult], planned: int) -> ToolResult:

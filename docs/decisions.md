@@ -333,6 +333,24 @@ gate on a codebase it cannot fix all at once.
    join the analyzer pool rather than being re-implemented, the same rule as
    every other detector.
 
+### Decision 16: Shell is measured by ShellCheck
+
+- Recorded: 2026-10-04
+- Status: **Accepted, chosen by the maintainer 2026-10-04.** Not yet built.
+
+Shell has been parsed and scored since 3.9.0 and anchored since 4.0.0, but
+no analyzer in the pool reads it: eight of its nine concepts are reported
+unexamined for any repository with shell scripts, and unexamined aspects
+price at zero for the grade. secure-code-agent audits clean and grades C
+partly for this reason, and nothing in that repository can move it.
+
+The gap is closed with evidence, not by re-labelling it: a ShellCheck
+adapter joins the pool under the same rules as every other — version
+pinned, availability probed with a flag it has, output parsed, exclusions
+honoured. Reporting a language's areas as not applicable when no catalog
+tool reads it was considered and not chosen; it would change the evidence
+rules rather than add evidence.
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

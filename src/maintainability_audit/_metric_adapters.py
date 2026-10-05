@@ -321,10 +321,12 @@ class CohesionAdapter(BaseAdapter):
         super().__init__(
             slug="cohesion", emits="metric", executable="cohesion",
             concepts=("cohesion",), exclude_dialect="files",
-            # Its CLI takes files or a directory and has no version flag,
-            # so availability is answered from package metadata, the same
-            # arrangement multimetric already uses.
-            distribution="cohesion",
+            # Its CLI takes files or a directory and has no version flag, so
+            # the version comes from package metadata — and availability
+            # from `--help`, the arrangement multimetric uses. The probe was
+            # `--version`, which argparse rejects with exit 2, so cohesion
+            # was recorded as failed without ever being asked to run.
+            version_flag="--help", distribution="cohesion",
         )
 
     def has_targets(self, root: Path, excludes: Sequence[str] = ()) -> bool:

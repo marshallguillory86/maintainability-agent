@@ -6,6 +6,7 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a><ul>
+<li><a href="#fixed-three-analyzers-were-lost-to-every-audit-d226">Fixed — three analyzers were lost to every audit (D226)</a></li>
 <li><a href="#added-code-a-change-touches-meets-a-stricter-bar-decision-15">Added — code a change touches meets a stricter bar (Decision 15)</a></li>
 </ul>
 </li>
@@ -530,6 +531,19 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h3 id="fixed-three-analyzers-were-lost-to-every-audit-d226">Fixed — three analyzers were lost to every audit (D226)</h3>
+<ul>
+<li><strong>pylint</strong> analysed nothing: exclude globs were passed to its
+  <code>--ignore-paths</code> as regular expressions it could not compile. They are now
+  translated, for pylint and mypy.</li>
+<li><strong>interrogate</strong> analysed directories it was told to skip, and one
+  unparseable file there crashed it: its exclusions arrived as one argument.
+  Each path is now its own <code>--exclude</code>.</li>
+<li><strong>cohesion</strong> was recorded as failed without running: its availability
+  check used <code>--version</code>, which it does not accept.</li>
+<li>A tool that writes no output is now reported as failed with what it said,
+  whatever its exit code, instead of as unreadable output.</li>
+</ul>
 <h3 id="added-code-a-change-touches-meets-a-stricter-bar-decision-15">Added — code a change touches meets a stricter bar (Decision 15)</h3>
 <ul>
 <li><code>policy.changed_code</code> in <code>maintainability-agent.json</code> sets stricter

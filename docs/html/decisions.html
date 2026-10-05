@@ -18,6 +18,7 @@
 <li><a href="#decision-13-the-ask-beside-the-diff">Decision 13: The ask beside the diff</a></li>
 <li><a href="#decision-14-secure-code-agents-behaviour-is-built-there">Decision 14: secure-code-agent's behaviour is built there</a></li>
 <li><a href="#decision-15-policy-as-code-tightens-the-gate-never-the-grade">Decision 15: Policy-as-code tightens the gate, never the grade</a></li>
+<li><a href="#decision-16-shell-is-measured-by-shellcheck">Decision 16: Shell is measured by ShellCheck</a></li>
 </ul>
 </li>
 <li><a href="#statuses">Statuses</a></li>
@@ -413,6 +414,22 @@ gate on a codebase it cannot fix all at once.</p>
    join the analyzer pool rather than being re-implemented, the same rule as
    every other detector.</li>
 </ol>
+<h3 id="decision-16-shell-is-measured-by-shellcheck">Decision 16: Shell is measured by ShellCheck</h3>
+<ul>
+<li>Recorded: 2026-10-04</li>
+<li>Status: <strong>Accepted, chosen by the maintainer 2026-10-04.</strong> Not yet built.</li>
+</ul>
+<p>Shell has been parsed and scored since 3.9.0 and anchored since 4.0.0, but
+no analyzer in the pool reads it: eight of its nine concepts are reported
+unexamined for any repository with shell scripts, and unexamined aspects
+price at zero for the grade. secure-code-agent audits clean and grades C
+partly for this reason, and nothing in that repository can move it.</p>
+<p>The gap is closed with evidence, not by re-labelling it: a ShellCheck
+adapter joins the pool under the same rules as every other — version
+pinned, availability probed with a flag it has, output parsed, exclusions
+honoured. Reporting a language's areas as not applicable when no catalog
+tool reads it was considered and not chosen; it would change the evidence
+rules rather than add evidence.</p>
 <h2 id="statuses">Statuses</h2>
 <ul>
 <li><strong>Proposed</strong> — written up with options; not yet decided. May be edited freely.</li>

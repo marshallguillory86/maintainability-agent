@@ -12,6 +12,19 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+### Fixed — three analyzers were lost to every audit (D226)
+
+- **pylint** analysed nothing: exclude globs were passed to its
+  `--ignore-paths` as regular expressions it could not compile. They are now
+  translated, for pylint and mypy.
+- **interrogate** analysed directories it was told to skip, and one
+  unparseable file there crashed it: its exclusions arrived as one argument.
+  Each path is now its own `--exclude`.
+- **cohesion** was recorded as failed without running: its availability
+  check used `--version`, which it does not accept.
+- A tool that writes no output is now reported as failed with what it said,
+  whatever its exit code, instead of as unreadable output.
+
 ### Added — code a change touches meets a stricter bar (Decision 15)
 
 - `policy.changed_code` in `maintainability-agent.json` sets stricter

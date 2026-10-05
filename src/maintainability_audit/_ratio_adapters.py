@@ -134,7 +134,10 @@ class InterrogateAdapter(BaseAdapter):
         super().__init__(
             slug="interrogate", emits="metric", executable="interrogate",
             concepts=("documentation",), findings_exit_codes=(0, 1),
-            exclude_flag="--exclude", exclude_separator=" ",
+            # One `--exclude` per path: interrogate names one location per
+            # flag, and a space-joined list named none, so excluded trees
+            # were analysed and one unparseable file in them crashed it.
+            exclude_flag="--exclude", exclude_repeat=True,
             exclude_dialect="abspath",
         )
 

@@ -9,6 +9,7 @@
 <li><a href="#common-fields">Common Fields</a></li>
 <li><a href="#configuration-locations-and-precedence">Configuration locations and precedence</a></li>
 <li><a href="#analyzer-policy-analyzers">Analyzer policy (analyzers)</a></li>
+<li><a href="#changed-code-policy-policychanged_code">Changed-code policy (policy.changed_code)</a></li>
 <li><a href="#security-pillar-security">Security pillar (security)</a></li>
 <li><a href="#economic-context">Economic context</a></li>
 <li><a href="#semantic-policy">Semantic policy</a></li>
@@ -94,6 +95,28 @@ python tools/resolve_pool.py --explain pylint   # why is one tool in or out?
 python tools/resolve_pool.py --depth all        # what-if, without editing the file
 </code></pre>
 <p>A slug that is not in the catalog is a config error, not a silent no-op.</p>
+<h2 id="changed-code-policy-policychanged_code">Changed-code policy (<code>policy.changed_code</code>)</h2>
+<p>Holds the code a change touches to a stricter bar than code it leaves alone
+(Decision 15) — how a team adopts a quality gate on a codebase it cannot fix
+all at once.</p>
+<pre><code class="language-json">&quot;policy&quot;: {
+  &quot;changed_code&quot;: {
+    &quot;max_function_lines&quot;: 40,
+    &quot;max_complexity&quot;: 10,
+    &quot;max_cognitive_complexity&quot;: 15
+  }
+}
+</code></pre>
+<ul>
+<li>Applies on a run against a change: <code>--changed-only main...HEAD</code>. A function
+  is <em>touched</em> when the change added or altered a line inside it; a pure
+  deletion touches nothing, and classes are not held to it.</li>
+<li>Each limit may only <strong>tighten</strong> the matching <code>thresholds</code> value. A looser
+  one is refused when the configuration loads, by name.</li>
+<li>It decides the <strong>gate, never the grade</strong>: breaches fail <code>--fail-on-gate</code>
+  and the chat door's <code>gate_passed</code>, and the report lists them under
+  <em>Changed-code policy</em> — but the score is computed exactly as without it.</li>
+</ul>
 <h2 id="security-pillar-security">Security pillar (<code>security</code>)</h2>
 <p>The security pillar is measured by <code>secure-code-agent</code>, which this tool runs
 for you. A full run can take several minutes on a large repository.</p>

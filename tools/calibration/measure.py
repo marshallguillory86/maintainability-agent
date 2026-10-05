@@ -288,6 +288,11 @@ MEASUREMENT_PATH = (
 #: Reachable from the list above and deliberately not in it, each with the
 #: reason it cannot move a stored row.
 NOT_FINGERPRINTED: dict[str, str] = {
+    "_changed_code_policy": (
+        "reached through config, which validates it at load; it runs after the "
+        "measurements, reads them, and writes only report['policy'] (Decision 15), "
+        "so no stored row can depend on it"
+    ),
     "_calibration": (
         "holds the constants fitted *from* the rows; a row stores raw "
         "pressures, and the references only normalize them for display, so "

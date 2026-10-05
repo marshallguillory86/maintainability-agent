@@ -98,6 +98,31 @@ python tools/resolve_pool.py --depth all        # what-if, without editing the f
 
 A slug that is not in the catalog is a config error, not a silent no-op.
 
+## Changed-code policy (`policy.changed_code`)
+
+Holds the code a change touches to a stricter bar than code it leaves alone
+(Decision 15) — how a team adopts a quality gate on a codebase it cannot fix
+all at once.
+
+```json
+"policy": {
+  "changed_code": {
+    "max_function_lines": 40,
+    "max_complexity": 10,
+    "max_cognitive_complexity": 15
+  }
+}
+```
+
+- Applies on a run against a change: `--changed-only main...HEAD`. A function
+  is *touched* when the change added or altered a line inside it; a pure
+  deletion touches nothing, and classes are not held to it.
+- Each limit may only **tighten** the matching `thresholds` value. A looser
+  one is refused when the configuration loads, by name.
+- It decides the **gate, never the grade**: breaches fail `--fail-on-gate`
+  and the chat door's `gate_passed`, and the report lists them under
+  *Changed-code policy* — but the score is computed exactly as without it.
+
 ## Security pillar (`security`)
 
 The security pillar is measured by `secure-code-agent`, which this tool runs

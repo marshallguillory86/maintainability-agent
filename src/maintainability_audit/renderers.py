@@ -178,11 +178,32 @@ def render_markdown(report: dict[str, Any], *, complete: bool = True) -> str:
 
 
 def _hard_gate_lines(report: dict[str, Any]) -> list[str]:
-    """The hard-gate list, printed the same way wherever it appears."""
-    if not report["hard_gate_failures"]:
+    """The hard-gate list, printed the same way wherever it appears.
+
+    The changed-code policy follows it: also a gate, never a grade
+    (Decision 15), so it is printed wherever the gates are.
+    """
+    lines: list[str] = []
+    if report["hard_gate_failures"]:
+        lines += ["## Hard Gate Failures", "",
+                  *(f"- {gate}" for gate in report["hard_gate_failures"]), ""]
+    return lines + _policy_lines(report)
+
+
+def _policy_lines(report: dict[str, Any]) -> list[str]:
+    policy = report.get("policy")
+    if not policy:
         return []
-    return ["## Hard Gate Failures", "",
-            *(f"- {gate}" for gate in report["hard_gate_failures"]), ""]
+    failures = policy.get("failures") or []
+    head = (f"{policy.get('touched_functions', 0)} function(s) touched by "
+            f"`{policy.get('revspec')}` are held to this repository's stricter limits; "
+            "the grade is unaffected.")
+    if not failures:
+        return ["## Changed-code policy", "", head + " All of them meet it.", ""]
+    rows = [f"| `{f['path']}:{f['start_line']}` | `{f['name']}` | {f['measure']} | {f['value']} | {f['limit']} |"
+            for f in failures]
+    return ["## Changed-code policy", "", head, "",
+            "| Location | Function | Measure | Value | Limit |", "|---|---|---|---|---|", *rows, ""]
 
 
 def _no_work_order_lines() -> list[str]:

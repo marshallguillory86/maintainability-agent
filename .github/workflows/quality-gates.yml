@@ -259,7 +259,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install tool with dev extras
-        run: python3 -m pip install -e ".[dev]"
+        run: python3 -m pip install -e ".[dev]" -c constraints/analyzers.txt
       - name: Prove each newly cited falsifier
         run: python3 tools/prove_falsifiers.py --base "origin/${{ github.base_ref }}"
 

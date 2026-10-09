@@ -174,7 +174,8 @@ jobs:
             echo "::error::The built wheel carries $built, but the tag is $GITHUB_REF_NAME"
             exit 1
           fi
-          python3 -m pip install ".[dev]"
+          # Under the pool's pins, as every job that runs the suite is.
+          python3 -m pip install ".[dev]" -c constraints/analyzers.txt
           # Every audit runs secure-code-agent (D177), and it is installed
           # alongside rather than as a dependency. 3.7.2's tag failed here
           # because this job never installed it.

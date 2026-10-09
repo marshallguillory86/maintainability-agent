@@ -19,7 +19,8 @@ from __future__ import annotations
 import argparse
 import os
 import pwd
-import subprocess
+import shutil
+import subprocess  # nosec B404 - runs git only, argv lists, never a shell
 import sys
 import zipfile
 from pathlib import Path
@@ -27,6 +28,15 @@ from pathlib import Path
 # The real home, not $HOME: the test suite isolates $HOME for git.
 DEFAULT_FILE = Path(pwd.getpwuid(os.getuid()).pw_dir) / ".config" / "private-names"
 VARIABLES = ("FORBIDDEN_TERMS", "PRIVATE_NAMES")
+# Resolved once to an absolute path, so no later lookup can pick another `git`.
+GIT = shutil.which("git") or "/usr/bin/git"
+
+
+def _git(root: Path, *args: str) -> str:
+    """git's stdout for `args` in `root`. An argv list, never a shell; the
+    arguments are this tool's own flags, a path and a revision range."""
+    return subprocess.run([GIT, "-C", str(root), *args],  # nosec B603 - fixed program, argv list
+                          check=True, capture_output=True, text=True).stdout
 
 
 def load_names(files: list[Path]) -> list[str]:
@@ -41,8 +51,7 @@ def load_names(files: list[Path]) -> list[str]:
 
 
 def _tracked(root: Path) -> list[str]:
-    out = subprocess.run(["git", "-C", str(root), "ls-files", "-z"], check=True, capture_output=True).stdout
-    return [p for p in out.decode("utf-8").split("\0") if p]
+    return [p for p in _git(root, "ls-files", "-z").split("\0") if p]
 
 
 def _contains(text: str, names: list[str]) -> bool:
@@ -79,12 +88,10 @@ def scan(root: Path, names: list[str]) -> list[tuple[str, int]]:
 
 def scan_messages(root: Path, revspec: str, names: list[str]) -> list[str]:
     """The sha of every commit in `revspec` whose message or identity names one."""
-    shas = subprocess.run(["git", "-C", str(root), "rev-list", revspec],
-                          check=True, capture_output=True, text=True).stdout.split()
+    shas = _git(root, "rev-list", revspec).split()
     hits = []
     for sha in shas:
-        body = subprocess.run(["git", "-C", str(root), "show", "-s", "--format=%an%n%ae%n%cn%n%ce%n%B", sha],
-                              check=True, capture_output=True, text=True).stdout
+        body = _git(root, "show", "-s", "--format=%an%n%ae%n%cn%n%ce%n%B", sha)
         if _contains(body, names):
             hits.append(sha)
     return hits
@@ -102,8 +109,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"no private names given ({', '.join(VARIABLES)} unset, {DEFAULT_FILE} absent); "
               "this check proved nothing", file=sys.stderr)
         return 2
-    if args.messages and not subprocess.run(["git", "-C", str(root), "rev-list", "--no-merges", args.messages],
-                                            check=True, capture_output=True, text=True).stdout.strip():
+    if args.messages and not _git(root, "rev-list", "--no-merges", args.messages).strip():
         print(f"no non-merge commits in {args.messages}; this check proved nothing")
         return 1
     hits = [f"{path}:{line}" for path, line in scan(root, names)]

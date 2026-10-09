@@ -6,7 +6,8 @@ in this tree: the `FORBIDDEN_TERMS` and `PRIVATE_NAMES` environment variables
 (CI secrets, one name per line) and `~/.config/private-names`, which is
 generated from the owner's private repositories.
 
-A match is reported by file and line (line 0 for a path) or by commit, never
+A match is reported by file and line (line 0 for a path or a binary file,
+whose zip members — a .docx is one — are read too) or by commit, never
 by the text that matched. With no names to check against it exits 2: a guard
 with nothing to look for has proved nothing.
 
@@ -20,6 +21,7 @@ import os
 import pwd
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 # The real home, not $HOME: the test suite isolates $HOME for git.
@@ -48,16 +50,29 @@ def _contains(text: str, names: list[str]) -> bool:
     return any(name.lower() in lowered for name in names)
 
 
+def _binary_text(path: Path) -> str:
+    """What a binary file says: each member of a zip (.docx, .xlsx, .pptx), else its bytes."""
+    if zipfile.is_zipfile(path):
+        with zipfile.ZipFile(path) as archive:
+            return "\n".join(archive.read(member).decode("utf-8", "ignore") for member in archive.namelist())
+    return path.read_bytes().decode("latin-1")
+
+
 def scan(root: Path, names: list[str]) -> list[tuple[str, int]]:
-    """(path, line) for every match; line 0 means the path itself."""
+    """(path, line) for every match; line 0 means the path itself or inside a binary file."""
     hits: list[tuple[str, int]] = []
     for path in _tracked(root):
+        file = root / path
+        if not file.is_file():
+            continue
+        try:
+            text = file.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            if _contains(path, names) or _contains(_binary_text(file), names):
+                hits.append((path, 0))
+            continue
         if _contains(path, names):
             hits.append((path, 0))
-        try:
-            text = (root / path).read_text(encoding="utf-8")
-        except (UnicodeDecodeError, FileNotFoundError, IsADirectoryError):
-            continue
         hits += [(path, n) for n, line in enumerate(text.splitlines(), 1) if _contains(line, names)]
     return hits
 

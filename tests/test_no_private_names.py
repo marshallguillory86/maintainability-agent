@@ -66,6 +66,23 @@ def test_a_name_in_a_file_name_is_found(tmp_path: Path) -> None:
     assert guard.scan(root, [NAME]) == [("docs/defects-from-quillfeather.md", 0)]
 
 
+def test_a_name_inside_an_office_document_is_found(tmp_path: Path) -> None:
+    """A .docx is a zip of XML: read as text it is binary, and was skipped.
+
+    That is how a document naming a forbidden term sat in the tree past the
+    first version of this check.
+    """
+    import zipfile
+
+    root = _repo(tmp_path, {"keep.md": "fine\n"})
+    with zipfile.ZipFile(root / "case.docx", "w", zipfile.ZIP_DEFLATED) as docx:
+        docx.writestr("word/document.xml", "<w:t>the Quillfeather case</w:t>")
+    _git(root, "add", "case.docx")
+    _git(root, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "doc")
+
+    assert guard.scan(root, [NAME]) == [("case.docx", 0)]
+
+
 def test_a_commit_message_in_the_range_is_found(tmp_path: Path) -> None:
     root = _repo(tmp_path, {"a.md": "fine\n"})
     (root / "a.md").write_text("still fine\n", encoding="utf-8")

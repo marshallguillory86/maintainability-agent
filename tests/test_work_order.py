@@ -358,7 +358,7 @@ def test_within_a_class_the_worst_offender_leads(tmp_path: Path) -> None:
 def test_prompt_items_keep_severe_inside_the_bounded_subset() -> None:
     """Economics may reorder the table; the agent paste cannot drop risk 5.
 
-    bighound 2026-08-30: tokens.py absence-as-zero was Severe, then 13th
+    A private repository, 2026-08-30: tokens.py absence-as-zero was Severe, then 13th
     after churn reorder, then missing from prompt_items[:12].
     """
     items = [

@@ -2,7 +2,7 @@
 
 A duplicated block appears as many overlapping windows, each a distinct
 fingerprint at consecutive lines. Reported one row per window it was 861
-line-items of a single clone (bighound field test); reported one row per
+line-items of a single clone (field test on a private repository); reported one row per
 clone it is one finding carrying the occurrence count and the span.
 Genuinely separate clones stay separate.
 """

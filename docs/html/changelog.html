@@ -6,6 +6,10 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#431-2026-10-09">4.3.1 - 2026-10-09</a><ul>
+<li><a href="#fixed-private-repositories-were-named-in-a-public-one-d227">Fixed — private repositories were named in a public one (D227)</a></li>
+</ul>
+</li>
 <li><a href="#430-2026-10-04">4.3.0 - 2026-10-04</a><ul>
 <li><a href="#fixed-three-analyzers-were-lost-to-every-audit-d226">Fixed — three analyzers were lost to every audit (D226)</a></li>
 <li><a href="#added-code-a-change-touches-meets-a-stricter-bar-decision-15">Added — code a change touches meets a stricter bar (Decision 15)</a></li>
@@ -532,6 +536,27 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="431-2026-10-09">4.3.1 - 2026-10-09</h2>
+<p><strong>This public repository no longer names its owner's private repositories,
+and a check now stops it happening again.</strong> Nothing an audit measures or
+reports changes.</p>
+<h3 id="fixed-private-repositories-were-named-in-a-public-one-d227">Fixed — private repositories were named in a public one (D227)</h3>
+<ul>
+<li>Three private repositories were named in the changelog, the defect
+  register, a document's file name, code comments, test docstrings and the
+  scan history. They are replaced with neutral wording, and
+  <code>docs/defects-from-a-field-audit-2026-09-26.md</code> is the renamed document.</li>
+<li>The existing check read only the lines a change added, so a name already
+  in the tree was invisible to it. <code>tools/check_private_names.py</code> reads every
+  tracked file, every path and every commit message in a change against names
+  held outside the tree, reports a match by file and line without repeating
+  it, and fails when it has no names to check. It runs in the required
+  "Commit identity and signatures" job. Binary files are read too, including
+  the documents inside office files.</li>
+<li>Its first run found three business documents, as HTML and .docx, naming an
+  organisation the earlier check already forbade. They are removed; they
+  were never in a published package.</li>
+</ul>
 <h2 id="430-2026-10-04">4.3.0 - 2026-10-04</h2>
 <p><strong>Code a change touches can be held to a stricter bar, and three analyzers
 that silently contributed nothing now run.</strong> No published number moves for a
@@ -761,7 +786,7 @@ function after them from the audit. They are arithmetic now. A keyword after
 as a branch. The Shell page names every line shape that still over-counts.</p>
 <h3 id="fixed-consent-to-run-a-test-command-is-per-repository-d214">Fixed — consent to run a test command is per repository (D214)</h3>
 <p>Consent given while setting up one repository ran that repository's test
-command in every repository audited afterwards: auditing Scrollwork executed
+command in every repository audited afterwards: auditing a private application executed
 this project's own <code>pytest --cov=maintainability_audit</code> against a JavaScript
 tree. Consent is now recorded against the repository it was given for, and a
 repository with none of its own runs nothing and says so. A new repository
@@ -839,7 +864,7 @@ were two.</p>
 <p><code>docs/html/</code> now holds a reading copy of all the documentation: the root
 documents, all 60-odd under <code>docs/</code>, grouped by kind, and cards linking the
 standalone HTML pages already there. <code>tools/render_docs.py</code> produces it, adapted
-from the renderer the cq-team project uses. The markdown stays the source of truth.</p>
+from another project's documentation renderer. The markdown stays the source of truth.</p>
 <p>The set of documents is read from git rather than a list, so a new document is
 picked up automatically and an untracked file is never published. The output has
 no timestamps, so <code>tests/test_rendered_docs.py</code> can require the committed copy to
@@ -4086,7 +4111,7 @@ score learned to be <strong>withheld</strong> when the evidence cannot support o
 external analyzers became the primary evidence with disagreement widening
 the range rather than being averaged (0.7.0); the surfaces converged on
 <strong>one setup, three transports</strong> with chat as the primary door (0.8–0.9);
-and a real-repo acceptance round (Phase 8, on bighound) hardened the last
+and a real-repo acceptance round (Phase 8, on a private repository) hardened the last
 edges. What ships as 1.0 is the thing the whole project is for: a
 deterministic, offline, one-rubric audit whose output is a <strong>bounded work
 order</strong> — a copy-paste prompt per finding that tells an agent to fix

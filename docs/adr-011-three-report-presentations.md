@@ -102,7 +102,7 @@ let the host save it. That worked while the HTML was small. From 2026-08-31 the
 HTML is the complete report — every work item with its prompt, and the history
 charts — and on a real repository it is far over a host's result limit. The
 size fix of that day bounded the Markdown field only and left the complete HTML
-in the same reply. On Scrollwork's first run the reply was 308,957 characters,
+in the same reply. On a private application's first run the reply was 308,957 characters,
 the host refused it, and no report reached anyone.
 
 - **markdown and html are saved by the MCP server**, to `output_path`: the

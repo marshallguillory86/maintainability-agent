@@ -140,7 +140,7 @@ def test_a_clean_tsc_run_still_reports_available_with_no_diagnostics(
 
 def _workspace_repo(tmp_path: Path, *, with_local_tsc: bool) -> Path:
     """A monorepo whose TypeScript lives in `web/`, not the root — the
-    bighound UAT layout. Optionally with a project-local `tsc`."""
+    field-test UAT layout. Optionally with a project-local `tsc`."""
     web = tmp_path / "web"
     web.mkdir()
     (web / "tsconfig.json").write_text("{}", encoding="utf-8")
@@ -154,7 +154,7 @@ def _workspace_repo(tmp_path: Path, *, with_local_tsc: bool) -> Path:
 def test_a_workspace_tsconfig_and_local_tsc_are_found_and_paths_re_rooted(
     tmp_path: Path, monkeypatch,
 ) -> None:
-    """The bighound defect, minus the half that was a security hole.
+    """The field-test defect, minus the half that was a security hole.
 
     What is still required: a TS config in `web/` rather than at the root
     is discovered, and a diagnostic tsc reports as `src/app.ts` from that

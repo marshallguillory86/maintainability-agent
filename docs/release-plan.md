@@ -4,11 +4,11 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 ## Where this actually stands
 
-*Measured 2026-10-04. Regenerate the counts before quoting them: the previous version of this table survived fifty-five commits past the point it stopped being true, and then did it again — an audit on 2026-08-26 found it still naming 0.7.0 as the last tag while v0.9.1 was shipped and 26 further commits sat on the branch, and a v1.0 readiness audit on 2026-08-31 found the counts stale a third time. Three times now, in the paperwork of the project that exists to catch drift.*
+*Measured 2026-10-09. Regenerate the counts before quoting them: the previous version of this table survived fifty-five commits past the point it stopped being true, and then did it again — an audit on 2026-08-26 found it still naming 0.7.0 as the last tag while v0.9.1 was shipped and 26 further commits sat on the branch, and a v1.0 readiness audit on 2026-08-31 found the counts stale a third time. Three times now, in the paperwork of the project that exists to catch drift.*
 
 | Fact | Value |
 |---|---|
-| Last tagged version | v4.3.0 |
+| Last tagged version | v4.3.1 |
 | Production code | 36,291 lines across 138 modules |
 | Tests | 3,367 collected across 313 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |

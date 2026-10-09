@@ -180,6 +180,17 @@ jobs:
             fi
           done
           exit $failed
+      - name: No private repository's name anywhere in the tree
+        # The step below looks only at what a change adds. This one reads
+        # every tracked file and path, and every commit message in the
+        # change, so a name already in the tree is found too (D227). The
+        # names live in secrets, never here; without them it exits 2.
+        env:
+          FORBIDDEN_TERMS: ${{ secrets.FORBIDDEN_TERMS }}
+          PRIVATE_NAMES: ${{ secrets.PRIVATE_NAMES }}
+        run: |
+          python3 tools/check_private_names.py --no-default-file \
+            --messages "origin/${{ github.base_ref }}..HEAD"
       - name: No forbidden term in the change
         # Terms that must never appear in this repository live in the
         # FORBIDDEN_TERMS secret, one per line, so this check does not

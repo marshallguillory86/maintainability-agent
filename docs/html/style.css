@@ -1,4 +1,4 @@
-/* Reading-copy styles for docs/html, adapted from the cq-team documentation renderer. */
+/* Reading-copy styles for docs/html, adapted from another project's documentation renderer. */
 :root{--bg:#fbfaf7;--panel:#ffffff;--ink:#1d1d1f;--muted:#6b6b70;--rule:#e6e3dc;
 --accent:#1f5f8b;--accent-soft:#e8f0f6;--code:#f3f1ec;--decided:#1e7a4b;--decided-bg:#e3f3ea;
 --leaning:#8a5a00;--leaning-bg:#fbf0d9;--open:#1f5f8b;--open-bg:#e5eef6;--stated:#5c5c63;--stated-bg:#ececef}

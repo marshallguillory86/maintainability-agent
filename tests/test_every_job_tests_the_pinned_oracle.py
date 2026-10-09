@@ -26,17 +26,14 @@ def _jobs(text: str) -> dict[str, str]:
     """Each job's body under `jobs:`, keyed by its id."""
     body = text.split("\njobs:\n", 1)[1]
     parts = re.split(r"^  ([A-Za-z0-9_-]+):\s*$", body, flags=re.M)
-    return dict(zip(parts[1::2], parts[2::2]))
-
-
-def test_the_workflows_have_jobs_that_install_the_dev_extras() -> None:
-    found = [job for wf in WORKFLOWS for job, body in _jobs(wf.read_text(encoding="utf-8")).items()
-             if re.search(r"pip install[^\n]*\.\[dev\]", body)]
-    assert len(found) >= 5, found
+    return dict(zip(parts[1::2], parts[2::2], strict=True))
 
 
 def test_every_job_installing_the_dev_extras_applies_the_pins() -> None:
-    unpinned = [f"{wf.name}:{job}" for wf in WORKFLOWS
-                for job, body in _jobs(wf.read_text(encoding="utf-8")).items()
-                if re.search(r"pip install[^\n]*\.\[dev\]", body) and CONSTRAINTS not in body]
+    installing = {f"{wf.name}:{job}": body for wf in WORKFLOWS
+                  for job, body in _jobs(wf.read_text(encoding="utf-8")).items()
+                  if re.search(r"pip install[^\n]*\.\[dev\]", body)}
+    # A parser that found no jobs would pass this vacuously.
+    assert len(installing) >= 5, sorted(installing)
+    unpinned = [name for name, body in installing.items() if CONSTRAINTS not in body]
     assert unpinned == [], f"these jobs test against an unpinned lizard: {unpinned}"

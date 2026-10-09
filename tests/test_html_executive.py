@@ -352,7 +352,7 @@ def _assert_full_ladder(html: str) -> None:
 def test_charts_are_readable_legend_clear_dated_and_laddered(
     executive_report: tuple[dict, list],
 ) -> None:
-    """The three defects the bighound UAT named, encoded so they cannot come
+    """The three defects a private repository's UAT named, encoded so they cannot come
     back: legend clear of the plot, a dated x-axis, and the full 0-5 ladder.
     """
     _report, records = executive_report

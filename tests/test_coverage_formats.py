@@ -1,6 +1,6 @@
 """Coverage is read from lcov as well as Cobertura XML.
 
-Found auditing Scrollwork: its suite measures with V8 and writes lcov, not
+Found auditing a private application: its suite measures with V8 and writes lcov, not
 `coverage.xml`, so even the right command would have left
 `test_effectiveness` unscored. JavaScript's coverage tools — c8, nyc, jest,
 vitest — write `coverage/lcov.info` by convention. The same provenance rule

@@ -8,6 +8,7 @@
 <li><a href="#unreleased">Unreleased</a></li>
 <li><a href="#431-2026-10-09">4.3.1 - 2026-10-09</a><ul>
 <li><a href="#fixed-private-repositories-were-named-in-a-public-one-d227">Fixed — private repositories were named in a public one (D227)</a></li>
+<li><a href="#fixed-every-ci-job-tests-against-the-pinned-lizard">Fixed — every CI job tests against the pinned lizard</a></li>
 </ul>
 </li>
 <li><a href="#430-2026-10-04">4.3.0 - 2026-10-04</a><ul>
@@ -556,6 +557,14 @@ reports changes.</p>
 <li>Its first run found three business documents, as HTML and .docx, naming an
   organisation the earlier check already forbade. They are removed; they
   were never in a published package.</li>
+</ul>
+<h3 id="fixed-every-ci-job-tests-against-the-pinned-lizard">Fixed — every CI job tests against the pinned lizard</h3>
+<ul>
+<li>Three jobs installed the dev extras without the analyzer pool's pins and
+  took lizard 1.24.1, which counts Rust match arms as the scanner does, so a
+  declared divergence vanished and the release job refused to publish. Every
+  job that installs the dev extras now applies <code>constraints/analyzers.txt</code>,
+  and a test reads the workflows to keep it so.</li>
 </ul>
 <h2 id="430-2026-10-04">4.3.0 - 2026-10-04</h2>
 <p><strong>Code a change touches can be held to a stricter bar, and three analyzers

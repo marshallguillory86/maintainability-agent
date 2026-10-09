@@ -35,6 +35,14 @@ reports changes.
   organisation the earlier check already forbade. They are removed; they
   were never in a published package.
 
+### Fixed — every CI job tests against the pinned lizard
+
+- Three jobs installed the dev extras without the analyzer pool's pins and
+  took lizard 1.24.1, which counts Rust match arms as the scanner does, so a
+  declared divergence vanished and the release job refused to publish. Every
+  job that installs the dev extras now applies `constraints/analyzers.txt`,
+  and a test reads the workflows to keep it so.
+
 ## 4.3.0 - 2026-10-04
 
 **Code a change touches can be held to a stricter bar, and three analyzers

@@ -29,7 +29,11 @@ reports changes.
   tracked file, every path and every commit message in a change against names
   held outside the tree, reports a match by file and line without repeating
   it, and fails when it has no names to check. It runs in the required
-  "Commit identity and signatures" job.
+  "Commit identity and signatures" job. Binary files are read too, including
+  the documents inside office files.
+- Its first run found three business documents, as HTML and .docx, naming an
+  organisation the earlier check already forbade. They are removed; they
+  were never in a published package.
 
 ## 4.3.0 - 2026-10-04
 

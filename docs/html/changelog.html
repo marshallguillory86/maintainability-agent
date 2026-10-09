@@ -551,7 +551,11 @@ reports changes.</p>
   tracked file, every path and every commit message in a change against names
   held outside the tree, reports a match by file and line without repeating
   it, and fails when it has no names to check. It runs in the required
-  "Commit identity and signatures" job.</li>
+  "Commit identity and signatures" job. Binary files are read too, including
+  the documents inside office files.</li>
+<li>Its first run found three business documents, as HTML and .docx, naming an
+  organisation the earlier check already forbade. They are removed; they
+  were never in a published package.</li>
 </ul>
 <h2 id="430-2026-10-04">4.3.0 - 2026-10-04</h2>
 <p><strong>Code a change touches can be held to a stricter bar, and three analyzers

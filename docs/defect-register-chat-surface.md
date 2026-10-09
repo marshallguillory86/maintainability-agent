@@ -8783,6 +8783,13 @@ private repository") and the document named after one is renamed. The scan
 history's branch field is rewritten; nothing reads it as a key. Git history
 and the published packages are left as they are, by the owner's decision.
 
+The check's first run in CI found more: three versions of a business
+document, each as HTML and as .docx, naming an organisation the existing
+term list already forbade. They had been committed after that term was
+forbidden, past a check that read only added lines, and the .docx copies
+were binary, so a text scan would have skipped them too. They are removed
+from the tree and kept privately; they were never in a published package.
+
 *The class:* a public repository naming a private one. `tools/check_private_names.py`
 reads every tracked file, every tracked path and every commit message in a
 change, case-insensitively, against names that never live in the tree — the
@@ -8798,7 +8805,11 @@ message being found in any case, the report never repeating it, and no names
 failing; and `test_a_name_already_in_the_tree_fails_though_the_change_never_touched_it`
 in `tests/test_authorship_gates.py`, which runs the CI step itself.
 
-*Mutation:* every test failed before the tool existed; with the scan
+Binary files are read as well: each member of a zip (a .docx, .xlsx or
+.pptx is one), otherwise the file's bytes.
+
+*Mutation:* every test failed before the tool existed, and the office-file
+test failed while binary files were skipped; with the scan
 case-sensitive, the three that use a mixed-case name failed.
 
 ## Disposition

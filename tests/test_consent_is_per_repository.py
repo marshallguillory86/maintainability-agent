@@ -1,6 +1,6 @@
 """Consent to run a test command is given for one repository, not for every one.
 
-Found auditing private-repo: the audit ran this project's own suite —
+Found auditing a private application: the audit ran this project's own suite —
 `pytest -n auto --cov=maintainability_audit …` — against a JavaScript
 and Python tree it has nothing to do with, because the person's tier
 held a single `expected_commands.test`. Consent given while setting up

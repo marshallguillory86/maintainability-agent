@@ -92,7 +92,7 @@ def _clone_groups(
     A duplicated 200-line block appears as ~200 near-identical windows,
     each a distinct fingerprint sharing the same files at consecutive
     lines. Reported one row per window it was 861 line-items of one clone
-    (private-repo field test, plan-81dc6870 Class 4); reported one row per
+    (field test on a private repository, plan-81dc6870 Class 4); reported one row per
     clone it is a single finding carrying the occurrence count and the
     span. Two windows join the same group when they share a file at lines
     within ``block_size`` — overlapping or adjacent — so genuinely

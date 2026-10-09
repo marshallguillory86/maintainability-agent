@@ -520,7 +520,7 @@ class Finding:
 #: test code. `_discovery` reads this list too, plus the one name it
 #: declares for itself (`DISCOVERY_ONLY_TEST_DIRECTORIES`).
 #:
-#: `acceptance` and `e2e` joined in 3.9.1, after private-repo's sixty
+#: `acceptance` and `e2e` joined in 3.9.1, after a private application's sixty
 #: behaviour suites under `acceptance/` were graded as production: most
 #: of its duplication and oversized files, and 106 production files
 #: reported unpaired while those suites covered them at 98%. Only those

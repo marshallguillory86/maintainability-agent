@@ -16,7 +16,7 @@ Output is deterministic — no timestamps — so `tests/test_rendered_docs.py`
 can prove the committed copy matches its markdown. Change a document,
 re-run this, commit both.
 
-Adapted from the private-repo documentation renderer; styles in
+Adapted from another project's documentation renderer; styles in
 `tools/render_docs.css`.
 
 Usage: python3 tools/render_docs.py [output_dir]      # default: docs/html

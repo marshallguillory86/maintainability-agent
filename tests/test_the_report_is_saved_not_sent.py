@@ -2,7 +2,7 @@
 
 The report — HTML or Markdown — is the complete record, with the history
 charts drawn from the audit series. Chat is the bounded view. Found on
-private-repo's first chat-door run with 3.9.0: `format: "html"` returned
+A private application's first chat-door run with 3.9.0: `format: "html"` returned
 the whole 257 KB HTML inline beside the Markdown and work orders, 309 KB
 in one result. The host refused it for size and nothing was saved, so
 the report and its charts reached nobody.

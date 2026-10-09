@@ -600,7 +600,7 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
     else:
         # Chat always gets the bounded view, whatever was chosen. A chosen
         # file format is the complete report and is *saved*, never sent:
-        # 3.9.0 sent html inline beside this, 309 KB on private-repo's first
+        # 3.9.0 sent html inline beside this, 309 KB on a private application's first
         # run, which the host refused and nobody received (D216).
         result["report_markdown"] = render_markdown(report, complete=False)
     if target is not None:

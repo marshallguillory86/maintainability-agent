@@ -128,7 +128,7 @@ def opted_in_command(root: Path) -> list[str]:
     **Per repository.** The tier held one `expected_commands.test`, so
     consent given while setting up one repository ran that program in
     every repository audited afterwards — this project's own `pytest
-    --cov=maintainability_audit` against private-repo's JavaScript. The
+    --cov=maintainability_audit` against a private application's JavaScript. The
     command is now recorded against the repository it was consented for,
     and read only there.
     """
@@ -280,7 +280,7 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
 
 #: Coverage artifacts this reads, in order, each with its parser. Cobertura
 #: XML is what Python's coverage writes; `lcov.info` is what JavaScript's
-#: tools write (c8, nyc, jest, vitest) — private-repo measured with V8 and
+#: tools write (c8, nyc, jest, vitest) — a private application measured with V8 and
 #: left `test_effectiveness` unscored because only the first was read.
 COVERAGE_ARTIFACTS: tuple[str, ...] = ("coverage.xml", "coverage/lcov.info", "lcov.info")
 

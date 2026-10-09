@@ -12,6 +12,29 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.3.1 - 2026-10-09
+
+**This public repository no longer names its owner's private repositories,
+and a check now stops it happening again.** Nothing an audit measures or
+reports changes.
+
+### Fixed — private repositories were named in a public one (D227)
+
+- Three private repositories were named in the changelog, the defect
+  register, a document's file name, code comments, test docstrings and the
+  scan history. They are replaced with neutral wording, and
+  `docs/defects-from-a-field-audit-2026-09-26.md` is the renamed document.
+- The existing check read only the lines a change added, so a name already
+  in the tree was invisible to it. `tools/check_private_names.py` reads every
+  tracked file, every path and every commit message in a change against names
+  held outside the tree, reports a match by file and line without repeating
+  it, and fails when it has no names to check. It runs in the required
+  "Commit identity and signatures" job. Binary files are read too, including
+  the documents inside office files.
+- Its first run found three business documents, as HTML and .docx, naming an
+  organisation the earlier check already forbade. They are removed; they
+  were never in a published package.
+
 ## 4.3.0 - 2026-10-04
 
 **Code a change touches can be held to a stricter bar, and three analyzers
@@ -266,7 +289,7 @@ as a branch. The Shell page names every line shape that still over-counts.
 ### Fixed — consent to run a test command is per repository (D214)
 
 Consent given while setting up one repository ran that repository's test
-command in every repository audited afterwards: auditing private-repo executed
+command in every repository audited afterwards: auditing a private application executed
 this project's own `pytest --cov=maintainability_audit` against a JavaScript
 tree. Consent is now recorded against the repository it was given for, and a
 repository with none of its own runs nothing and says so. A new repository
@@ -358,7 +381,7 @@ Three risks the roadmap named, each of which failed silently:
 `docs/html/` now holds a reading copy of all the documentation: the root
 documents, all 60-odd under `docs/`, grouped by kind, and cards linking the
 standalone HTML pages already there. `tools/render_docs.py` produces it, adapted
-from the renderer the private-repo project uses. The markdown stays the source of truth.
+from another project's documentation renderer. The markdown stays the source of truth.
 
 The set of documents is read from git rather than a list, so a new document is
 picked up automatically and an untracked file is never published. The output has
@@ -4001,7 +4024,7 @@ score learned to be **withheld** when the evidence cannot support one, and
 external analyzers became the primary evidence with disagreement widening
 the range rather than being averaged (0.7.0); the surfaces converged on
 **one setup, three transports** with chat as the primary door (0.8–0.9);
-and a real-repo acceptance round (Phase 8, on private-repo) hardened the last
+and a real-repo acceptance round (Phase 8, on a private repository) hardened the last
 edges. What ships as 1.0 is the thing the whole project is for: a
 deterministic, offline, one-rubric audit whose output is a **bounded work
 order** — a copy-paste prompt per finding that tells an agent to fix

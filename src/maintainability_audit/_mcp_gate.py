@@ -103,7 +103,7 @@ def _choose_next(root: Path) -> dict[str, Any]:
     # a forced re-ask (that would break the configured-repo contract every
     # test and CI run depends on) — a discovery line, so `reconfigure` (which
     # does ask it) is a choice the operator knows to make. This is why a
-    # private-repo configured pre-Class-5 was never offered the option.
+    # A repository configured pre-Class-5 was never offered the option.
     if run_tests_pending(root):
         prompt += (
             " New since this repository was configured: an opt-in to run its "

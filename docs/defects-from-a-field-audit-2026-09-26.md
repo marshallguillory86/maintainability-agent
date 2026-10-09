@@ -1,7 +1,7 @@
-# Defects found auditing private-repo, 2026-09-26
+# Defects found auditing a private application, 2026-09-26
 
-Version 1.6.0 · 2026-09-27 · Filed from a real audit
-of `private-repo` (maintainability-agent 3.9.0, secure-code-agent 0.12.9).
+Version 1.6.1 · 2026-10-09 · Filed from a real audit
+of a private application repository (maintainability-agent 3.9.0, secure-code-agent 0.12.9).
 1 and 2 are closed as **D214** and **D215** in `defect-register-chat-surface.md`,
 each with a failing test written first. 3 closed as D216 and 4 shipped with D214, both in 3.10.0.
 
@@ -9,7 +9,7 @@ each with a failing test written first. 3 closed as D216 and 4 shipped with D214
 
 ## 1. The consented test command is one per person, so it runs in every repository
 
-**Seen.** private-repo's audit ran `pytest -n auto --cov=maintainability_audit
+**Seen.** The application's audit ran `pytest -n auto --cov=maintainability_audit
 --cov-report=xml:coverage.xml -q` -- this repository's own suite -- against a
 JavaScript and Python tree it has nothing to do with. pytest exited 5 (no tests
 collected), coverage said "no data was collected", and `test_effectiveness`
@@ -31,7 +31,7 @@ remote), so a repository with no consent of its own asks, rather than
 inheriting. Or, at the least, the run reports that the command it executed was
 consented for a different repository and scores nothing from it.
 
-**Also.** Coverage is read only from `coverage.xml`. private-repo measures with
+**Also.** Coverage is read only from `coverage.xml`. The application measures with
 V8 (`node scripts/coverage.mjs`) and has no Cobertura output, so even a correct
 command would leave `test_effectiveness` unscored. Worth deciding whether lcov
 or V8 JSON is read too, or saying in the report that the format was the reason.
@@ -43,7 +43,7 @@ audit of the second must not spawn the first's command.
 
 ## 2. `acceptance/` is not recognised as a test directory
 
-**Seen.** private-repo's behaviour tests live in `acceptance/<suite>/run.mjs`,
+**Seen.** The application's behaviour tests live in `acceptance/<suite>/run.mjs`,
 more than sixty suites that import and drive the production handlers. The audit
 treats every one of them as production code:
 
@@ -104,8 +104,8 @@ report behind a resource. A product decision before a fix.
 
 ## 4. The chat door and the terminal decide "first run" differently
 
-**Seen, from the code (no terminal transcript of the private-repo run exists).**
-The chat door asked no setup question on private-repo, which had no
+**Seen, from the code (no terminal transcript of that run exists).**
+The chat door asked no setup question on the application, which had no
 `maintainability-agent.json`: `_mcp_setup.setup_pending` counts a repository
 as configured when the person's tier exists, which the help page documents.
 The terminal asks whenever the repository file is absent
@@ -133,7 +133,7 @@ per repository — asked for every new one.
 
 - The markdown report is titled "Maintainability CI Report" on the chat door.
 - Running another repository's test command left an untracked `.coverage` in
-  private-repo's tree, outside the six declared artifacts (a consequence of
+  the application's tree, outside the six declared artifacts (a consequence of
   D214, now closed; inferred rather than proven to be the source).
 
 ## Resolution
@@ -165,6 +165,8 @@ reconfigure changes them.
 
 ## Changelog
 
+1.6.1 The application is no longer named.
+
 1.6.0 lcov read (3.11.0).
 
 1.5.0 3 closed as D216.
@@ -173,7 +175,7 @@ reconfigure changes them.
 
 1.3.0 Decisions recorded for 3 and 4.
 
-1.2.0 Filed 3–5 from auditing MA's first run on private-repo.
+1.2.0 Filed 3–5 from auditing MA's first run on the application.
 
 1.1.0 Resolved as D214 and D215; the test-roots decision recorded.
 

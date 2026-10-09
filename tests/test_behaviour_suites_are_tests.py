@@ -1,6 +1,6 @@
 """A behaviour suite under `acceptance/` is test code, not production code.
 
-Found auditing private-repo: more than sixty suites in `acceptance/<suite>/
+Found auditing a private application: more than sixty suites in `acceptance/<suite>/
 run.mjs`, each importing and driving the production handlers, were
 graded as production. 18 of 25 duplicate blocks and most oversized files
 were in them, and 106 production files were reported unpaired while those
@@ -82,7 +82,7 @@ def test_the_classifiers_agree_outside_the_list_too(name: str) -> None:
 
 
 def test_a_handler_driven_by_an_acceptance_suite_is_paired(tmp_path: Path) -> None:
-    """The closing test the defect asked for, on private-repo's own shape."""
+    """The closing test the defect asked for, on that application's own shape."""
     suite = tmp_path / "acceptance" / "login"
     suite.mkdir(parents=True)
     (suite / "run.mjs").write_text(

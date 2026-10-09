@@ -221,7 +221,7 @@ def test_reconfigure_preserves_hand_tuned_config_the_wizard_never_asks_about(
         "hard_gates": {"require_readme": True},
         "expected_commands": {"test": ["pytest", "-q"]},
         "risk_patterns": [{"name": "eval", "pattern": "eval\\("}],
-        "instruction_pack": {"project_name": "private-repo"},
+        "instruction_pack": {"project_name": "Fixture"},
     }
     (root / CONFIG_FILENAME).write_text(json.dumps(tuned), encoding="utf-8")
 
@@ -237,7 +237,7 @@ def test_reconfigure_preserves_hand_tuned_config_the_wizard_never_asks_about(
     assert saved["hard_gates"] == {"require_readme": True}
     assert saved["expected_commands"] == {"test": ["pytest", "-q"]}
     assert saved["risk_patterns"] == [{"name": "eval", "pattern": "eval\\("}]
-    assert saved["instruction_pack"] == {"project_name": "private-repo"}
+    assert saved["instruction_pack"] == {"project_name": "Fixture"}
     # Analyzer sub-keys beyond the three the wizard sets are preserved.
     assert saved["analyzers"]["concerns"] == ["all"]
     assert saved["analyzers"]["timeout_seconds"] == 120

@@ -78,6 +78,7 @@ def _step_scripts() -> dict[str, str]:
         "Each commit carries the repository's commit identity",
         "Each commit is signed",
         "Commit messages name only the commit identity",
+        "No private repository's name anywhere in the tree",
         "No forbidden term in the change",
     }
     return scripts
@@ -88,6 +89,8 @@ SCRIPTS = _step_scripts()
 #: Stands in for the FORBIDDEN_TERMS secret. A made-up term, deliberately:
 #: the real terms live only in the secret and must never be written here.
 EXAMPLE_TERM = "example-forbidden-term"
+#: The tree check's tool, resolved to this checkout (D227).
+TOOL = WORKFLOW.parents[2] / "tools" / "check_private_names.py"
 
 
 def _run_gate(
@@ -98,11 +101,12 @@ def _run_gate(
     ``terms`` is what the secret would hold; an empty string is the secret
     being unset.
     """
-    script = SCRIPTS[name].replace("${{ github.base_ref }}", "main")
+    script = (SCRIPTS[name].replace("${{ github.base_ref }}", "main")
+              .replace("tools/check_private_names.py", str(TOOL)))
     return subprocess.run(
         ["bash", "-c", script],
         cwd=repo,
-        env={**os.environ, "FORBIDDEN_TERMS": terms},
+        env={**os.environ, "FORBIDDEN_TERMS": terms, "PRIVATE_NAMES": terms},
         text=True,
         capture_output=True,
         check=False,
@@ -424,3 +428,36 @@ def test_the_forbidden_term_check_fails_closed_without_the_secret(
 
     assert result.returncode == 1
     assert "this check proved nothing" in result.stdout
+
+
+TREE_GATE = "No private repository's name anywhere in the tree"
+
+
+def test_a_name_already_in_the_tree_fails_though_the_change_never_touched_it(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    """The gap D227 closes: the step below it reads only the lines a change adds."""
+    repo, commit = signed_repo
+    (repo / "old.md").write_text(f"written long ago: {EXAMPLE_TERM}\n", encoding="utf-8")
+    _require_git(repo, "add", "old.md")
+    _require_git(repo, "commit", "-qm", "older")
+    _require_git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    commit()
+
+    result = _run_gate(repo, TREE_GATE)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "old.md:1" in result.stdout
+    assert EXAMPLE_TERM not in (result.stdout + result.stderr).lower()
+
+
+def test_the_tree_check_fails_closed_without_the_secrets(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    repo, commit = signed_repo
+    commit()
+
+    result = _run_gate(repo, TREE_GATE, terms="")
+
+    assert result.returncode == 2
+    assert "this check proved nothing" in result.stderr

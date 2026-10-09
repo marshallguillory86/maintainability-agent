@@ -19,16 +19,20 @@ nothing.
 
 from __future__ import annotations
 
+import importlib.util
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "tools"))
 
-import check_private_names as guard  # noqa: E402
+# Loaded from this checkout's file, not from whichever `tools/` is on the
+# path: the falsifier prover runs with the original checkout's `tools/` on
+# it, so an import by name reached the tool its proof had removed.
+_SPEC = importlib.util.spec_from_file_location("check_private_names", ROOT / "tools" / "check_private_names.py")
+guard = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(guard)
 
 # A made-up name: the real ones must never be written here.
 NAME = "Quillfeather"

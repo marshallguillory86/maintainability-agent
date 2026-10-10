@@ -23,6 +23,13 @@ commits that no longer exist. Those were removed deliberately and must not
 be re-created — a re-pushed tag would republish an old version over a
 newer one. A rule over all of history would fail on a decision.
 
+The 2026-10-09 rewrite, which removed private repository and employer names
+from every historical tree, did the same to the 26 releases from 3.7.6 to
+4.3.1. Their GitHub releases were immutable, so their tags could not be
+moved onto the rewritten commits, and were deleted with them. GitHub
+reserves an immutable release's tag name, so they cannot be re-created
+either. Those versions are on PyPI and are named below.
+
 What catches a backlog on its *first* step is one version back: the
 release before the one this tree ships must already carry its tag. 3.7.21
 could not have merged while 3.7.20 sat untagged.
@@ -37,6 +44,14 @@ from pathlib import Path
 from maintainability_audit import __version__ as VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
+#: Released to PyPI; tags deleted in the 2026-10-09 history rewrite and
+#: reserved by GitHub, so they can never carry a tag again.
+UNTAGGED_BY_DECISION = frozenset(
+    ["3.7.6", "3.7.7", "3.7.8", "3.7.9", "3.7.10", "3.7.11", "3.7.13", "3.7.14",
+     "3.7.15", "3.7.16", "3.7.17", "3.7.18", "3.7.19", "3.8.0", "3.8.1", "3.9.0",
+     "3.10.0", "3.11.0", "3.11.1", "3.12.0", "4.0.0", "4.0.1", "4.1.0", "4.2.0",
+     "4.3.0", "4.3.1"]
+)
 HEADING = re.compile(r"^## (\d+\.\d+\.\d+)\b", re.M)
 
 
@@ -80,7 +95,7 @@ def test_the_release_before_this_one_carries_its_tag() -> None:
     )
     previous = versions[1]
 
-    assert f"v{previous}" in tags, (
+    assert f"v{previous}" in tags or previous in UNTAGGED_BY_DECISION, (
         f"{previous} is the release before {VERSION} and was never tagged, so "
         "it never reached PyPI. Tag it before shipping another on top of it — "
         "3.7.20 through 3.7.30 stacked up this way, unreleased, including a "

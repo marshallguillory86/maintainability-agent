@@ -245,3 +245,23 @@ def test_a_config_the_analysis_already_refused_does_not_end_the_audit(tmp_path: 
     add_pipeline_results(analysis, root, {"analyzers": {"depth": "light", **_config()["analyzers"]}})
 
     assert not [i for i in analysis.coverage if i.tier == "pipeline"]
+
+
+def test_the_elicited_second_stage_says_it_is_asking_for_the_files(tmp_path: Path) -> None:
+    from maintainability_audit._mcp_setup import apply_answers
+    from maintainability_audit.mcp_server import _setup_stage_message
+
+    root = _repo(tmp_path, None)
+    apply_answers(root, {"pipeline_results": "declare"})
+
+    assert "SARIF" in _setup_stage_message(str(root))
+
+
+def test_declare_stays_with_the_repository_and_never_reaches_the_person(tmp_path: Path) -> None:
+    """Which files a build writes is a fact about one repository, not a preference."""
+    from maintainability_audit._mcp_setup import apply_answers
+    from maintainability_audit._user_config import user_config_answers
+
+    apply_answers(_repo(tmp_path, None), {"pipeline_results": "declare"})
+
+    assert "pipeline_requested" not in ((user_config_answers() or {}).get("analyzers") or {})

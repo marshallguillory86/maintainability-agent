@@ -194,7 +194,12 @@ def _persist_answers(root: Path, payload: dict[str, Any]) -> dict[str, Any]:
         Path(root), config_path,
         json.dumps(merged, indent=2, sort_keys=True) + "\n",
     )
-    write_user_answers(_keeping_consents(payload))
+    # Which SARIF files a build writes is a fact about this repository
+    # (Decision 17), so `declare` stays in its file and never carries to
+    # the person's next repository.
+    person = {**payload, "analyzers": {
+        key: value for key, value in payload["analyzers"].items() if key != "pipeline_requested"}}
+    write_user_answers(_keeping_consents(person))
     return load_config(str(config_path))
 
 

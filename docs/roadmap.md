@@ -102,7 +102,10 @@ one over explicitly with `--security-pillar PATH`.
 ## Next
 
 **The developer's own analyzers, read from their pipeline — decided
-2026-10-12, queued behind D228, not started.** The catalog holds some 760
+2026-10-12 (Decision 17); the first slice shipped in 4.4.0.** Declaration,
+setup on every surface, coverage and the pointer from every unexamined
+concern are in; whether those findings should score is the next decision,
+and is not taken. The catalog holds some 760
 tools and this one cannot run them all; the developer runs theirs in their
 own pipeline and this tool reads what they wrote. Found from a C# field
 report: C# is read by lizard and jscpd only, and the tools that cover the

@@ -108,6 +108,54 @@
           "type": "boolean",
           "default": false,
           "description": "Declared so this schema describes the key the runtime reads. Setting it in a repository file has no effect: acquisition is a decision the user makes in their own configuration tier, because it fetches and executes a package on their machine (product-intent P1, D35). A repository stating a preference here is ignored, not refused."
+        },
+        "pipeline_requested": {
+          "type": "boolean",
+          "description": "Set by first-run setup when the developer answered 'declare': their own pipeline writes SARIF, and the files are asked next (Decision 17)."
+        },
+        "pipeline_results": {
+          "type": "array",
+          "description": "SARIF files the developer's own build or pipeline already writes, read and never run (Decision 17). Each turns the concerns it covers from unexamined to examined for the languages its results name; its findings are listed and do not score.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "covers"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Relative to the repository; a path outside it is refused."
+              },
+              "covers": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "complexity",
+                    "duplication",
+                    "dead-code",
+                    "documentation",
+                    "structure",
+                    "testing",
+                    "style",
+                    "types",
+                    "metrics"
+                  ]
+                },
+                "description": "The concerns this file covers, chosen by its owner."
+              },
+              "languages": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Languages it covers when its results name no source file, e.g. a clean run: 'C#'."
+              }
+            }
+          }
         }
       },
       "additionalProperties": false

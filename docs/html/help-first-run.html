@@ -31,6 +31,7 @@ asks those fields as one structured form with visible defaults:</p>
 <li>license policy: permissive;</li>
 <li>economic context: skip;</li>
 <li>run this repository's test suite for coverage — <strong>this executes the tree</strong>: no;</li>
+<li>analyzer results your own build or pipeline already writes as SARIF: none;</li>
 <li>presentation: chat, markdown, html or json — default chat. <code>json</code> is the
   report dictionary itself, for a pipeline rather than a reader (D201);</li>
 <li>record scan history in this repository: yes.</li>
@@ -49,6 +50,18 @@ it had just declined.</p>
 used to live in scoring, so an impossible set was accepted here, written to
 both tiers, and surfaced two calls later as an error about a file the person
 had already left behind.</p>
+<p><strong>Your pipeline's SARIF files are a second question, asked only if you answer
+<code>declare</code></strong> (Decision 17). This tool runs a pinned handful of the analyzers it
+catalogs; the rest run where you already run them — a .NET build runs the
+Roslyn analyzers — and this reads what they wrote, never running them. The
+next call asks for each file and the concerns it covers, e.g.
+<code>artifacts/roslyn.sarif: style, documentation, dead-code</code>, files separated by
+<code>;</code>, paths relative to the repository. They are stored in
+<code>analyzers.pipeline_results</code>. A declared file turns its concerns from
+unexamined to examined for the languages its results name, its findings are
+listed, a file older than the last commit is called stale, and nothing in it
+moves the grade. A blank answer cancels. Answer <code>none</code> — the default — and you
+are never asked.</p>
 <p><strong>The test command is a second question set, asked only if you opt the suite
 in.</strong> Answer <code>yes</code> to running the suite and the next call asks one more:</p>
 <ul>

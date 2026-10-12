@@ -31,3 +31,25 @@ artifact-read adapters compose in one report without manufacturing
 agreement across unlike findings
 (`tests/test_d15_composition.py`; D15 in the
 [chat-surface defect register](../defect-register-chat-surface.md)).
+
+## Analyzers your own pipeline runs
+
+This tool runs a pinned handful of the analyzers it catalogs. The rest run
+where you already run them — a .NET build runs the Roslyn analyzers, and
+executes code from the repository it builds, which this tool never does — and
+it reads what they wrote (Decision 17). Declare each SARIF file in
+`maintainability-agent.json`, or answer `declare` at first-run setup:
+
+```json
+"analyzers": {"pipeline_results": [
+  {"path": "artifacts/roslyn.sarif", "covers": ["style", "documentation", "dead-code"]}
+]}
+```
+
+`covers` is yours to state, from the same concerns `analyzers.concerns`
+takes, because one file can mix rule families. A declared file turns those
+concerns from unexamined to examined for the languages its results name —
+add `"languages": ["C#"]` for a clean run that names no file. Its findings
+are listed and, for now, do not move the grade. The report says when the file
+is older than the last commit, and when a declared file cannot be read.
+

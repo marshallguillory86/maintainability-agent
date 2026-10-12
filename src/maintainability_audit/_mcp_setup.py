@@ -28,13 +28,14 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ._catalog import LICENSE_POLICIES, PRESENTATIONS
+from ._catalog import CONCERNS, LICENSE_POLICIES, PRESENTATIONS
 from ._setup_errors import SetupRequired as SetupRequired
 from ._setup_persist import (
     BOUNDS,
     _accepted,
     _apply_bounds,
     _apply_command,
+    _apply_pipeline_files,
     _economics_block,
     _is_bounds_only,
     _is_command_only,
@@ -88,6 +89,7 @@ def setup_questions(config: dict[str, Any]) -> list[dict[str, Any]]:
         },
         *_economics_questions(),
         *run_tests_question(),
+        pipeline_results_question(),
         {
             "name": "default_format",
             "prompt": "Default report presentation for this user.",
@@ -110,6 +112,48 @@ def setup_questions(config: dict[str, Any]) -> list[dict[str, Any]]:
             "default": "yes",
         },
     ]
+
+
+def pipeline_results_question() -> dict[str, Any]:
+    """Whether the developer's own pipeline writes analyzer results (Decision 17).
+
+    A choice, like every first-stage question; the files are the second
+    stage, asked only on `declare`. This tool runs a pinned handful of the
+    catalog, and the rest are run where they already run and read here.
+    """
+    return {
+        "name": "pipeline_results",
+        "prompt": (
+            "Does your own build or pipeline already write analyzer results as "
+            "SARIF (Roslyn analyzers, Semgrep, CodeQL...)? Declare names the files "
+            "next; this reads them and never runs the tools."
+        ),
+        "options": ["none", "declare"],
+        "default": "none",
+    }
+
+
+def pipeline_files_questions() -> list[dict[str, Any]]:
+    """The files, asked only of someone who said `declare`."""
+    return [{
+        "name": "pipeline_files",
+        "prompt": (
+            "Each SARIF file and the concerns it covers, from "
+            + ", ".join(CONCERNS) + " — e.g. `artifacts/roslyn.sarif: style, "
+            "documentation, dead-code`; separate files with `;`. Paths are "
+            "relative to the repository. Blank cancels."
+        ),
+        "options": [],
+        "default": "",
+    }]
+
+
+def pipeline_files_pending(root: Path) -> bool:
+    """`declare` was answered and no file is declared yet."""
+    discovered = discovered_config(Path(root))
+    stored = _read_config(Path(discovered)) if discovered is not None else None
+    analyzers = (stored or {}).get("analyzers") or {}
+    return bool(analyzers.get("pipeline_requested")) and not analyzers.get("pipeline_results")
 
 
 def economics_bound_questions() -> list[dict[str, Any]]:
@@ -178,6 +222,8 @@ def published_questions(root: Path | None = None) -> dict[str, dict[str, Any]]:
     for question in economics_bound_questions():
         questions[question["name"]] = question
     for question in test_command_questions(root):
+        questions[question["name"]] = question
+    for question in pipeline_files_questions():
         questions[question["name"]] = question
     return questions
 
@@ -248,6 +294,7 @@ def submittable_answer_names() -> frozenset[str]:
     names = {question["name"] for question in setup_questions({})}
     names.update(name for name, _, _ in BOUNDS)
     names.add("test_command")
+    names.add("pipeline_files")
     return frozenset(names)
 
 
@@ -258,6 +305,8 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
         return _apply_bounds(root, answers)
     if _is_command_only(answers):
         return _apply_command(root, answers)
+    if set(k for k, v in answers.items() if v is not None) == {"pipeline_files"}:
+        return _apply_pipeline_files(root, answers)
     payload: dict[str, Any] = {
         "version": 1,
         "analyzers": {
@@ -272,6 +321,8 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
         # suite; the command is a staged second ask.
         "test_execution": {"requested": _accepted(answers.get("run_tests", "no"))},
     }
+    if answers.get("pipeline_results") == "declare":
+        payload["analyzers"]["pipeline_requested"] = True
     economics = _economics_block(answers)
     if economics is not None:
         payload["economic_context"] = economics
@@ -406,7 +457,8 @@ def setup_pending(root: Path) -> bool:
         # rates for someone who wanted the scenario, or the test command for
         # someone who opted to run the suite. Both are stage two of an ask
         # already begun, not a new one.
-        return economics_bounds_pending(root) or test_command_pending(root)
+        return (economics_bounds_pending(root) or test_command_pending(root)
+                or pipeline_files_pending(root))
     # No repository file: the person's answers carry to it (first-run.md),
     # and it is asked only what is its own — its test command (Decision 4).
     return user_config_answers() is None or test_command_pending(root)
@@ -465,6 +517,8 @@ def staged_questions(root: Path | None = None) -> list[dict[str, Any]]:
         return economics_bound_questions()
     if root is not None and test_command_pending(root):
         return test_command_questions(root)
+    if root is not None and pipeline_files_pending(root):
+        return pipeline_files_questions()
     return setup_questions(load_config(None))
 
 

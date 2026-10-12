@@ -4,7 +4,9 @@
 <link rel="stylesheet" href="style.css"></head><body>
 <div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#analyzers-your-own-pipeline-runs">Analyzers your own pipeline runs</a></li>
+</ul>
 </div>
 </aside>
 <main><div class="meta">Help</div><h1>What the analyzer pool runs</h1><p>The validated analyzer pool is the primary evidence source. Built-in detectors
@@ -34,5 +36,21 @@ artifact-read adapters compose in one report without manufacturing
 agreement across unlike findings
 (<code>tests/test_d15_composition.py</code>; D15 in the
 <a href="defect-register-chat-surface.html">chat-surface defect register</a>).</p>
+<h2 id="analyzers-your-own-pipeline-runs">Analyzers your own pipeline runs</h2>
+<p>This tool runs a pinned handful of the analyzers it catalogs. The rest run
+where you already run them — a .NET build runs the Roslyn analyzers, and
+executes code from the repository it builds, which this tool never does — and
+it reads what they wrote (Decision 17). Declare each SARIF file in
+<code>maintainability-agent.json</code>, or answer <code>declare</code> at first-run setup:</p>
+<pre><code class="language-json">&quot;analyzers&quot;: {&quot;pipeline_results&quot;: [
+  {&quot;path&quot;: &quot;artifacts/roslyn.sarif&quot;, &quot;covers&quot;: [&quot;style&quot;, &quot;documentation&quot;, &quot;dead-code&quot;]}
+]}
+</code></pre>
+<p><code>covers</code> is yours to state, from the same concerns <code>analyzers.concerns</code>
+takes, because one file can mix rule families. A declared file turns those
+concerns from unexamined to examined for the languages its results name —
+add <code>"languages": ["C#"]</code> for a clean run that names no file. Its findings
+are listed and, for now, do not move the grade. The report says when the file
+is older than the last commit, and when a declared file cannot be read.</p>
 <footer>Rendered from <code>docs/help/analyzer-pool.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
 </main></div></body></html>

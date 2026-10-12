@@ -67,7 +67,8 @@ def coverage_notes(coverage: dict[str, Any]) -> list[str]:
             "**Nothing examined:** " + ", ".join(f"`{c}`" for c in unexamined) + ".",
             "",
             "These concerns are unmeasured, not clean. Install a tool that covers them, "
-            "or widen `analyzers.depth`, to have them reported.",
+            "widen `analyzers.depth`, or declare the SARIF your own build or pipeline "
+            "already writes in `analyzers.pipeline_results` to have them reported.",
             "",
         ])
 

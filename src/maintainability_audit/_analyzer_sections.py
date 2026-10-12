@@ -21,6 +21,7 @@ from ._documents import (
 )
 from ._environment import environment_work_order
 from ._metrics_types import FunctionMetric
+from ._pipeline_results import add_pipeline_results
 from ._pressures import (
     ExternalPressures,
     analyzer_pressures,
@@ -46,6 +47,9 @@ def analyzer_sections(
         return {"coverage": None, "findings": [], "measurements": {},
                 "pressures": None, "environment": []}
     analysis = analyze(root, config)
+    # Decision 17: the files the developer's own pipeline wrote, read
+    # beside what this run's analyzers produced.
+    add_pipeline_results(analysis, root, config)
     coverage = coverage_document(analysis)
     # P8: where the analyzer tier could not drive a dimension, say so on
     # the coverage document rather than leaving the built-in fallback to

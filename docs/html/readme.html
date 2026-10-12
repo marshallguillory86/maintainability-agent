@@ -36,7 +36,7 @@
 <p><strong>A deterministic, offline maintainability audit whose output is a <em>bounded
 work order</em> for an AI coding agent</strong> — a copy-paste prompt, per finding, that
 says <em>fix exactly these and refactor nothing else</em>. Chat-primary; CLI for CI.
-Version <strong>4.3.2</strong>.</p>
+Version <strong>4.4.0</strong>.</p>
 <blockquote>
 <h2 id="calibrated-against-201-mature-open-source-repositories-in-fifteen-languages"><strong>Calibrated against 201 mature open-source repositories in fifteen languages.</strong></h2>
 <p>Every grade is a measured multiple of real code, not a threshold someone
@@ -301,8 +301,11 @@ codebase is read rather than sampled — FFmpeg's 4,687 files, not the first
 <p>The analyzer is intentionally conservative and under-reports rather than
 over-reports: an unrecognized declaration costs one missed finding, never a
 cascade of false ones. Pair it with native tools (ESLint, Ruff, Radon, Semgrep,
-SonarQube, Qlty) rather than replacing them — their SARIF folds in via
-<code>--sarif-input</code>. Accuracy and limits: <a href="language-support.html">docs/language-support.md</a>.</p>
+SonarQube, Qlty) rather than replacing them. This tool runs a pinned handful of
+the analyzers it catalogs; the rest run where you already run them, and their
+SARIF is read, never run: declare each file in <code>analyzers.pipeline_results</code>
+with the concerns it covers (first-run setup asks), and those concerns count as
+examined for the languages it names. One-off files fold in via <code>--sarif-input</code>. Accuracy and limits: <a href="language-support.html">docs/language-support.md</a>.</p>
 <h2 id="language-support">Language support</h2>
 <p><strong>Be clear-eyed: the tool does not support every language equally, and on an
 unrecognized language it under-reports rather than fails.</strong> Coverage has two layers.</p>
@@ -511,7 +514,7 @@ instead of an invokable skill:
 <a href="ide-agent-integration.html#invokable-skill--slash-command">docs/ide-agent-integration.md</a>.</p>
 <h2 id="github-action">GitHub Action</h2>
 <p>This repo ships <code>action.yml</code>, usable as a composite action:</p>
-<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v4.3.2
+<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v4.4.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

@@ -288,6 +288,11 @@ MEASUREMENT_PATH = (
 #: Reachable from the list above and deliberately not in it, each with the
 #: reason it cannot move a stored row.
 NOT_FINGERPRINTED: dict[str, str] = {
+    "_pipeline_results": (
+        "reads SARIF files the developer's own pipeline wrote (Decision 17); "
+        "it adds coverage rows and listed findings and no measurement, and the "
+        "corpus declares none, so no stored row can depend on it"
+    ),
     "_changed_code_policy": (
         "reached through config, which validates it at load; it runs after the "
         "measurements, reads them, and writes only report['policy'] (Decision 15), "

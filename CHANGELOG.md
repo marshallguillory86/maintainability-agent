@@ -12,10 +12,23 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
-## 4.3.2 - 2026-10-12
+## 4.4.0 - 2026-10-12
 
-**A report says when an analyzer's findings do not move the grade.** No
+**The analyzers your own pipeline already runs can now close a coverage gap,
+and a report says when an analyzer's findings do not move the grade.** No
 published number moves.
+
+### Added — your pipeline's SARIF, read and never run (Decision 17)
+
+- This tool runs a pinned handful of the analyzers it catalogs. The rest run
+  where you already run them, and their SARIF is read: declare each file in
+  `analyzers.pipeline_results` with the concerns it covers. First-run setup
+  asks on every surface — `declare`, then the files. A declared file turns
+  those concerns from unexamined to examined for the languages its results
+  name; its findings are listed and do not score. A file older than the last
+  commit is called stale, and one that cannot be read is reported as such.
+- Where concerns are unexamined, the coverage section now names this route
+  beside installing a tool.
 
 ### Fixed — findings the grade does not use looked ignored (D228)
 

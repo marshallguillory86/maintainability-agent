@@ -41,6 +41,10 @@ from ._runner import Outcome, Probe, ToolResult, run
 from ._selection import Selected, select_runnable
 from .config import acquisition_permitted
 
+#: Sources outside this package: an analyzer it ran, or a file the
+#: developer's own pipeline wrote (Decision 17). Built-ins are not here.
+EXTERNAL_TIERS = ("analyzer", "pipeline")
+
 
 @dataclass(frozen=True)
 class ToolCoverage:
@@ -152,7 +156,7 @@ class Analysis:
         """
         covered: dict[str, set[str]] = {name: set() for name in self.languages}
         for item in self.coverage:
-            if not item.contributed or item.tier != "analyzer":
+            if not item.contributed or item.tier not in EXTERNAL_TIERS:
                 continue
             concerns = self._concerns_of(item.concepts)
             for name, slug in self.languages.items():
@@ -217,7 +221,7 @@ class Analysis:
             if name in self.scored_languages
         ]
         if not scored:
-            return self._concerns_from("analyzer")
+            return self._concerns_from("analyzer") | self._concerns_from("pipeline")
         return set.intersection(*scored)
 
     def single_source_concerns(self) -> list[str]:

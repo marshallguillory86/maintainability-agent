@@ -166,7 +166,38 @@ def settings_from(config: dict[str, Any]) -> dict[str, Any]:
     if unknown:
         raise PolicyError(f"unknown concerns {sorted(unknown)}; expected from {list(CONCERNS)}")
     settings["timeout_seconds"] = _bounded_timeout(settings["timeout_seconds"])
+    settings["pipeline_results"] = _pipeline_results(settings.get("pipeline_results"))
     return settings
+
+
+def pipeline_results_from_answer(answer: str) -> list[dict[str, Any]]:
+    """The first-run answer, `path: concern, concern; path: concern`, as declarations."""
+    entries = []
+    for part in (answer or "").split(";"):
+        if not part.strip():
+            continue
+        path, _, covers = part.partition(":")
+        entries.append({"path": path.strip(),
+                        "covers": [c.strip() for c in covers.split(",") if c.strip()]})
+    return _pipeline_results(entries)
+
+
+def _pipeline_results(declared: Any) -> list[dict[str, Any]]:
+    """Each file the developer's pipeline writes, and what it covers (Decision 17).
+
+    Refused rather than skipped: a declaration that silently examined
+    nothing would leave a concern unexamined with the operator believing
+    it covered.
+    """
+    entries = list(declared or [])
+    for entry in entries:
+        if not isinstance(entry, dict) or not isinstance(entry.get("path"), str) or not entry["path"]:
+            raise PolicyError(f"analyzers.pipeline_results entry {entry!r} needs a `path`")
+        covers = entry.get("covers")
+        if not covers or not isinstance(covers, list) or set(covers) - set(CONCERNS):
+            raise PolicyError(
+                f"analyzers.pipeline_results {entry['path']!r} needs `covers` from {list(CONCERNS)}")
+    return entries
 
 
 #: The widest per-analyzer wall clock a configured value may ask for. An

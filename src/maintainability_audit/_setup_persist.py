@@ -194,7 +194,12 @@ def _persist_answers(root: Path, payload: dict[str, Any]) -> dict[str, Any]:
         Path(root), config_path,
         json.dumps(merged, indent=2, sort_keys=True) + "\n",
     )
-    write_user_answers(_keeping_consents(payload))
+    # Which SARIF files a build writes is a fact about this repository
+    # (Decision 17), so `declare` stays in its file and never carries to
+    # the person's next repository.
+    person = {**payload, "analyzers": {
+        key: value for key, value in payload["analyzers"].items() if key != "pipeline_requested"}}
+    write_user_answers(_keeping_consents(person))
     return load_config(str(config_path))
 
 
@@ -212,3 +217,24 @@ def _keeping_consents(payload: dict[str, Any]) -> dict[str, Any]:
     kept = dict(payload)
     kept["test_execution"] = {**(payload.get("test_execution") or {}), "commands": recorded}
     return kept
+
+
+def _apply_pipeline_files(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
+    """Merge the declared files into the repository's config; blank cancels."""
+    from ._catalog import PolicyError, pipeline_results_from_answer
+    from ._setup_errors import SetupRequired
+
+    try:
+        declared = pipeline_results_from_answer(str(answers.get("pipeline_files") or ""))
+    except PolicyError as malformed:
+        raise SetupRequired(str(malformed)) from None
+    discovered = discovered_config(Path(root))
+    stored = dict(_read_config(Path(discovered)) or {}) if discovered else {}
+    analyzers = dict(stored.get("analyzers") or {})
+    analyzers["pipeline_requested"] = bool(declared)
+    if declared:
+        analyzers["pipeline_results"] = declared
+    stored["analyzers"] = analyzers
+    config_path = Path(root) / CONFIG_FILENAME
+    write_bounded(Path(root), config_path, json.dumps(stored, indent=2, sort_keys=True) + "\n")
+    return load_config(str(config_path))

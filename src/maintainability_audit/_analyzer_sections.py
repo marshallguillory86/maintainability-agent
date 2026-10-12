@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from ._analysis import analyze
-from ._criteria_scope import built_in_readings
+from ._criteria_scope import built_in_readings, reported_not_scored
 from ._documents import (
     coverage_document,
     findings_document,
@@ -21,6 +21,7 @@ from ._documents import (
 )
 from ._environment import environment_work_order
 from ._metrics_types import FunctionMetric
+from ._pipeline_results import add_pipeline_results
 from ._pressures import (
     ExternalPressures,
     analyzer_pressures,
@@ -46,6 +47,9 @@ def analyzer_sections(
         return {"coverage": None, "findings": [], "measurements": {},
                 "pressures": None, "environment": []}
     analysis = analyze(root, config)
+    # Decision 17: the files the developer's own pipeline wrote, read
+    # beside what this run's analyzers produced.
+    add_pipeline_results(analysis, root, config)
     coverage = coverage_document(analysis)
     # P8: where the analyzer tier could not drive a dimension, say so on
     # the coverage document rather than leaving the built-in fallback to
@@ -58,6 +62,7 @@ def analyzer_sections(
     built_in = built_in_readings(function_metrics, prefix)
     coverage["dimensions_declined"] = list(
         declined_dimensions(analysis.measurements, False, built_in, prefix))
+    coverage["reported_not_scored"] = reported_not_scored(coverage)
     return {
         "coverage": coverage,
         # ADR 006 §2c: what did not run and what it would take, for the

@@ -49,6 +49,7 @@ from ._mcp_resources import _report_markdown as _report_markdown  # noqa: PLC041
 from ._mcp_setup import SetupRequired as SetupRequired
 from ._mcp_setup import (
     economics_bounds_pending,
+    pipeline_files_pending,
     setup_pending,
     setup_schema,
     test_command_pending,
@@ -163,6 +164,11 @@ def _setup_stage_message(root: str) -> str:
         return (
             "Running the test suite needs the exact command to run "
             "(e.g. `pytest -q`). Leave it blank to cancel."
+        )
+    if pipeline_files_pending(root):
+        return (
+            "Name each SARIF file your own build or pipeline writes, and the "
+            "concerns it covers. Leave it blank to cancel."
         )
     return (
         "First run in this repository and no configuration found — "

@@ -101,6 +101,23 @@ one over explicitly with `--security-pillar PATH`.
 
 ## Next
 
+**The developer's own analyzers, read from their pipeline — decided
+2026-10-12 (Decision 17); the first slice shipped in 4.4.0.** Declaration,
+setup on every surface, coverage and the pointer from every unexamined
+concern are in; whether those findings should score is the next decision,
+and is not taken. The catalog holds some 760
+tools and this one cannot run them all; the developer runs theirs in their
+own pipeline and this tool reads what they wrote. Found from a C# field
+report: C# is read by lizard and jscpd only, and the tools that cover the
+rest (Roslyn analyzers, Roslynator, `dotnet format`) run inside a .NET build
+this tool will not run. `--sarif-input` already reads such output, but on
+the CLI only, listed and never scored, and nothing points a reader to it.
+The work: declare the files in `maintainability-agent.json` and ask for
+them in first-run setup on every surface; let their findings count toward
+the concepts they cover; say in the coverage section, beside every
+unexamined concept, that a file from the developer's own pipeline would
+close it; and state the model in product intent.
+
 **The recalibration**, *as this entry read on 2026-09-04, before it shipped.* It was the only scheduled work, and everything that touched measurement queued behind it — six then-unanchored languages (Swift, COBOL, Go, Rust, PHP, Ruby), plus the two built-in changes recorded in [corpus policy](#corpus-policy-recalibrate-once-after-the-remaining-scanners-land): deleting the per-language cyclomatic regexes, and merging analyzer evidence per concept rather than per dimension.
 
 **Shipped in 3.0.0 on 2026-09-08.** All four steps: the corpus re-measured, the per-language criterion scope fixed (D137), the criterion set completed from the built-in tier per concept, and the corpus extended from 112 repositories to 180 and from eight anchored languages to thirteen. `CALIBRATION_C` moved 8.7161 to 4.2565 and 33 of the 112 repositories in both corpora change grade, which is what made it a major.

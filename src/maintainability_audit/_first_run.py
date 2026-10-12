@@ -111,6 +111,7 @@ def maybe_prompt_first_run(root: Path, explicit_config: str | None) -> None:
             "Add the economic scenario (loaded labor rate per hour) beside "
             "the score? Skip leaves money out of reports. "
             "(include/skip) [skip]: ", ("include", "skip"), "skip"),
+        "pipeline_results": _ask_pipeline_results(),  # Decision 17
     }
     apply_answers(root, answers)
     print(f"Wrote {root / CONFIG_FILENAME}")
@@ -338,3 +339,27 @@ def _record_test_command(root: Path, config: dict, answer: str) -> None:
     if not answer:
         config["test_execution"] = {"requested": False}
     print(f"Wrote {target}")
+
+
+def _ask_pipeline_results() -> str:
+    """Whether the developer's own pipeline writes SARIF; the files are the
+    second stage, `maybe_prompt_pipeline_files` (Decision 17)."""
+    from ._mcp_setup import pipeline_results_question
+
+    return _ask(pipeline_results_question()["prompt"] + " (none/declare) [none]: ",
+                ("none", "declare"), "none")
+
+
+def maybe_prompt_pipeline_files(root: Path, config: dict) -> dict:
+    """The CLI half of the Decision 17 second stage: at a TTY, after `declare`.
+
+    Returns the configuration this run should use, so files declared at the
+    prompt are read by the audit that asked for them.
+    """
+    from ._mcp_setup import pipeline_files_pending, pipeline_files_questions
+    from ._setup_persist import _apply_pipeline_files
+
+    if not _stdin_is_a_tty() or not pipeline_files_pending(root):
+        return config
+    answer = input(pipeline_files_questions()[0]["prompt"] + " ").strip()
+    return _apply_pipeline_files(root, {"pipeline_files": answer})

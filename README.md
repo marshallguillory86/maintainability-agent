@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **4.3.1**.
+Version **4.4.0**.
 
 > ## **Calibrated against 201 mature open-source repositories in fifteen languages.**
 >
@@ -330,8 +330,11 @@ codebase is read rather than sampled — FFmpeg's 4,687 files, not the first
 The analyzer is intentionally conservative and under-reports rather than
 over-reports: an unrecognized declaration costs one missed finding, never a
 cascade of false ones. Pair it with native tools (ESLint, Ruff, Radon, Semgrep,
-SonarQube, Qlty) rather than replacing them — their SARIF folds in via
-`--sarif-input`. Accuracy and limits: [docs/language-support.md](docs/language-support.md).
+SonarQube, Qlty) rather than replacing them. This tool runs a pinned handful of
+the analyzers it catalogs; the rest run where you already run them, and their
+SARIF is read, never run: declare each file in `analyzers.pipeline_results`
+with the concerns it covers (first-run setup asks), and those concerns count as
+examined for the languages it names. One-off files fold in via `--sarif-input`. Accuracy and limits: [docs/language-support.md](docs/language-support.md).
 
 ## Language support
 
@@ -467,7 +470,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v4.3.1
+- uses: marshallguillory86/maintainability-agent@v4.4.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

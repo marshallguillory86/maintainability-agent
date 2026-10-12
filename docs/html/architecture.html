@@ -71,6 +71,7 @@
   subgraph assembly[&quot;assembly — builds the report, calls the scorer once&quot;]
     report[&quot;report&quot;]
     _analysis[&quot;_analysis&quot;]
+    _pipeline_results[&quot;_pipeline_results&quot;]
     _documents[&quot;_documents&quot;]
     _analyzer_sections[&quot;_analyzer_sections&quot;]
     _economics[&quot;_economics&quot;]
@@ -227,7 +228,7 @@
 </tr>
 <tr>
 <td><strong>assembly</strong></td>
-<td>Running the scan, running the analyzer pool (<code>_analysis</code>) and stating what it found (<code>_documents</code>), the environment work order composed from coverage (<code>_environment</code>), recording the built-in detectors as their own source tier (<code>_built_ins</code>), ordering the work by risk against effort and recomputing each item's worth (<code>_work_order</code>, weights in <code>_work_order_weights</code>), deciding which of those items an agent is handed and which are withheld for a design decision (<code>_handoff</code>, split from <code>_work_order</code> at its file gate — D208), assembling the report dict, invoking the scorer once</td>
+<td>Running the scan, running the analyzer pool (<code>_analysis</code>), reading the SARIF the developer's own pipeline wrote (<code>_pipeline_results</code>, Decision 17) and stating what it found (<code>_documents</code>), the environment work order composed from coverage (<code>_environment</code>), recording the built-in detectors as their own source tier (<code>_built_ins</code>), ordering the work by risk against effort and recomputing each item's worth (<code>_work_order</code>, weights in <code>_work_order_weights</code>), deciding which of those items an agent is handed and which are withheld for a design decision (<code>_handoff</code>, split from <code>_work_order</code> at its file gate — D208), assembling the report dict, invoking the scorer once</td>
 <td>anything below. <code>_conformance</code> compares a diff against the work order the report already produced — or against an ask the operator supplies (<code>--ask</code>, Decision 13) — and <code>_oracle</code> reads the diff's test files for the shapes that make a suite unable to fail (Decision 12) — assembly because it composes from a finished report rather than measuring a tree, and it may never reach scoring: whether a diff was obedient is a fact about an agent, not evidence about the code's condition. <code>_ratchet</code> compares the newest scan with the previous <em>comparable</em> one, refusing to subtract across an instrument change — two scans taken under different calibration cannot be differenced, and <code>_scan_history.segments</code> already owns that rule</td>
 </tr>
 <tr>
@@ -443,7 +444,7 @@ The plain functions keep raising the domain types — <code>InvalidAuditArgument
 <ul>
 <li><strong>A new detector</strong> belongs in scanners, returns findings, and adds a count to <code>report_summary</code>. It becomes scored only by being given weight in <code>_formula.CATEGORY_ASPECTS</code>; an aspect with no weight fails the build.</li>
 <li><strong>A new output format</strong> belongs in presentation and reads the report dictionary. It must not compute a score.</li>
-<li><strong>A new external analyzer</strong> is a leaf adapter in <code>_tool_adapters</code> (or a declared tool in the catalog) that <code>_analysis</code> invokes through <code>_runner</code>. SARIF ingest (<code>--sarif-input</code>) remains a side-channel and does not feed the point estimate. A metric adapter that completes a concept set does: <code>_primary_pressures</code> substitutes that reading. Per <a href="adapters.html">adapters</a>, do not pretend every analyzer has the same semantics.</li>
+<li><strong>A new external analyzer</strong> is a leaf adapter in <code>_tool_adapters</code> (or a declared tool in the catalog) that <code>_analysis</code> invokes through <code>_runner</code>. SARIF ingest (<code>--sarif-input</code>) remains a side-channel and does not feed the point estimate. A SARIF the developer's own pipeline wrote, declared in <code>analyzers.pipeline_results</code>, is read by <code>_pipeline_results</code> into the coverage section: it examines its declared concerns for the languages it names and, in its first slice, does not score (Decision 17). A metric adapter that completes a concept set does: <code>_primary_pressures</code> substitutes that reading. Per <a href="adapters.html">adapters</a>, do not pretend every analyzer has the same semantics.</li>
 </ul>
 <h2 id="where-the-design-is-going">Where the design is going</h2>
 <p>What has not landed is listed under <a href="#known-debt">Known debt</a>. Remaining direction of travel lives in <a href="target-architecture.html">target architecture</a>. Status of each decision lives in the <a href="decisions.html">register</a>. This file does not carry a second copy of either.</p>

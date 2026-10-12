@@ -115,6 +115,22 @@ pillar was not measured and gives the install command. A <code>security-pillar.j
 in the audited tree is no longer trusted on its own authority; a pipeline hands
 one over explicitly with <code>--security-pillar PATH</code>.</p>
 <h2 id="next">Next</h2>
+<p><strong>The developer's own analyzers, read from their pipeline — decided
+2026-10-12 (Decision 17); the first slice shipped in 4.4.0.</strong> Declaration,
+setup on every surface, coverage and the pointer from every unexamined
+concern are in; whether those findings should score is the next decision,
+and is not taken. The catalog holds some 760
+tools and this one cannot run them all; the developer runs theirs in their
+own pipeline and this tool reads what they wrote. Found from a C# field
+report: C# is read by lizard and jscpd only, and the tools that cover the
+rest (Roslyn analyzers, Roslynator, <code>dotnet format</code>) run inside a .NET build
+this tool will not run. <code>--sarif-input</code> already reads such output, but on
+the CLI only, listed and never scored, and nothing points a reader to it.
+The work: declare the files in <code>maintainability-agent.json</code> and ask for
+them in first-run setup on every surface; let their findings count toward
+the concepts they cover; say in the coverage section, beside every
+unexamined concept, that a file from the developer's own pipeline would
+close it; and state the model in product intent.</p>
 <p><strong>The recalibration</strong>, <em>as this entry read on 2026-09-04, before it shipped.</em> It was the only scheduled work, and everything that touched measurement queued behind it — six then-unanchored languages (Swift, COBOL, Go, Rust, PHP, Ruby), plus the two built-in changes recorded in <a href="#corpus-policy-recalibrate-once-after-the-remaining-scanners-land">corpus policy</a>: deleting the per-language cyclomatic regexes, and merging analyzer evidence per concept rather than per dimension.</p>
 <p><strong>Shipped in 3.0.0 on 2026-09-08.</strong> All four steps: the corpus re-measured, the per-language criterion scope fixed (D137), the criterion set completed from the built-in tier per concept, and the corpus extended from 112 repositories to 180 and from eight anchored languages to thirteen. <code>CALIBRATION_C</code> moved 8.7161 to 4.2565 and 33 of the 112 repositories in both corpora change grade, which is what made it a major.</p>
 <p>Two of the four did not land as written, and both are recorded above with the measurement that withdrew them: deleting the per-language cyclomatic regexes would have cost the bare install half its decision points, and the per-concept merge had no analyzer-to-analyzer content to merge. COBOL is not anchored and will not be.</p>

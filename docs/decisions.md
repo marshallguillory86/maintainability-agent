@@ -351,6 +351,30 @@ honoured. Reporting a language's areas as not applicable when no catalog
 tool reads it was considered and not chosen; it would change the evidence
 rules rather than add evidence.
 
+### Decision 17: The developer's own analyzers are read from their pipeline
+
+- Recorded: 2026-10-12
+- Status: **Accepted, chosen by the maintainer 2026-10-12.** First slice shipped in 4.4.0: declaration, setup, coverage; findings do not score.
+
+The catalog holds some 760 tools and this one runs a pinned handful. The
+rest are run where they already run — the developer's own build or
+pipeline — and this tool reads what they wrote. Found from a C# field
+report: C# is read by lizard and jscpd only, and the tools that cover the
+rest of it (Roslyn analyzers, Roslynator, `dotnet format`) run inside a .NET
+build, which executes code from the repository it builds and which no
+adapter here runs. `--sarif-input` already read such files, on the CLI only,
+listed and never scored, and nothing pointed a reader to it.
+
+A SARIF file is declared in `analyzers.pipeline_results` with the concerns
+it covers, chosen by the developer: one file can mix style, documentation
+and dead-code rules, and inferring a concern per rule would need a mapping
+per tool, which is the problem this avoids. A declared file turns those
+concerns from unexamined to examined, for the languages its results name;
+its findings are listed, and in this slice do not score, so no published
+number moves. Its age against the last commit is stated. First-run setup
+asks for it on every surface. Running the build was considered and not
+chosen.
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

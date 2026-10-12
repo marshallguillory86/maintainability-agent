@@ -13,6 +13,7 @@ from ._first_run import (
     ask_presentation,
     maybe_prompt_economics,
     maybe_prompt_first_run,
+    maybe_prompt_pipeline_files,
     maybe_prompt_test_command,
 )
 from ._gates import (
@@ -179,7 +180,7 @@ def _interactive_config(root: Path, config_arg: str | None) -> dict:
         ) from unreadable
     maybe_prompt_economics(root, config)
     maybe_prompt_test_command(root, config)
-    return config
+    return maybe_prompt_pipeline_files(root, config)
 
 
 #: Flags `--staged` will not silently ignore. Each one asks for

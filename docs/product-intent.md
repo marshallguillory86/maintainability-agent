@@ -120,6 +120,15 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 | P7 | A score is issued only where enough was examined to support it, and never as a consequence of not looking | A number a reader with the repository in front of them would call absurd |
 | P8 | Every report states what examined it — which analyzers ran, which did not, and what measured each value | A reported value with no attributable source, or a run whose coverage cannot be recovered from its output |
 
+### The developer's own analyzers are read, not run
+
+Decided 2026-10-12 ([Decision 17](decisions.md)). The catalog holds some 760
+analyzers and this tool runs a pinned handful. It does not set out to run the
+rest: the developer runs their own tools where they already run them, in their
+own build or pipeline, and this tool reads the SARIF they wrote and states what
+it examined. Running a project's build to obtain that output is not this
+tool's job — a build executes the repository it builds.
+
 ### Why P1 was amended
 
 P1 read "no network, no LLM" when the tool was pure computation over a file tree. Under [ADR 006](adr-006-analyzer-evidence.md) it invokes external analyzers, and some of those live in ecosystems whose normal installation path is a fetch — `npx` for the Node tools most obviously.

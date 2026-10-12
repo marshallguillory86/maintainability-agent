@@ -39,7 +39,9 @@ engineering changes, not as permission to refactor unrelated code.
      names and no others, then call again with `setup_answers` — a
      mapping of each question's `name` to the option chosen. Answering
      one stage can open the next (`include` for the economic scenario
-     asks the three rates; `yes` to the suite asks for the command),
+     asks the three rates; `yes` to the suite asks for the command;
+     `declare` for pipeline results asks which SARIF files the
+     developer's own build writes and what each covers),
      and the next reply carries whatever is still outstanding.
      Answering does *not* start an audit.
    - **Configured** — the result carries `choice_needed`: run the
@@ -76,7 +78,13 @@ engineering changes, not as permission to refactor unrelated code.
    secure-code-agent scanner that is not installed, its install
    command, and the concepts installing it restores. It can arrive
    with `choice_needed`, before the run, so the user can install
-   first. The agent never installs tools itself.
+   first. The agent never installs tools itself. Where the coverage
+   section lists concerns as unexamined — C# style, documentation and
+   dead code, for instance — tell the user their own build or pipeline
+   can cover them: the SARIF it already writes is declared in
+   `analyzers.pipeline_results` (or by answering `declare` in setup)
+   and read, never run. This tool runs a pinned handful of analyzers;
+   the rest run where the developer already runs them.
 6. Re-run the audit and any native tests/lints required by the repo,
    then report what ran, whether the gate passed, and any remaining
    false positives or follow-ups.

@@ -13,6 +13,7 @@
 </li>
 <li><a href="#who-it-is-for">Who it is for</a></li>
 <li><a href="#what-it-promises">What it promises</a><ul>
+<li><a href="#the-developers-own-analyzers-are-read-not-run">The developer's own analyzers are read, not run</a></li>
 <li><a href="#why-p1-was-amended">Why P1 was amended</a></li>
 <li><a href="#why-p7-and-p8-were-added">Why P7 and P8 were added</a></li>
 </ul>
@@ -178,6 +179,13 @@ standard below.</p>
 </tr>
 </tbody>
 </table></div>
+<h3 id="the-developers-own-analyzers-are-read-not-run">The developer's own analyzers are read, not run</h3>
+<p>Decided 2026-10-12 (<a href="decisions.html">Decision 17</a>). The catalog holds some 760
+analyzers and this tool runs a pinned handful. It does not set out to run the
+rest: the developer runs their own tools where they already run them, in their
+own build or pipeline, and this tool reads the SARIF they wrote and states what
+it examined. Running a project's build to obtain that output is not this
+tool's job — a build executes the repository it builds.</p>
 <h3 id="why-p1-was-amended">Why P1 was amended</h3>
 <p>P1 read "no network, no LLM" when the tool was pure computation over a file tree. Under <a href="adr-006-analyzer-evidence.html">ADR 006</a> it invokes external analyzers, and some of those live in ecosystems whose normal installation path is a fetch — <code>npx</code> for the Node tools most obviously.</p>
 <p>Two honest options existed: refuse to acquire tools, which makes the multi-language story depend on every user hand-installing a dozen ecosystems; or provide an explicit acquisition choice and disclose it. The latter was chosen, so the promise separates <strong>analysis</strong> from <strong>acquisition</strong>. Analysis still touches no network and no model: <strong>this agent does not transmit the audited source.</strong> Acquisition defaults off. When a user enables <code>analyzers.acquire_tools</code>, a missing tool may be fetched and its version is recorded in the report so the run remains reproducible.</p>

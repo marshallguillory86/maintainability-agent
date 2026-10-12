@@ -19,6 +19,7 @@
 <li><a href="#decision-14-secure-code-agents-behaviour-is-built-there">Decision 14: secure-code-agent's behaviour is built there</a></li>
 <li><a href="#decision-15-policy-as-code-tightens-the-gate-never-the-grade">Decision 15: Policy-as-code tightens the gate, never the grade</a></li>
 <li><a href="#decision-16-shell-is-measured-by-shellcheck">Decision 16: Shell is measured by ShellCheck</a></li>
+<li><a href="#decision-17-the-developers-own-analyzers-are-read-from-their-pipeline">Decision 17: The developer's own analyzers are read from their pipeline</a></li>
 </ul>
 </li>
 <li><a href="#statuses">Statuses</a></li>
@@ -430,6 +431,28 @@ pinned, availability probed with a flag it has, output parsed, exclusions
 honoured. Reporting a language's areas as not applicable when no catalog
 tool reads it was considered and not chosen; it would change the evidence
 rules rather than add evidence.</p>
+<h3 id="decision-17-the-developers-own-analyzers-are-read-from-their-pipeline">Decision 17: The developer's own analyzers are read from their pipeline</h3>
+<ul>
+<li>Recorded: 2026-10-12</li>
+<li>Status: <strong>Accepted, chosen by the maintainer 2026-10-12.</strong> First slice shipped in 4.4.0: declaration, setup, coverage; findings do not score.</li>
+</ul>
+<p>The catalog holds some 760 tools and this one runs a pinned handful. The
+rest are run where they already run — the developer's own build or
+pipeline — and this tool reads what they wrote. Found from a C# field
+report: C# is read by lizard and jscpd only, and the tools that cover the
+rest of it (Roslyn analyzers, Roslynator, <code>dotnet format</code>) run inside a .NET
+build, which executes code from the repository it builds and which no
+adapter here runs. <code>--sarif-input</code> already read such files, on the CLI only,
+listed and never scored, and nothing pointed a reader to it.</p>
+<p>A SARIF file is declared in <code>analyzers.pipeline_results</code> with the concerns
+it covers, chosen by the developer: one file can mix style, documentation
+and dead-code rules, and inferring a concern per rule would need a mapping
+per tool, which is the problem this avoids. A declared file turns those
+concerns from unexamined to examined, for the languages its results name;
+its findings are listed, and in this slice do not score, so no published
+number moves. Its age against the last commit is stated. First-run setup
+asks for it on every surface. Running the build was considered and not
+chosen.</p>
 <h2 id="statuses">Statuses</h2>
 <ul>
 <li><strong>Proposed</strong> — written up with options; not yet decided. May be edited freely.</li>

@@ -192,6 +192,9 @@ SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_anchor", "_calibra
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.
 ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
+            # Decision 17: composes the developer's pipeline SARIF into the
+            # analysis, beside `_analysis`; it measures nothing.
+            "_pipeline_results",
             # Which work-order items an agent is handed, split from
             # `_work_order` at its own file gate (D208). Assembly for the
             # same reason `_work_order` is: it composes from a finished

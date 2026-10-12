@@ -40,6 +40,29 @@ DECLARATION_CRITERIA: tuple[tuple[str, str, str], ...] = (
 # `risk` and `gates` are configured policy with no external equivalent.
 ANALYZER_DIMENSIONS: tuple[str, ...] = ("declarations",)
 
+# Concepts an analyzer can report whose dimension is scored from the
+# built-in detectors only. Their findings are listed, never scored.
+BUILT_IN_SCORED_CONCEPTS: dict[str, str] = {"duplication": "duplication", "file_lines": "file_size"}
+
+
+def reported_not_scored(coverage: dict) -> list[dict]:
+    """Analyzer findings listed in the report that do not move the grade.
+
+    A field report on a C# repository read jscpd's 439 duplicate blocks,
+    listed beside a duplication grade computed from the built-in detector,
+    as the analyzer's output being ignored. The design was right and the
+    page did not say it (P8).
+    """
+    return [
+        {"tool": entry["tool"], "concept": concept,
+         "dimension": BUILT_IN_SCORED_CONCEPTS[concept], "findings": entry["findings"]}
+        for entry in (coverage.get("by_outcome") or {}).get("ran", [])
+        if entry.get("tier") == "analyzer" and entry.get("findings")
+        for concept in entry.get("concepts", [])
+        if concept in BUILT_IN_SCORED_CONCEPTS
+        and BUILT_IN_SCORED_CONCEPTS[concept] not in ANALYZER_DIMENSIONS
+    ]
+
 
 def declaration_concepts_missing(covered: set[str]) -> tuple[str, ...]:
     """Criteria the analyzers did not supply, in rubric order.

@@ -12,6 +12,19 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.3.2 - 2026-10-12
+
+**A report says when an analyzer's findings do not move the grade.** No
+published number moves.
+
+### Fixed — findings the grade does not use looked ignored (D228)
+
+- jscpd's duplicate blocks are listed in the findings, and the duplication
+  grade is computed from the built-in detector, by design. On a C# repository
+  that read as the analyzer's output being ignored. The coverage section now
+  names each analyzer whose findings are listed but not scored, with the
+  count and the dimension.
+
 ## 4.3.1 - 2026-10-09
 
 **This public repository no longer names its owner's private repositories,

@@ -6,6 +6,10 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#432-2026-10-12">4.3.2 - 2026-10-12</a><ul>
+<li><a href="#fixed-findings-the-grade-does-not-use-looked-ignored-d228">Fixed — findings the grade does not use looked ignored (D228)</a></li>
+</ul>
+</li>
 <li><a href="#431-2026-10-09">4.3.1 - 2026-10-09</a><ul>
 <li><a href="#fixed-private-repositories-were-named-in-a-public-one-d227">Fixed — private repositories were named in a public one (D227)</a></li>
 <li><a href="#fixed-every-ci-job-tests-against-the-pinned-lizard">Fixed — every CI job tests against the pinned lizard</a></li>
@@ -537,6 +541,17 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="432-2026-10-12">4.3.2 - 2026-10-12</h2>
+<p><strong>A report says when an analyzer's findings do not move the grade.</strong> No
+published number moves.</p>
+<h3 id="fixed-findings-the-grade-does-not-use-looked-ignored-d228">Fixed — findings the grade does not use looked ignored (D228)</h3>
+<ul>
+<li>jscpd's duplicate blocks are listed in the findings, and the duplication
+  grade is computed from the built-in detector, by design. On a C# repository
+  that read as the analyzer's output being ignored. The coverage section now
+  names each analyzer whose findings are listed but not scored, with the
+  count and the dimension.</li>
+</ul>
 <h2 id="431-2026-10-09">4.3.1 - 2026-10-09</h2>
 <p><strong>This public repository no longer names its owner's private repositories,
 and a check now stops it happening again.</strong> Nothing an audit measures or

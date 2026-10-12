@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from ._analysis import analyze
-from ._criteria_scope import built_in_readings
+from ._criteria_scope import built_in_readings, reported_not_scored
 from ._documents import (
     coverage_document,
     findings_document,
@@ -58,6 +58,7 @@ def analyzer_sections(
     built_in = built_in_readings(function_metrics, prefix)
     coverage["dimensions_declined"] = list(
         declined_dimensions(analysis.measurements, False, built_in, prefix))
+    coverage["reported_not_scored"] = reported_not_scored(coverage)
     return {
         "coverage": coverage,
         # ADR 006 §2c: what did not run and what it would take, for the

@@ -48,6 +48,17 @@ def coverage_notes(coverage: dict[str, Any]) -> list[str]:
             "",
         ])
 
+    for unused in coverage.get("reported_not_scored") or []:
+        # The count sits in the findings beside a grade computed from
+        # something else; without this a reader takes it as ignored.
+        lines.extend([
+            f"**`{unused['tool']}` reported {unused['findings']} `{unused['concept']}` "
+            f"findings; they are listed and their count does not move the grade:** the "
+            f"`{unused['dimension']}` dimension is scored from the built-in "
+            "detectors only.",
+            "",
+        ])
+
     unexamined = coverage["concepts_unexamined"]
     if unexamined:
         # The point of the whole section. Silence about a concern is not

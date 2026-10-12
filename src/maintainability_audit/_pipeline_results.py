@@ -81,19 +81,23 @@ def _read_one(root: Path, declared: dict[str, Any]) -> tuple[ToolCoverage, list]
 
 def _languages(payload: dict[str, Any], declared: Any) -> tuple[str, ...]:
     """Catalog languages of the source files the results and artifacts name."""
-    uris = [
-        (location.get("physicalLocation") or {}).get("artifactLocation", {}).get("uri", "")
-        for run in payload.get("runs", [])
-        for result in run.get("results", [])
-        for location in (result.get("locations") or [])
-    ] + [
-        (artifact.get("location") or {}).get("uri", "")
-        for run in payload.get("runs", [])
-        for artifact in run.get("artifacts", [])
-    ]
-    names = {KNOWN_SOURCE_SUFFIXES.get(PurePosixPath(uri).suffix.lower()) for uri in uris} | set(declared)
+    names = {KNOWN_SOURCE_SUFFIXES.get(PurePosixPath(uri).suffix.lower())
+             for uri in _uris(payload)} | set(declared)
     slugs = sorted({CATALOG_LANGUAGE[name] for name in names if name in CATALOG_LANGUAGE})
     return tuple(slugs) or NO_LANGUAGE
+
+
+def _uris(payload: dict[str, Any]) -> list[str]:
+    """Every file a result points at, and every artifact the run lists."""
+    uris = []
+    for run in payload.get("runs", []):
+        for result in run.get("results", []):
+            for location in result.get("locations") or []:
+                physical = location.get("physicalLocation") or {}
+                uris.append((physical.get("artifactLocation") or {}).get("uri", ""))
+        for artifact in run.get("artifacts", []):
+            uris.append((artifact.get("location") or {}).get("uri", ""))
+    return uris
 
 
 def _driver(payload: dict[str, Any]) -> str:

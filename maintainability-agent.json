@@ -1,1 +1,0 @@
-{"version": 1, "analyzers": {"run": true, "concerns": ["types"], "depth": "baseline", "license_policy": "permissive", "acquire_tools": false, "allow_tools": ["lizard"], "deny_tools": [], "deny_license_classes": [], "deny_concerns": [], "timeout_seconds": 5}, "paths": {"include_extensions": [".ex"]}}

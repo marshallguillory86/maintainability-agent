@@ -512,6 +512,8 @@ def _write_guard_argvs(slug, root):
 
 @pytest.mark.parametrize("slug", sorted(ADAPTERS))
 def test_no_adapter_is_built_to_write(slug, tmp_path):
+    """Covers existing behaviour: no adapter has ever passed a write-enabling flag; D229's
+    rewrite came from repository config, and this keeps a future adapter from adding one."""
     adapter = ADAPTERS[slug]()
     for argv in _write_guard_argvs(slug, tmp_path):
         found = [token for token in argv if token in _WRITE_TOKENS]
@@ -529,6 +531,8 @@ class _QuietProbe(BaseAdapter):
 
 
 def test_an_analyzer_that_changes_nothing_reports_no_integrity_failure(tmp_path, monkeypatch):
+    """Covers existing behaviour: a clean run raised nothing before D229 either; this holds
+    that the integrity check never turns an unchanged tree into a failure."""
     for args in (("init", "-q"), ("config", "user.email", "t@example.com"), ("config", "user.name", "t")):
         subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
     (tmp_path / "mod.py").write_text("import os\n", encoding="utf-8")

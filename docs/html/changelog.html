@@ -6,6 +6,7 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#441-2026-10-14">4.4.1 - 2026-10-14</a></li>
 <li><a href="#440-2026-10-12">4.4.0 - 2026-10-12</a><ul>
 <li><a href="#added-your-pipelines-sarif-read-and-never-run-decision-17">Added — your pipeline's SARIF, read and never run (Decision 17)</a></li>
 <li><a href="#fixed-findings-the-grade-does-not-use-looked-ignored-d228">Fixed — findings the grade does not use looked ignored (D228)</a></li>
@@ -542,6 +543,25 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="441-2026-10-14">4.4.1 - 2026-10-14</h2>
+<p><strong>An audit can no longer rewrite the repository it audits.</strong> No published
+number moves.</p>
+<ul>
+<li><strong>The defect.</strong> The ruff adapter ran <code>ruff check</code> without <code>--no-fix</code>, and
+  ruff honours a repository's own <code>fix = true</code>. An audit of a repository
+  configured that way rewrote 102 of its files — unused imports deleted,
+  imports re-sorted — and broke its test suites. MA promises it never edits
+  source; that promise had an unguarded path. The fortitude adapter had the
+  same shape.</li>
+<li><strong>The fix.</strong> ruff and fortitude run with <code>--no-fix</code>.</li>
+<li><strong>The class.</strong> The audited tree's tracked state is snapshotted around every
+  analyzer run. Any change raises <code>RepositoryModifiedError</code>, naming the files,
+  and the audit returns no grade: a score for code that is no longer what was
+  audited is not a score. Over MCP it is a refusal you can act on, and the
+  adapter backstop cannot swallow it. A parametrized test forbids
+  write-enabling flags (<code>--fix</code>, <code>--write</code>, <code>--in-place</code>, <code>--apply</code> and the
+  like) in every adapter's command line.</li>
+</ul>
 <h2 id="440-2026-10-12">4.4.0 - 2026-10-12</h2>
 <p><strong>The analyzers your own pipeline already runs can now close a coverage gap,
 and a report says when an analyzer's findings do not move the grade.</strong> No

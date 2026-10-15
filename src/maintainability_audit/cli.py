@@ -393,6 +393,15 @@ def _action_before_config(
     """
     if args.install_skill:
         return _install_skill_action(args)
+    if args.update:
+        from ._self_update import update_action
+
+        return update_action()
+    if args.install_updater:
+        from ._self_update import install_updater
+
+        home = Path(args.home).expanduser() if args.home else Path.home()
+        return install_updater(home, launchctl=not args.no_launchctl)
     if args.install_precommit_hook:
         from ._precommit_install import install_precommit_hook
 

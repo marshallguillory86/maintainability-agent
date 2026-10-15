@@ -12,6 +12,21 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.4.2 - 2026-10-15
+
+**`--update` keeps the install current without ever moving it backwards.**
+No published number moves.
+
+- **The defect (D230).** The local updater was a script outside the product.
+  It trusted PyPI's lagging `info.version` and once downgraded 3.7.29 to
+  3.7.19, and it never re-synced the skill after an upgrade.
+- **`--update`** lets the installer resolve the newest release, refuses a
+  lower result, re-syncs the skill, and says when the MCP server needs a
+  restart.
+- **`--install-updater`** schedules it hourly as a macOS launch agent named
+  `io.github.marshallguillory86.maintainability-agent.update`, removing the
+  legacy agent so two never run.
+
 ## 4.4.1 - 2026-10-14
 
 **An audit can no longer rewrite the repository it audits.** No published

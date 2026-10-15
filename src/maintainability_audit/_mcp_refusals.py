@@ -18,6 +18,7 @@ D48.
 
 from __future__ import annotations
 
+from ._analysis import RepositoryModifiedError
 from ._catalog import PolicyError
 from ._mcp_audit import InvalidAuditArgument, PathNotAllowed
 from ._mcp_setup import SetupRequired
@@ -37,6 +38,11 @@ ANTICIPATED_REFUSALS = (
     # type and `PathNotAllowed` both derive from it alongside the
     # internal ones that must stay crashes.
     ConfigUnreadable,
+    # An analyzer changed the audited repository. The message names the
+    # changed files and says to report the adapter: actionable, and a
+    # grade must never be returned for code that is no longer what was
+    # audited.
+    RepositoryModifiedError,
 )
 
 __all__ = ["ANTICIPATED_REFUSALS"]

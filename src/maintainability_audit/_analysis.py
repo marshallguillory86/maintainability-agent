@@ -19,6 +19,7 @@ clean result.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -40,6 +41,7 @@ from ._metrics_types import KNOWN_SOURCE_SUFFIXES, Finding, Measurement
 from ._runner import Outcome, Probe, ToolResult, run
 from ._selection import Selected, select_runnable
 from .config import acquisition_permitted
+from .git_tools import GitCommandFailed, probe_git, run_git
 
 #: Sources outside this package: an analyzer it ran, or a file the
 #: developer's own pipeline wrote (Decision 17). Built-ins are not here.
@@ -356,6 +358,43 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     return analysis
 
 
+class RepositoryModifiedError(Exception):
+    """An analyzer changed the repository it was auditing.
+
+    The audit never edits source. A tool that writes to the audited tree
+    (ruff honouring a repository's `fix = true` rewrote 102 files of
+    an audited repository on 2026-10-14) fails the audit loudly rather than handing back
+    a grade for code that is no longer what was audited.
+    """
+
+
+def _tracked_state(root: Path) -> dict[str, str] | None:
+    """Each tracked file that differs from HEAD, by a hash of its diff.
+
+    None when `root` is not a git work tree: there is nothing to compare
+    against, so nothing is claimed.
+    """
+    if not probe_git(["rev-parse", "--is-inside-work-tree"], root):
+        return None
+    try:
+        diff = run_git(["diff", "HEAD", "--no-ext-diff", "--binary"], root, strip=False)
+    except GitCommandFailed:
+        return None
+    state: dict[str, str] = {}
+    for block in diff.split("\ndiff --git "):
+        if not block.strip():
+            continue
+        header = block.split("\n", 1)[0].removeprefix("diff --git ")
+        name = header.split(" b/", 1)[-1]
+        state[name] = hashlib.sha256(block.encode("utf-8", "replace")).hexdigest()
+    return state
+
+
+def _changed_paths(before: dict[str, str], after: dict[str, str]) -> list[str]:
+    return sorted(path for path in set(before) | set(after)
+                  if before.get(path) != after.get(path))
+
+
 def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
              analysis: Analysis, excludes: Sequence[str] = (),
              inventory: Any = None) -> ToolCoverage:
@@ -371,6 +410,9 @@ def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
     """
     try:
         return _attempt(root, adapter, probe, timeout, analysis, excludes, inventory)
+    except RepositoryModifiedError:
+        # Not an adapter defect to record quietly: the audited tree changed.
+        raise
     except Exception as error:  # noqa: BLE001 - the backstop is the point
         return ToolCoverage(
             slug=adapter.slug, outcome="failed", concepts=tuple(adapter.concepts),
@@ -494,12 +536,19 @@ def _run_batches(adapter: Any, root: Path, excludes: Sequence[str],
     invocations = planned(root, excludes) if planned else [adapter.invocation(root, excludes=excludes)]
     results: list[ToolResult] = []
     parsed: list[Extraction] = []
+    before = _tracked_state(root)
     for invocation in invocations:
         result = run(adapter.slug, invocation, timeout_seconds=timeout)
         results.append(result)
         parsed.append(adapter.parse(result))
         if not result.usable:
             break
+    after = _tracked_state(root) if before is not None else None
+    if before is not None and after is not None and after != before:
+        changed = _changed_paths(before, after)
+        raise RepositoryModifiedError(
+            f"{adapter.slug} modified the audited repository: {', '.join(changed)}. "
+            "The audit never edits source; restore these files and report the adapter.")
     if len(results) == 1:
         return results[0], parsed[0]
     return _merged_result(results, len(invocations)), _merged_extraction(parsed)

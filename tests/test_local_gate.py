@@ -73,10 +73,10 @@ def test_the_gate_runs_from_the_repository_root() -> None:
 
 def test_the_gate_lints_then_runs_the_whole_suite_with_coverage_floor() -> None:
     lines = _logical_lines(GATE)
-    lint = [i for i, line in enumerate(lines) if line == "ruff check src tests tools"]
+    lint = [i for i, line in enumerate(lines) if line == "python3 -m ruff check src tests tools"]
     suite = [i for i, line in enumerate(lines)
              if re.search(r"python3 -m pytest\b", line)]
-    assert lint, f"no `ruff check src tests tools` line: {lines}"
+    assert lint, f"no `python3 -m ruff check src tests tools` line: {lines}"
     assert suite, f"no `python3 -m pytest` line: {lines}"
     assert lint[0] < suite[0], "lint must run before the suite"
     command = lines[suite[0]]

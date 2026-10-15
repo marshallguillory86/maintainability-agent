@@ -6,5 +6,6 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-ruff check src tests tools
+# Through python3: a git hook's PATH need not include where ruff's script lives.
+python3 -m ruff check src tests tools
 python3 -m pytest -n auto -q --cov=maintainability_audit --cov-fail-under=92

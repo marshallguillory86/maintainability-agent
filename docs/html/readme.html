@@ -36,7 +36,7 @@
 <p><strong>A deterministic, offline maintainability audit whose output is a <em>bounded
 work order</em> for an AI coding agent</strong> — a copy-paste prompt, per finding, that
 says <em>fix exactly these and refactor nothing else</em>. Chat-primary; CLI for CI.
-Version <strong>4.4.1</strong>.</p>
+Version <strong>4.4.2</strong>.</p>
 <blockquote>
 <h2 id="calibrated-against-201-mature-open-source-repositories-in-fifteen-languages"><strong>Calibrated against 201 mature open-source repositories in fifteen languages.</strong></h2>
 <p>Every grade is a measured multiple of real code, not a threshold someone
@@ -499,7 +499,8 @@ and is now the dominant failure in the probe, which is why the count moved. The
 bounded, symlink-refusing write works through a <em>file descriptor</em>, so a validated
 path cannot be swapped for a symlink before the write lands — Windows has no
 equivalent and the portable rewrite is the hole. <strong>An unsupported platform never
-buys green by weakening the supported ones.</strong></p>
+buys green by weakening the supported ones.</strong> Windows is not run in CI at all
+(Decision 18); a Windows user who hits a problem can open an issue or a pull request.</p>
 <h2 id="invokable-skill-slash-command">Invokable skill / slash command</h2>
 <p>This repo ships a portable skill under
 <a href="../../skills/maintainability-agent"><code>skills/maintainability-agent/</code></a>, so
@@ -507,14 +508,18 @@ buys green by weakening the supported ones.</strong></p>
 Copilot Chat:</p>
 <pre><code class="language-bash">maintainability-agent --install-skill        # writes ~/.claude/skills
 </code></pre>
-<p>Re-run it after every upgrade — a drifted skill teaches agents a dead workflow,
+<p><code>maintainability-agent --update</code> upgrades the install to the newest release —
+never a downgrade — re-syncs the skill, and says when the MCP server needs a
+restart; <code>maintainability-agent --install-updater</code> runs it hourly (macOS launch
+agent). Run <code>--install-skill</code> by hand after any other upgrade — a drifted skill
+teaches agents a dead workflow,
 so a differing installed copy is refused with the list of differences. Per-host
 install destinations, and <code>--init-agent-standards</code> for always-on guidance
 instead of an invokable skill:
 <a href="ide-agent-integration.html#invokable-skill--slash-command">docs/ide-agent-integration.md</a>.</p>
 <h2 id="github-action">GitHub Action</h2>
 <p>This repo ships <code>action.yml</code>, usable as a composite action:</p>
-<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v4.4.1
+<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v4.4.2
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

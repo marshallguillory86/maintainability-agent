@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **4.4.1**.
+Version **4.4.2**.
 
 > ## **Calibrated against 201 mature open-source repositories in fifteen languages.**
 >
@@ -446,7 +446,8 @@ and is now the dominant failure in the probe, which is why the count moved. The
 bounded, symlink-refusing write works through a *file descriptor*, so a validated
 path cannot be swapped for a symlink before the write lands — Windows has no
 equivalent and the portable rewrite is the hole. **An unsupported platform never
-buys green by weakening the supported ones.**
+buys green by weakening the supported ones.** Windows is not run in CI at all
+(Decision 18); a Windows user who hits a problem can open an issue or a pull request.
 
 ## Invokable skill / slash command
 
@@ -459,7 +460,11 @@ Copilot Chat:
 maintainability-agent --install-skill        # writes ~/.claude/skills
 ```
 
-Re-run it after every upgrade — a drifted skill teaches agents a dead workflow,
+`maintainability-agent --update` upgrades the install to the newest release —
+never a downgrade — re-syncs the skill, and says when the MCP server needs a
+restart; `maintainability-agent --install-updater` runs it hourly (macOS launch
+agent). Run `--install-skill` by hand after any other upgrade — a drifted skill
+teaches agents a dead workflow,
 so a differing installed copy is refused with the list of differences. Per-host
 install destinations, and `--init-agent-standards` for always-on guidance
 instead of an invokable skill:
@@ -470,7 +475,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v4.4.1
+- uses: marshallguillory86/maintainability-agent@v4.4.2
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

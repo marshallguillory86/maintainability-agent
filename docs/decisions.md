@@ -375,6 +375,18 @@ number moves. Its age against the last commit is stated. First-run setup
 asks for it on every surface. Running the build was considered and not
 chosen.
 
+### Decision 18: Windows is not tested in CI
+
+- Recorded: 2026-10-15
+- Status: **Accepted, chosen by the maintainer 2026-10-15.** His words: "just turn this shit off. I am not going to test windows ... windows users can submit PRs or defects to the repo if they want it fixed."
+
+The `windows-latest` probe failed on every run — the POSIX-only calls the
+README names — and blocked nothing, so it cost run time on every pull request
+and proved only what was already known. It is deleted, not rescheduled. The
+platform statement stands: POSIX is supported, Windows is not claimed. A
+Windows problem arrives as an issue or a pull request and is weighed then;
+nothing in the supported platforms is weakened to make Windows pass.
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

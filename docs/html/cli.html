@@ -183,6 +183,22 @@ maintainability-agent mcp --allow-root /absolute/path/to/repository
 <td>Where <code>--install-skill</code> writes (default <code>~/.claude/skills</code>).</td>
 </tr>
 <tr>
+<td><code>--update</code></td>
+<td>Upgrade this install to the newest release and exit. The installer resolves the version (<code>uv pip install --upgrade</code>, or pip without uv), so it never moves backwards; a lower result is refused and named. On an upgrade it re-syncs the skill (<code>--install-skill</code>) and records that the MCP server, which holds the code it loaded at spawn, needs a restart (D230).</td>
+</tr>
+<tr>
+<td><code>--install-updater</code></td>
+<td>Write the macOS launch agent <code>io.github.marshallguillory86.maintainability-agent.update</code>, which runs <code>--update</code> hourly, load it, and exit. Removes the legacy <code>com.marshallguillory.maintainability-agent-update</code> agent so two updaters never run.</td>
+</tr>
+<tr>
+<td><code>--home</code></td>
+<td>With <code>--install-updater</code>: the home directory to write the launch agent into (default <code>~</code>).</td>
+</tr>
+<tr>
+<td><code>--no-launchctl</code></td>
+<td>With <code>--install-updater</code>: write the launch agent without loading it.</td>
+</tr>
+<tr>
 <td><code>--force-skill</code></td>
 <td>With <code>--install-skill</code>: overwrite a differing installed copy and remove files the package no longer ships. Without it, a differing copy is refused with the list of differences against the packaged payload.</td>
 </tr>

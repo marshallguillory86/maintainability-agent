@@ -149,3 +149,32 @@ def test_the_composite_action_still_passes_every_input_through() -> None:
         assert variable in text, (
             f"input {name!r} is declared but never reaches the command"
         )
+
+
+REQUIRED_CHECKS = (
+    "Verify (lint, deps, tests, coverage)",
+    "Audit (maintainability + security)",
+    "Falsifiers fail without their fix",
+    "Commit identity and signatures",
+)
+
+
+def test_every_required_check_runs_on_pull_requests() -> None:
+    """Covers existing behaviour: a required check that skips on pull_request
+    deadlocks every merge, so none may be excluded when the CI is trimmed."""
+    from _workflow_text import jobs, triggers
+
+    found: dict[str, tuple[str, str, bool]] = {}
+    for workflow in ("quality-gates.yml", "authorship.yml"):
+        for job in jobs(workflow).values():
+            found[job["name"]] = (workflow, job["if"], "pull_request" in triggers(workflow))
+    for name in REQUIRED_CHECKS:
+        assert name in found, f"no job is named {name!r}"
+        workflow, condition, triggered = found[name]
+        assert triggered, f"{workflow} does not trigger on pull_request for {name!r}"
+        # Runs on pull_request when unconditional, when it names
+        # pull_request without negating it, or when it only excludes push.
+        runs = (not condition
+                or ("pull_request" in condition and "!= 'pull_request'" not in condition)
+                or condition.strip() == "github.event_name != 'push'")
+        assert runs, f"{name!r} is excluded from pull_request by: {condition}"

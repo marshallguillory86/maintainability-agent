@@ -357,6 +357,9 @@ ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audi
          "_gates",
          "_grant_ledger", "_setup_persist", "_setup_errors",
          "_skill_install", "_mcp_gate", "_mcp_resources",
+         # --update / --install-updater (D230): an operator action that
+         # installs and exits, entry beside `_skill_install`.
+         "_self_update",
          # Writes the git pre-commit hook and exits. Entry beside
          # `_skill_install` for the same reason: it performs a setup
          # action against the user's machine, which no layer below

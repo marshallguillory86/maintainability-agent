@@ -213,6 +213,24 @@ def _add_setup_actions(parser: argparse.ArgumentParser) -> None:
              "core.hooksPath.",
     )
     parser.add_argument(
+        "--update", action="store_true",
+        help="Upgrade this install to the newest release (never a downgrade), "
+             "re-sync the skill, and say when the MCP server needs a restart.",
+    )
+    parser.add_argument(
+        "--install-updater", action="store_true",
+        help="Write the hourly launch agent that runs --update (macOS), "
+             "replacing the legacy one.",
+    )
+    parser.add_argument(
+        "--home", default=None, metavar="DIR",
+        help="With --install-updater: the home directory to write into (default: ~).",
+    )
+    parser.add_argument(
+        "--no-launchctl", action="store_true",
+        help="With --install-updater: write the agent without loading it.",
+    )
+    parser.add_argument(
         "--skills-dir", default=None, metavar="DIR",
         help="Where --install-skill writes (default: ~/.claude/skills).",
     )

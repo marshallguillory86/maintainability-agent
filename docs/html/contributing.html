@@ -25,6 +25,11 @@
 <li>Keep changes small and reviewable.</li>
 </ul>
 <h2 id="local-verification">Local Verification</h2>
+<p>Run <code>tools/install-local-gate.sh</code> once per clone. It installs a pre-push hook
+that runs <code>tools/local-gate.sh</code> — lint and the whole suite under the coverage
+floor — before every push. CI runs the suite once, on Linux; the pre-push gate
+is how macOS is verified (Decision 18), so a push from a Mac that skips it
+leaves macOS unverified.</p>
 <pre><code class="language-bash"># Install dev extras (ruff + pip-audit + jsonschema + pytest-cov + PyYAML
 # for tools/build_catalog.py). The shipped package does not depend on PyYAML.
 # secure-code-agent, which every audit runs (D177), is installed alongside,

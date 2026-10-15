@@ -146,6 +146,8 @@ WRITES_A_FILE = {
     "--comment-output", "--prompt-output", "--attestation-output",
     "--agent-instructions-output", "--hostile-prompt-output",
     "--instructions-output-dir", "--skills-dir", "--target-path",
+    # The home --install-updater writes its launch agent into (D230).
+    "--home",
 }
 NOT_AN_OPERATOR_PATH = {
     # A revspec, not a file.
@@ -160,6 +162,7 @@ NOT_AN_OPERATOR_PATH = {
     "--fail-on-gate", "--fail-on-new", "--fail-on-out-of-scope",
     "--fail-on-regression", "--force-skill", "--format", "--help",
     "--init-agent-standards", "--install-precommit-hook", "--install-skill",
+    "--update", "--install-updater", "--no-launchctl",
     "--record-history", "--staged", "--target", "--transformation",
     "--version", "--work",
 }

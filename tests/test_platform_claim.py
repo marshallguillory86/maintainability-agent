@@ -102,6 +102,38 @@ def _gates_on_windows(body: list[str]) -> bool:
     return runs_windows and not non_blocking
 
 
+def _local_gate_commands() -> list[str]:
+    """Commands in the local gate script, continuations joined, comments dropped."""
+    path = ROOT / "tools" / "local-gate.sh"
+    if not path.is_file():
+        return []
+    text = path.read_text(encoding="utf-8").replace("\\\n", " ")
+    return [
+        " ".join(line.split()) for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+
+
+def _runs_whole_suite(command: str) -> bool:
+    """`pytest` with flags only: no paths, and `-n auto` is a worker count.
+
+    The D81/D87 rule: `echo pytest` and `pytest tests/one_file.py` both fail.
+    """
+    worker_count = re.compile(r"\s+-n\s+\S+")
+    return bool(re.fullmatch(
+        r"(?:python3?\s+-m\s+)?pytest(?:\s+-\S+)*", worker_count.sub("", command)))
+
+
+def _local_gate_runs_the_suite() -> bool:
+    """macOS evidence (2026-10-15): the enforced local gate, not a CI runner.
+
+    Both scripts must exist and the gate must run the whole suite.
+    """
+    if not (ROOT / "tools" / "install-local-gate.sh").is_file():
+        return False
+    return any(_runs_whole_suite(c) for c in _local_gate_commands())
+
+
 def test_ci_runs_only_platforms_the_package_claims() -> None:
     """If a Windows runner appears, the claim has to move with it —
     unless the job claims nothing at all. See `_gates_on_windows`."""
@@ -132,15 +164,21 @@ def test_ci_runs_only_platforms_the_package_claims() -> None:
     # evidence behind it was one Linux image. An audit walked straight
     # through that: the claim was wider than the thing checking it, the
     # fourth time this project has shipped that shape.
-    families = {"linux": ("ubuntu",), "macos": ("macos",)}
+    # 2026-10-15 decision: `verify-macos` left CI so each test runs once,
+    # on Linux. macOS evidence is the enforced local pre-push gate, which
+    # runs the full suite on the maintainer's Mac. Linux still needs a CI
+    # runner that really runs pytest.
+    families = {"linux": ("ubuntu",)}
     missing = sorted(
         name for name, images in families.items()
         if not any(image in runner.lower() for runner in runners for image in images)
     )
+    if not _local_gate_runs_the_suite():
+        missing.append("macos")
     assert not missing, (
         f"the package claims {CLAIMED_PLATFORM}, which covers {missing}, and "
-        "no CI runner exercises it -- the claim rests on a platform nobody "
-        "has run"
+        "no CI runner or enforced local gate exercises it -- the claim rests "
+        "on a platform nobody has run"
     )
 
 
@@ -184,51 +222,21 @@ def test_the_macos_runner_actually_runs_the_suite() -> None:
     What the second platform is *for* is running the suite, so that is
     what is checked. Deliberately not lint, coverage or CVE scanning:
     those are properties of the project rather than of the platform, and
-    D70 says so.
+    D70 says so. `echo pytest` passes a bare word search, and so does a
+    pytest invocation naming one file (D77, D87); `-n auto` is a worker
+    count, not a path, and is stripped before matching.
+
+    2026-10-15: `verify-macos` was removed from CI (each test runs once,
+    on Linux). macOS evidence is the enforced local gate, a pre-push hook
+    running the local gate script on the maintainer's Mac, so the same
+    "actually runs the suite" property is asserted against that script.
     """
-    text = (ROOT / ".github" / "workflows" / "quality-gates.yml").read_text(
-        encoding="utf-8")
-    lines = text.splitlines()
-
-    starts = [
-        index for index, line in enumerate(lines)
-        if "runs-on:" in line and "macos" in line.lower()
-    ]
-    assert starts, "no macOS runner; the claim rests on one platform again"
-
-    for start in starts:
-        # The job body runs until the next line at or below the depth of
-        # the `runs-on:` key itself.
-        depth = len(lines[start]) - len(lines[start].lstrip())
-        body: list[str] = []
-        for line in lines[start + 1:]:
-            if line.strip() and (len(line) - len(line.lstrip())) < depth:
-                break
-            body.append(line)
-        # Not `"pytest" in joined`. That was the first spelling and an
-        # audit named what it accepts: `echo pytest` passes, and so does
-        # a pytest invocation naming one file, which would let the job
-        # stop running the product's suite without this noticing. D77
-        # had just taught the same lesson one job over -- a comment is
-        # not an install (D87).
-        runs = [
-            line.split("run:", 1)[1].strip()
-            for line in body if "run:" in line
-        ]
-        # `-n auto` is a worker count, not a path, and the strict rule
-        # above rejects it because `auto` does not begin with a dash.
-        # Stripping the pair before matching teaches this about
-        # parallelism without loosening what it exists to catch: a
-        # `pytest tests/one_file.py` still fails, because a path is not
-        # preceded by a flag that takes a value.
-        worker_count = re.compile(r"\s+-n\s+\S+")
-        suite = [
-            command for command in runs
-            if re.fullmatch(r"(?:python3?\s+-m\s+)?pytest(?:\s+-\S+)*",
-                            worker_count.sub("", command))
-        ]
-        assert suite, (
-            "the macOS job never runs the whole test suite -- a command "
-            "naming specific paths, or merely containing the word, leaves "
-            f"the POSIX claim resting on a job that proves nothing: {runs}"
-        )
+    assert (ROOT / "tools" / "install-local-gate.sh").is_file(), (
+        "no installer; the gate is not enforced, so the macOS claim is unbacked")
+    commands = _local_gate_commands()
+    assert commands, "the local gate script is missing or empty"
+    assert any(_runs_whole_suite(c) for c in commands), (
+        "the local gate never runs the whole test suite -- a command naming "
+        "specific paths, or merely containing the word, leaves the macOS "
+        f"claim resting on a gate that proves nothing: {commands}"
+    )

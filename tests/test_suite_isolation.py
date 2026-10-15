@@ -26,6 +26,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from conftest import child_import_path
+
 DEVELOPER_HOME = Path(os.path.expanduser("~")).resolve()
 """Captured at import, which is before the session fixture moves `HOME`.
 
@@ -112,6 +114,69 @@ def test_a_spawned_child_imports_the_same_package_this_process_did() -> None:
         "a spawned subprocess imported a different copy of the package than "
         f"this test process: child {child.stdout.strip()!r}, parent "
         f"{maintainability_audit.__file__!r}"
+    )
+
+
+def test_git_location_variables_from_the_launcher_never_reach_fixture_repositories(
+    tmp_path: Path,
+) -> None:
+    """D231: a suite launched from a git hook wrote into the real repository.
+
+    Written by the Claude Sonnet test seat (Codex at its usage limit); Codex reviews.
+
+    When pytest ran inside a git pre-push hook, the hook had exported
+    `GIT_DIR` (and the rest of what `git rev-parse --local-env-vars` lists).
+    Every fixture `git init`, `git config` and `git commit` then acted on the
+    *real* repository: about 60 fixture commits landed on the real branch and
+    its `.git/config` gained `core.bare=true`, `core.hooksPath`, `user.name`
+    and a pytest temp signing key. `conftest.py` isolated git's configuration
+    but never removed git's location variables.
+
+    A sentinel repository stands in for the real one. A child pytest runs a
+    fixture-style probe with `GIT_DIR` and `GIT_WORK_TREE` aimed at it; the
+    sentinel's HEAD, commit count and config bytes must not change.
+    """
+    clean = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    sentinel = tmp_path / "sentinel"
+    sentinel.mkdir()
+    identity = ["-c", "user.name=S", "-c", "user.email=s@example.invalid",
+                "-c", "commit.gpgsign=false"]
+    subprocess.run(["git", "init", "-q"], cwd=sentinel, env=clean, check=True)
+    subprocess.run(["git", *identity, "commit", "-q", "--allow-empty", "-m", "s"],
+                   cwd=sentinel, env=clean, check=True)
+
+    def snapshot() -> tuple[str, str, bytes]:
+        def git(*args: str) -> str:
+            return subprocess.run(["git", *args], cwd=sentinel, env=clean, text=True,
+                                  capture_output=True, check=True).stdout.strip()
+        return (git("rev-parse", "HEAD"), git("rev-list", "--all", "--count"),
+                (sentinel / ".git" / "config").read_bytes())
+
+    before = snapshot()
+
+    repo_root = Path(__file__).resolve().parent.parent
+    env = dict(os.environ)
+    env.update(
+        MA_D231_CHILD="1",
+        GIT_DIR=str(sentinel / ".git"),
+        GIT_WORK_TREE=str(sentinel),
+        PYTHONPATH=child_import_path(),
+    )
+    child = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+         "-p", "no:randomly", "tests/_d231_child_probe.py"],
+        cwd=repo_root, env=env, text=True, capture_output=True, check=False,
+    )
+    # A probe that was skipped or never collected would leave the sentinel
+    # untouched too, and pass this test without testing anything.
+    assert "1 passed" in child.stdout, child.stdout + child.stderr
+
+    after = snapshot()
+    assert after == before, (
+        "D231: git location variables inherited from the launching environment "
+        "(GIT_DIR/GIT_WORK_TREE) steered fixture git commands into another "
+        f"repository. HEAD {before[0]} -> {after[0]}, commits {before[1]} -> "
+        f"{after[1]}, config changed: {before[2] != after[2]}"
     )
 
 

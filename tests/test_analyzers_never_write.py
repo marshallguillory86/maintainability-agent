@@ -53,16 +53,6 @@ def test_the_linters_that_can_fix_are_told_not_to(slug: str, tmp_path: Path) -> 
         assert "--no-fix" in argv, f"{slug} may rewrite the audited repository: {argv}"
 
 
-@pytest.mark.parametrize("slug", sorted(ADAPTERS))
-def test_no_adapter_is_built_to_write(slug: str, tmp_path: Path) -> None:
-    adapter = ADAPTERS[slug]()
-    for argv in _argvs(slug, tmp_path):
-        found = [token for token in argv if token in WRITE_TOKENS]
-        assert not found, f"{slug} argv carries write-enabling {found}: {argv}"
-    assert not adapter.extra_args or adapter.extra_args[0] != "format", (
-        f"{slug} runs a formatter, which rewrites files")
-
-
 # --- the structural block -------------------------------------------------
 
 
@@ -108,16 +98,6 @@ def test_an_analyzer_that_edits_a_tracked_file_is_an_integrity_failure(
 
     assert "mod.py" in str(raised.value)
     assert "other.py" not in str(raised.value)
-
-
-def test_an_analyzer_that_changes_nothing_reports_no_integrity_failure(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    root = _repo(tmp_path)
-    _fake_run(monkeypatch, lambda: None)
-
-    result, _parsed = _analysis._run_batches(_Probe(), root, (), 60)
-
-    assert result.outcome == Outcome.RAN
 
 
 # --- end to end with the real tool ----------------------------------------

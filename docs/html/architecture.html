@@ -38,6 +38,7 @@
     _mcp_refusals[&quot;_mcp_refusals&quot;]
     _skill_install[&quot;_skill_install&quot;]
     _self_update[&quot;_self_update&quot;]
+    _mcp_servers[&quot;_mcp_servers&quot;]
     _precommit_install[&quot;_precommit_install&quot;]
     dunder_main[&quot;__main__&quot;]
     mcp_server[&quot;mcp_server&quot;]
@@ -239,7 +240,7 @@
 </tr>
 <tr>
 <td><strong>entry</strong></td>
-<td>Argument parsing, transport, output routing, exit codes, and first-run setup — <strong>one question set</strong>, two transports (<code>_first_run</code> on a CLI TTY, <code>_mcp_setup</code> over MCP elicitation; chat is MCP, not a third set) — and the MCP audit tool itself (<code>_mcp_audit</code>, split from <code>mcp_server</code>) and the D10 root-grant machinery (<code>_mcp_grants</code>, same split; grants are a server boundary, not setup) and the setup/run gate that answers with questions instead of a report (<code>_mcp_gate</code>) and the MCP resources, which answer reads and can never ask (<code>_mcp_resources</code>) and the set of refusals the transport may declare (<code>_mcp_refusals</code>, shared by both seam-binding modules so neither has to import the other) and the packaged-skill sync (<code>_skill_install</code>) and the self-update that installs a newer release and re-syncs that skill (<code>_self_update</code>, D230) — the one layer where the tool may ask a question</td>
+<td>Argument parsing, transport, output routing, exit codes, and first-run setup — <strong>one question set</strong>, two transports (<code>_first_run</code> on a CLI TTY, <code>_mcp_setup</code> over MCP elicitation; chat is MCP, not a third set) — and the MCP audit tool itself (<code>_mcp_audit</code>, split from <code>mcp_server</code>) and the D10 root-grant machinery (<code>_mcp_grants</code>, same split; grants are a server boundary, not setup) and the setup/run gate that answers with questions instead of a report (<code>_mcp_gate</code>) and the MCP resources, which answer reads and can never ask (<code>_mcp_resources</code>) and the set of refusals the transport may declare (<code>_mcp_refusals</code>, shared by both seam-binding modules so neither has to import the other) and the packaged-skill sync (<code>_skill_install</code>) and the self-update that installs a newer release and re-syncs that skill (<code>_self_update</code>, D230) and the record of running MCP servers it stops when stale (<code>_mcp_servers</code>, D232) — the one layer where the tool may ask a question</td>
 <td>anything below. <code>_gates</code> is the post-audit half of the CLI, split when <code>cli.py</code> crossed the 500-line file gate: it composes from a finished report — did the diff obey its work order, did a dimension slip since the last comparable scan — and turns those into a process exit code. It measures nothing and may not reach scoring</td>
 </tr>
 </tbody>

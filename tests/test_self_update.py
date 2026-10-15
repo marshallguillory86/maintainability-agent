@@ -159,6 +159,7 @@ def test_version_order_is_numeric_not_lexical(fake, tmp_path) -> None:
 # 5 -- upgrade --------------------------------------------------------------
 
 def test_upgrade_syncs_skill_writes_marker_and_says_restart(fake, tmp_path) -> None:
+    """Covers existing behaviour: skill sync and marker (the "/mcp" assertion moved to D232)."""
     runner = fake(["4.4.0", "4.5.0"])
     result = _su().update(PY, UV, tmp_path)
     assert [PY, "-m", "maintainability_audit", "--install-skill"] in [
@@ -167,7 +168,65 @@ def test_upgrade_syncs_skill_writes_marker_and_says_restart(fake, tmp_path) -> N
     assert result.restart_needed is True
     assert not result.error
     assert _marker(tmp_path).read_text(encoding="utf-8").strip() == "4.5.0"
-    assert "/mcp" in result.message
+
+
+# 5b -- D232: stop stale MCP servers --------------------------------------
+
+def _stopper(monkeypatch, *, stopped=(), busy=(), gone=()):
+    """Replace ``_mcp_servers.stop_stale`` with a fake returning fixed pids."""
+    ms = importlib.import_module("maintainability_audit._mcp_servers")
+    calls = []
+
+    def fake_stop(home, installed, **kwargs):
+        calls.append((home, installed))
+        return ms.Stopped(stopped=tuple(stopped), busy=tuple(busy), gone=tuple(gone))
+
+    monkeypatch.setattr(ms, "stop_stale", fake_stop)
+    return calls
+
+
+def test_upgrade_stops_stale_servers_and_says_so(fake, tmp_path, monkeypatch) -> None:
+    """D232: the message reports the stop and never points at /mcp."""
+    fake(["4.4.0", "4.5.0"])
+    calls = _stopper(monkeypatch, stopped=(101,))
+    message = _su().update(PY, UV, tmp_path).message
+    assert calls == [(tmp_path, "4.5.0")]
+    assert "Stopped 1" in message and "next call" in message
+    assert "/mcp" not in message
+
+
+def test_upgrade_with_busy_server_says_next_update_stops_it(fake, tmp_path,
+                                                            monkeypatch) -> None:
+    """D232: a mid-audit server is skipped and named as busy."""
+    fake(["4.4.0", "4.5.0"])
+    _stopper(monkeypatch, busy=(202,))
+    message = _su().update(PY, UV, tmp_path).message
+    assert "1 busy" in message and "next update" in message
+    assert "/mcp" not in message
+
+
+def test_upgrade_message_never_mentions_mcp_command_with_no_servers(
+        fake, tmp_path, monkeypatch) -> None:
+    """D232: even with nothing to stop, the old /mcp advice is gone."""
+    fake(["4.4.0", "4.5.0"])
+    _stopper(monkeypatch)
+    assert "/mcp" not in _su().update(PY, UV, tmp_path).message
+
+
+def test_already_up_to_date_still_stops_stale_servers(fake, tmp_path, monkeypatch) -> None:
+    """D232: a server left behind by an earlier upgrade is stopped by a later no-op update."""
+    fake(["4.5.0", "4.5.0"])
+    calls = _stopper(monkeypatch, stopped=(101,))
+    _su().update(PY, UV, tmp_path)
+    assert calls == [(tmp_path, "4.5.0")]
+
+
+def test_up_to_date_with_nothing_stale_message_unchanged(fake, tmp_path,
+                                                         monkeypatch) -> None:
+    """D232: nothing stale keeps the plain message."""
+    fake(["4.5.0", "4.5.0"])
+    _stopper(monkeypatch)
+    assert _su().update(PY, UV, tmp_path).message == "Already up to date (4.5.0)."
 
 
 # 6 -- up to date -----------------------------------------------------------

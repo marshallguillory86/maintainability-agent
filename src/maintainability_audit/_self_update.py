@@ -12,7 +12,8 @@ backwards — so this module holds no HTTP client and reads no release feed
 acquisition). Every child process goes through ``_runner.run`` (rule 7). A
 version that comes back lower than before is reported, never accepted
 silently; a higher one re-syncs the skill and records that the MCP server,
-which holds the code it loaded at spawn, needs a restart.
+which holds the code it loaded at spawn, needs a restart; stale servers
+that are not mid-audit are stopped so their host restarts them (D232).
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import _runner
+from . import _mcp_servers, _runner
 
 PACKAGE = "maintainability-agent"
 #: The launch agent, named for the product and the component (reverse DNS of
@@ -81,14 +82,28 @@ def update(python: str, uv: str | None, home: Path) -> UpdateResult:
                             f"version went down from {before} to {after}",
                             f"Refused: the install moved {before} to {after}, a downgrade.")
     if _key(after) == _key(before):
-        return UpdateResult(before, after, False, False, None, f"Already up to date ({after}).")
+        return UpdateResult(before, after, False, False, None,
+                            f"Already up to date ({after}).{_servers_note(home, after)}")
     _run([python, "-m", "maintainability_audit", "--install-skill"])
     state = _state_dir(home)
     state.mkdir(parents=True, exist_ok=True)
     (state / ".pending-restart").write_text(after + "\n", encoding="utf-8")
     return UpdateResult(before, after, True, True, None,
-                        f"Updated {before} -> {after}; skill re-synced. "
-                        "Restart the MCP server to use it (/mcp in Claude Code).")
+                        f"Updated {before} -> {after}; skill re-synced.{_servers_note(home, after)}")
+
+
+def _servers_note(home: Path, installed: str) -> str:
+    """Stop the MCP servers still on an older version (D232) and say so.
+    A host starts a stopped stdio server again on its next call."""
+    result = _mcp_servers.stop_stale(home, installed)
+    note = ""
+    if result.stopped:
+        note += (f" Stopped {len(result.stopped)} MCP server(s) on an older version;"
+                 f" the host starts {installed} on its next call.")
+    if result.busy:
+        note += (f" {len(result.busy)} busy with an audit kept running;"
+                 " the next update stops it.")
+    return note
 
 
 def update_action() -> int:

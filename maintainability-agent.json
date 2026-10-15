@@ -1,0 +1,10 @@
+{
+  "analyzers": {
+    "acquire_tools": false,
+    "allow_tools": [
+      "lizard"
+    ],
+    "run": false
+  },
+  "version": 1
+}

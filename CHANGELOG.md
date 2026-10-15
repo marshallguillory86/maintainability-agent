@@ -26,6 +26,10 @@ No published number moves.
 - **`--install-updater`** schedules it hourly as a macOS launch agent named
   `io.github.marshallguillory86.maintainability-agent.update`, removing the
   legacy agent so two never run.
+- **The test suite never writes outside its own fixtures (D231).** Run
+  from a git hook, it inherited `GIT_DIR` and committed its fixtures into the
+  real repository. It now drops git's location variables before any test
+  runs git.
 
 ## 4.4.1 - 2026-10-14
 

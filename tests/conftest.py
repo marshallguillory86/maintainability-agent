@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import os
 import site
+import subprocess
 import sys
 from collections.abc import Iterator
 
@@ -52,6 +53,18 @@ os.environ.setdefault(
     "COVERAGE_RCFILE",
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pyproject.toml"),
 )
+
+# No git in this suite is pointed at a repository by whoever launched it (D231).
+# A git hook exports `GIT_DIR` and its siblings; run from one, every fixture
+# `git init`, `commit` and `config` wrote into the real repository instead of
+# its temporary one -- sixty fixture commits on a real branch, and `core.bare`
+# set in its config. The names come from git itself, so a variable a later git
+# adds is dropped too. At import, before collection or any test runs git.
+for _name in subprocess.run(
+    ["git", "rev-parse", "--local-env-vars"],
+    capture_output=True, text=True, check=True,
+).stdout.split():
+    os.environ.pop(_name, None)
 
 
 @pytest.fixture(autouse=True)

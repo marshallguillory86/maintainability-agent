@@ -81,7 +81,13 @@ def test_the_gate_lints_then_runs_the_whole_suite_with_coverage_floor() -> None:
     assert lint[0] < suite[0], "lint must run before the suite"
     command = lines[suite[0]]
     assert re.search(r"-n auto\b", command)
-    assert "--cov=maintainability_audit" in command
+    # Measure this tree by path. An installed copy of the package elsewhere on
+    # the machine (pip install --user) must never be measured: a package-name
+    # source counts both copies and reports a false low percentage.
+    tokens = command.split()
+    assert "--cov=src/maintainability_audit" in tokens
+    assert "--cov=maintainability_audit" not in tokens, (
+        "the gate must measure src/maintainability_audit by path, not by package name")
     assert "--cov-fail-under=92" in command
     assert not re.search(r"tests/\S+\.py", command), (
         "the gate must run the whole suite, not named files")

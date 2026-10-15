@@ -5,7 +5,15 @@
 # Installed as the pre-push hook by tools/install-local-gate.sh.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
+# A git hook exports the repository's git variables; the suite's throwaway
+# repositories must not inherit them.
+# shellcheck disable=SC2046
+unset $(git rev-parse --local-env-vars)
+# This tree's code, not an installed copy of the package.
+export PYTHONPATH=src
 
 # Through python3: a git hook's PATH need not include where ruff's script lives.
 python3 -m ruff check src tests tools
-python3 -m pytest -n auto -q --cov=maintainability_audit --cov-fail-under=92
+# Coverage by path: some children run without PYTHONPATH on purpose, and a
+# package-name source would count a copy installed elsewhere as well.
+python3 -m pytest -n auto -q --cov=src/maintainability_audit --cov-fail-under=92

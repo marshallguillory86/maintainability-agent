@@ -557,6 +557,10 @@ No published number moves.</p>
 <li><strong><code>--install-updater</code></strong> schedules it hourly as a macOS launch agent named
   <code>io.github.marshallguillory86.maintainability-agent.update</code>, removing the
   legacy agent so two never run.</li>
+<li><strong>The test suite never writes outside its own fixtures (D231).</strong> Run
+  from a git hook, it inherited <code>GIT_DIR</code> and committed its fixtures into the
+  real repository. It now drops git's location variables before any test
+  runs git.</li>
 </ul>
 <h2 id="441-2026-10-14">4.4.1 - 2026-10-14</h2>
 <p><strong>An audit can no longer rewrite the repository it audits.</strong> No published

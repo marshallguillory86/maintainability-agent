@@ -14,6 +14,12 @@ Thanks for helping improve Maintainability Agent.
 
 ## Local Verification
 
+Run `tools/install-local-gate.sh` once per clone. It installs a pre-push hook
+that runs `tools/local-gate.sh` — lint and the whole suite under the coverage
+floor — before every push. CI runs the suite once, on Linux; the pre-push gate
+is how macOS is verified (Decision 18), so a push from a Mac that skips it
+leaves macOS unverified.
+
 ```bash
 # Install dev extras (ruff + pip-audit + jsonschema + pytest-cov + PyYAML
 # for tools/build_catalog.py). The shipped package does not depend on PyYAML.

@@ -14,8 +14,13 @@
 
 name: Maintainability
 
+# Not per PR: the required "Audit (maintainability + security)" job already
+# audits every pull request, so this one ran the same audit twice. It stays
+# as the published action's own check on main.
 on:
-  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 # The audit reads the tree and writes files into the workspace. It needs
 # nothing else, and asking for nothing else means a compromised

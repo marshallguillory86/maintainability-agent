@@ -446,7 +446,8 @@ and is now the dominant failure in the probe, which is why the count moved. The
 bounded, symlink-refusing write works through a *file descriptor*, so a validated
 path cannot be swapped for a symlink before the write lands — Windows has no
 equivalent and the portable rewrite is the hole. **An unsupported platform never
-buys green by weakening the supported ones.**
+buys green by weakening the supported ones.** Windows is not run in CI at all
+(Decision 18); a Windows user who hits a problem can open an issue or a pull request.
 
 ## Invokable skill / slash command
 

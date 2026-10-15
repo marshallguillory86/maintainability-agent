@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "semantic_policy": {
+    "version": 1,
+    "domain_types": [
+      {
+        "name": "customer-id-public-boundary",
+        "paths": ["src/revalidated-boundary.ts"],
+        "boundary": "public",
+        "symbol": "loadCustomer",
+        "required_type": "CustomerId"
+      }
+    ],
+    "operations": [
+      {
+        "name": "session-operation-review",
+        "paths": ["src/operations.ts"],
+        "capability_type": "SessionCapability",
+        "operation_contract": "Op<TResult>"
+      }
+    ]
+  }
+}

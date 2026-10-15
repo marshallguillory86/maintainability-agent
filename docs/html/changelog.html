@@ -6,6 +6,7 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#443-2026-10-15">4.4.3 - 2026-10-15</a></li>
 <li><a href="#442-2026-10-15">4.4.2 - 2026-10-15</a></li>
 <li><a href="#441-2026-10-14">4.4.1 - 2026-10-14</a></li>
 <li><a href="#440-2026-10-12">4.4.0 - 2026-10-12</a><ul>
@@ -544,6 +545,18 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="443-2026-10-15">4.4.3 - 2026-10-15</h2>
+<p><strong><code>--update</code> puts every MCP server on the new version itself.</strong> No published
+number moves.</p>
+<ul>
+<li><strong>The defect (D232).</strong> After an upgrade, 4.4.2 told the operator to run
+  <code>/mcp</code> to restart the MCP server. In the VS Code panel <code>/mcp</code> only lists
+  servers, so the servers went on serving the old code.</li>
+<li><strong>Now</strong> each MCP server records its pid and version and marks itself busy
+  while an audit runs. <code>--update</code> stops the servers on an older version that
+  are not mid-audit; the host starts the new version on its next call. A busy
+  server is left running and the next hourly update stops it.</li>
+</ul>
 <h2 id="442-2026-10-15">4.4.2 - 2026-10-15</h2>
 <p><strong><code>--update</code> keeps the install current without ever moving it backwards.</strong>
 No published number moves.</p>

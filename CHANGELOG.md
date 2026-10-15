@@ -12,6 +12,19 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.4.3 - 2026-10-15
+
+**`--update` puts every MCP server on the new version itself.** No published
+number moves.
+
+- **The defect (D232).** After an upgrade, 4.4.2 told the operator to run
+  `/mcp` to restart the MCP server. In the VS Code panel `/mcp` only lists
+  servers, so the servers went on serving the old code.
+- **Now** each MCP server records its pid and version and marks itself busy
+  while an audit runs. `--update` stops the servers on an older version that
+  are not mid-audit; the host starts the new version on its next call. A busy
+  server is left running and the next hourly update stops it.
+
 ## 4.4.2 - 2026-10-15
 
 **`--update` keeps the install current without ever moving it backwards.**

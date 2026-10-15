@@ -16,9 +16,11 @@ string, or invokes a shell.
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 from typing import Any
 
+from . import _mcp_servers
 from ._catalog import PolicyError as PolicyError
 
 # Redundant aliases on purpose: every name the split moved to
@@ -263,21 +265,23 @@ def _run_audit_tool(ledger, tool_error, repository_root, config_path, changed_on
     """
     try:
         _apply_call_consents(ledger, repository_root, setup, grant, setup_answers)
-        return audit_repository(
-            repository_root,
-            config_path,
-            changed_only,
-            run_analyzers,
-            format,
-            record_history,
-            baseline_path,
-            write_baseline,
-            include_prompt,
-            # Interactive door never assumes go (D27); CLI default is "run".
-            action=action,
-            roots=ledger.current(),
-            output_path=output_path,
-        )
+        # Busy while auditing: `--update` never stops a server mid-audit (D232).
+        with _mcp_servers.busy(Path.home(), os.getpid()):
+            return audit_repository(
+                repository_root,
+                config_path,
+                changed_only,
+                run_analyzers,
+                format,
+                record_history,
+                baseline_path,
+                write_baseline,
+                include_prompt,
+                # Interactive door never assumes go (D27); CLI default is "run".
+                action=action,
+                roots=ledger.current(),
+                output_path=output_path,
+            )
     except ANTICIPATED_REFUSALS as refusal:
         raise tool_error(str(refusal)) from refusal
 
@@ -548,7 +552,12 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    create_server(roots=allowed_roots(tuple(args.allow_root))).run("stdio")
+    # Recorded so `--update` can stop this server once it is stale (D232).
+    _mcp_servers.register(Path.home(), os.getpid(), VERSION)
+    try:
+        create_server(roots=allowed_roots(tuple(args.allow_root))).run("stdio")
+    finally:
+        _mcp_servers.unregister(Path.home(), os.getpid())
     return 0
 
 

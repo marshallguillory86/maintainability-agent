@@ -117,7 +117,9 @@ class RuffAdapter(BaseAdapter):
             concepts=("style", "complexity", "dead-code"),
             findings_exit_codes=(0, 1), exclude_flag="--exclude",
             exclude_dialect="gitignore",
-            extra_args=("check", "--output-format", "json", "--no-cache"),
+            # --no-fix: a repository's `fix = true` must never turn an audit
+            # into a rewrite (it rewrote 102 files of an audited repository, 2026-10-14).
+            extra_args=("check", "--no-fix", "--output-format", "json", "--no-cache"),
         )
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -169,7 +171,7 @@ class FortitudeAdapter(BaseAdapter):
             concepts=("style", "dead-code"),
             findings_exit_codes=(0, 1), exclude_flag="--exclude",
             exclude_dialect="fnmatch",
-            extra_args=("check", "--output-format", "json"),
+            extra_args=("check", "--no-fix", "--output-format", "json"),
         )
 
     def _read(self, result: ToolResult) -> Extraction:

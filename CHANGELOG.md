@@ -12,6 +12,26 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.4.1 - 2026-10-14
+
+**An audit can no longer rewrite the repository it audits.** No published
+number moves.
+
+- **The defect.** The ruff adapter ran `ruff check` without `--no-fix`, and
+  ruff honours a repository's own `fix = true`. An audit of a repository
+  configured that way rewrote 102 of its files — unused imports deleted,
+  imports re-sorted — and broke its test suites. MA promises it never edits
+  source; that promise had an unguarded path. The fortitude adapter had the
+  same shape.
+- **The fix.** ruff and fortitude run with `--no-fix`.
+- **The class.** The audited tree's tracked state is snapshotted around every
+  analyzer run. Any change raises `RepositoryModifiedError`, naming the files,
+  and the audit returns no grade: a score for code that is no longer what was
+  audited is not a score. Over MCP it is a refusal you can act on, and the
+  adapter backstop cannot swallow it. A parametrized test forbids
+  write-enabling flags (`--fix`, `--write`, `--in-place`, `--apply` and the
+  like) in every adapter's command line.
+
 ## 4.4.0 - 2026-10-12
 
 **The analyzers your own pipeline already runs can now close a coverage gap,

@@ -17,10 +17,12 @@ A+ one more time.
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
 
+from maintainability_audit import _analysis
 from maintainability_audit._adapters import BaseAdapter, Extraction, measurements_only
 from maintainability_audit._metrics_types import Measurement
 from maintainability_audit._runner import Outcome, ToolResult
@@ -489,3 +491,55 @@ def test_jscpd_paths_drop_the_embedded_format_tag() -> None:
 
     paths = [f.path for f in adapter.parse(result).findings]
     assert paths == ["docs/api/formik.md", "src/a.ts", "pkgs/v1.2/b.js"]
+
+
+# --- Guards for D229 (an analyzer can never rewrite the audited repository) --
+# Regression guards, not falsifiers: they pass on the code before the fix too,
+# so they live here rather than in the falsifier file D229 cites.
+
+_WRITE_TOKENS = ("--fix", "--write", "--in-place", "-i", "--apply", "--fix-only", "--unsafe-fixes")
+
+
+def _write_guard_argvs(slug, root):
+    names = ("mod.py", "Main.java", "main.f90", "app.js", "lib.c", "x.go", "y.rs", "z.ts")
+    for name in names:
+        (root / name).write_text("x\n", encoding="utf-8")
+    adapter = ADAPTERS[slug]()
+    runs = list(adapter.invocations(root, ()))
+    runs.append(adapter.invocation(root, [str(root / name) for name in names]))
+    return [tuple(run.argv) for run in runs]
+
+
+@pytest.mark.parametrize("slug", sorted(ADAPTERS))
+def test_no_adapter_is_built_to_write(slug, tmp_path):
+    """Covers existing behaviour: no adapter has ever passed a write-enabling flag; D229's
+    rewrite came from repository config, and this keeps a future adapter from adding one."""
+    adapter = ADAPTERS[slug]()
+    for argv in _write_guard_argvs(slug, tmp_path):
+        found = [token for token in argv if token in _WRITE_TOKENS]
+        assert not found, f"{slug} argv carries write-enabling {found}: {argv}"
+    assert not adapter.extra_args or adapter.extra_args[0] != "format", (
+        f"{slug} runs a formatter, which rewrites files")
+
+
+class _QuietProbe(BaseAdapter):
+    def __init__(self):
+        super().__init__(slug="fake", emits="verdict", executable="fake", concepts=("style",))
+
+    def _read(self, result):  # pragma: no cover - parse is not the subject
+        return Extraction()
+
+
+def test_an_analyzer_that_changes_nothing_reports_no_integrity_failure(tmp_path, monkeypatch):
+    """Covers existing behaviour: a clean run raised nothing before D229 either; this holds
+    that the integrity check never turns an unchanged tree into a failure."""
+    for args in (("init", "-q"), ("config", "user.email", "t@example.com"), ("config", "user.name", "t")):
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+    (tmp_path / "mod.py").write_text("import os\n", encoding="utf-8")
+    subprocess.run(["git", "add", "."], cwd=tmp_path, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=tmp_path, check=True, capture_output=True)
+    monkeypatch.setattr(_analysis, "run",
+                        lambda slug, invocation, **kw: ToolResult(slug=slug, outcome=Outcome.RAN,
+                                                                   stdout="[]", exit_code=0))
+    result, _parsed = _analysis._run_batches(_QuietProbe(), tmp_path, (), 60)
+    assert result.outcome == Outcome.RAN

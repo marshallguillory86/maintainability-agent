@@ -95,9 +95,13 @@ def test_the_installer_exists_and_is_executable() -> None:
 
 
 def test_the_installer_resolves_the_hooks_dir_through_git() -> None:
-    """`git rev-parse --git-path hooks` is what makes worktrees work."""
-    assert "git rev-parse --git-path hooks" in INSTALLER.read_text(
-        encoding="utf-8")
+    """`--git-common-dir`/hooks is the repository's own hooks folder in every
+    worktree. `--git-path hooks` follows a global core.hooksPath to a shared
+    dispatcher, which the installer must never write into; that dispatcher
+    runs `$(git rev-parse --git-common-dir)/hooks/<name>` itself."""
+    text = INSTALLER.read_text(encoding="utf-8")
+    assert "git rev-parse --git-common-dir" in text
+    assert "--git-path hooks" not in text
 
 
 def test_the_installer_writes_an_executable_pre_push_hook(tmp_path: Path) -> None:

@@ -6,7 +6,10 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 MARK="# maintainability-agent local gate (tools/install-local-gate.sh)"
-hooks="$(git rev-parse --git-path hooks)"
+# The repository's own hooks folder, shared by its worktrees. Not --git-path:
+# under a global core.hooksPath that names the shared dispatcher, which runs
+# this folder's hook of the same name itself.
+hooks="$(git rev-parse --git-common-dir)/hooks"
 mkdir -p "$hooks"
 hook="$hooks/pre-push"
 

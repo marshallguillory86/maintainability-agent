@@ -32,6 +32,10 @@ _STEM_SUFFIXES = (".test", ".spec", "_test")
 # pFUnit convention pairs that with `testFoo_mod.F90`. Dropping `_mod`
 # from both sides is what makes the two stems meet.
 _MODULE_STEM_SUFFIXES = ("_mod", "_module")
+
+# Where pFUnit's `testFooBar` prefix rule applies: Fortran sources and
+# pFUnit's own `.pf`, never another language's names.
+_FORTRAN_SUFFIXES = (".f", ".for", ".f90", ".f95", ".f03", ".f08", ".pf")
 _CONSTRUCTS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("pytest", re.compile(r"\bpytest\b|def test_")),
     ("unittest", re.compile(r"\bunittest\b")),
@@ -53,8 +57,11 @@ def subject_stem(rel: str) -> str:
         return _without_module_suffix(stem[5:])
     # pFUnit's camelCase convention: `testFooBar_mod.F90` covers
     # `fooBar_mod.F90`. Lowercased above, so the boundary the capital
-    # marked is gone and the prefix is all that is left to strip.
-    if stem.startswith("test") and len(stem) > 4:
+    # marked is gone and the prefix is all that is left to strip. pFUnit's
+    # rule, so a Fortran test only: applied everywhere it cut `tester.py`
+    # to `er` and `test-rp.mjs` to `-rp`, and they never paired (D233).
+    if (stem.startswith("test") and len(stem) > 4
+            and Path(rel).suffix.lower() in _FORTRAN_SUFFIXES and is_test_path(rel)):
         stripped = _without_module_suffix(stem[4:])
         if stripped:
             return stripped

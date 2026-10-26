@@ -6,6 +6,7 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#444-2026-10-26">4.4.4 - 2026-10-26</a></li>
 <li><a href="#443-2026-10-15">4.4.3 - 2026-10-15</a></li>
 <li><a href="#442-2026-10-15">4.4.2 - 2026-10-15</a></li>
 <li><a href="#441-2026-10-14">4.4.1 - 2026-10-14</a></li>
@@ -545,6 +546,16 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="444-2026-10-26">4.4.4 - 2026-10-26</h2>
+<p><strong>A production file whose name starts with <code>test</code> pairs with its test.</strong>
+Testability can rise for a repository that holds one.</p>
+<ul>
+<li><strong>The defect (D233, issue #306).</strong> pFUnit's camelCase rule
+  (<code>testFooBar_mod.F90</code> covers <code>fooBar_mod.F90</code>) was applied to every
+  language, so <code>test-rp.mjs</code>, <code>tester.py</code> and <code>testing.mjs</code> lost their first
+  four letters and never paired with the tests that cover them. The rule now
+  applies to Fortran tests only.</li>
+</ul>
 <h2 id="443-2026-10-15">4.4.3 - 2026-10-15</h2>
 <p><strong><code>--update</code> puts every MCP server on the new version itself.</strong> No published
 number moves.</p>

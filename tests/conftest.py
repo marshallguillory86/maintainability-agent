@@ -30,6 +30,7 @@ import os
 import site
 import subprocess
 import sys
+import tempfile
 from collections.abc import Iterator
 
 import pytest
@@ -72,6 +73,23 @@ def _isolate_user_config(tmp_path, monkeypatch):
     """No test may read or write the developer's real XDG config or state."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg-config"))
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "xdg-state"))
+
+
+@pytest.fixture(autouse=True)
+def _isolate_system_temp(tmp_path_factory, monkeypatch):
+    """No test may write to the system temp directory (D235).
+
+    Tests that build an adapter and call it piecemeal never reach the
+    release in `_run_one`, and left 29 directories per suite run there after
+    the adapters were fixed. Pointed at a directory of its own under
+    pytest's base temp, for this process and the children it spawns, so
+    pytest prunes it with the rest. Beside `tmp_path`, never inside it:
+    `tmp_path` is often the tree under audit, and a scratch directory there
+    is a write into the audited repository.
+    """
+    scratch = tmp_path_factory.mktemp("system-tmp")
+    monkeypatch.setattr(tempfile, "tempdir", str(scratch))
+    monkeypatch.setenv("TMPDIR", str(scratch))
 
 
 @pytest.fixture(autouse=True)

@@ -31,8 +31,6 @@ calibration constant against the new path is 3.6.
 from __future__ import annotations
 
 import subprocess
-import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -44,9 +42,9 @@ from maintainability_audit.scoring import score_evidence
 
 
 @pytest.fixture
-def evidence():
+def evidence(tmp_path):
     """A committed tree of ordinary small functions, scored cleanly."""
-    root = Path(tempfile.mkdtemp()) / "r"
+    root = tmp_path / "r"
     root.mkdir()
     subprocess.run(["git", "init", "-q", str(root)], check=True)
     (root / "README.md").write_text("# r\n", encoding="utf-8")

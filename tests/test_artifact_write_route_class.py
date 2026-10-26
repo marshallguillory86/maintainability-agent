@@ -93,10 +93,16 @@ def test_no_artifact_writer_reaches_for_a_raw_write_text() -> None:
     )
 
 
-def _inward_symlink_repo() -> Path:
+@pytest.fixture
+def inward_repo():
     """A repo under ``/var`` (unresolved on macOS) whose ``.maintainability``
-    is a symlink back into ``src`` -- the redirect ``tmp_path`` cannot make."""
-    base = Path(tempfile.mkdtemp(dir="/var/tmp"))
+    is a symlink back into ``src`` -- the redirect ``tmp_path`` cannot make.
+    Removed afterwards; a bare ``mkdtemp`` left one per run (D235)."""
+    with tempfile.TemporaryDirectory(dir="/var/tmp") as base:
+        yield _inward_symlink_repo(Path(base))
+
+
+def _inward_symlink_repo(base: Path) -> Path:
     root = base / "repo"
     (root / "src").mkdir(parents=True)
     (root / "src" / "app.py").write_text("x = 1\n", encoding="utf-8")
@@ -109,12 +115,12 @@ def _report(root: Path) -> dict:
 
 
 @pytest.mark.parametrize("spelling", ["/var", "/private/var"])
-def test_write_baseline_refuses_the_inward_route_on_either_spelling(spelling: str) -> None:
+def test_write_baseline_refuses_the_inward_route_on_either_spelling(spelling: str, inward_repo: Path) -> None:
     """``.maintainability -> src`` is refused whether the grant is named
     ``/var/...`` or its ``/private/var/...`` real path. Binding the check
     to ``target.parent`` checked the symlink against itself and let both
     through."""
-    root = _inward_symlink_repo()
+    root = inward_repo
     if spelling == "/private/var":
         root = Path(os.path.realpath(root))
     target = root / ".maintainability" / "baseline.json"
@@ -125,11 +131,11 @@ def test_write_baseline_refuses_the_inward_route_on_either_spelling(spelling: st
     assert not (Path(os.path.realpath(root)) / "src" / "baseline.json").exists()
 
 
-def test_write_baseline_refuses_to_truncate_a_non_json_file() -> None:
+def test_write_baseline_refuses_to_truncate_a_non_json_file(inward_repo: Path) -> None:
     """``write_baseline(baseline_path="README.md")`` truncated source once
     (D34). A stage-and-replace still unlinks that inode, so the refusal is
     on the existing bytes not being JSON, before any stage begins."""
-    root = _inward_symlink_repo()
+    root = inward_repo
     readme = root / "README.md"
     readme.write_text("# real docs\n", encoding="utf-8")
     report = _report(root)
@@ -138,11 +144,11 @@ def test_write_baseline_refuses_to_truncate_a_non_json_file() -> None:
     assert readme.read_text(encoding="utf-8") == "# real docs\n"
 
 
-def test_a_baseline_outside_the_tree_is_still_allowed() -> None:
+def test_a_baseline_outside_the_tree_is_still_allowed(inward_repo: Path) -> None:
     """The predating contract: a person may keep a baseline outside the
     audited tree. Outside the grant the tree cannot plant a route, so the
     write proceeds -- the refusals above do not become a new bound."""
-    root = _inward_symlink_repo()
+    root = inward_repo
     outside = root.parent / "backups" / "baseline.json"
     write_baseline(str(outside), _report(root))
     assert json.loads(outside.read_text(encoding="utf-8"))["version"] == 3

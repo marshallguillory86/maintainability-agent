@@ -236,6 +236,29 @@ class BaseAdapter:
     # Empty means "trust the catalog entry".
     languages: tuple[str, ...] = ()
 
+    def scratch(self) -> Path:
+        """This run's scratch directory, made on first use (D235).
+
+        Four adapters made one with `mkdtemp` in their constructors and
+        never removed it, so every adapter object left a directory whether
+        or not its tool ran: 74,535 of them on one machine. Made here only
+        when a run needs it; `release` removes it.
+        """
+        made = getattr(self, "_scratch_dir", None)
+        if made is None:
+            import tempfile
+
+            made = Path(tempfile.mkdtemp(prefix=f"{self.slug}-"))
+            self._scratch_dir = made
+        return made
+
+    def release(self) -> None:
+        """Remove the scratch directory, if a run made one."""
+        made = getattr(self, "_scratch_dir", None)
+        if made is not None:
+            shutil.rmtree(made, ignore_errors=True)
+            self._scratch_dir = None
+
     def version_argv(self) -> tuple[str, ...]:
         return (self.executable, self.version_flag)
 

@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import dataclasses
 import json
-import tempfile
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any
@@ -167,7 +166,6 @@ class CheckstyleAdapter(BaseAdapter):
             findings_exit_codes=tuple(range(254)),
             languages=("java",),
         )
-        self._work = Path(tempfile.mkdtemp(prefix="checkstyle-"))
 
     def has_targets(self, root: Path, excludes: Sequence[str] = ()) -> bool:
         """Whether any .java file survives the exclusions (never spawn empty)."""
@@ -189,7 +187,7 @@ class CheckstyleAdapter(BaseAdapter):
             # resolves its optional checkstyle-suppressions.xml against
             # the working directory, and the audited tree must not be
             # able to suppress its own findings (audit M2).
-            cwd=self._work,
+            cwd=self.scratch(),
         )
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -265,15 +263,19 @@ class SpotBugsAdapter(BaseAdapter):
         # default detectors include the SECURITY category. A bundled
         # exclude filter — written to this adapter's own scratch dir,
         # never read from the audited tree — keeps that boundary real
-        # instead of documentation (48293d3 audit M1).
-        self._work = Path(tempfile.mkdtemp(prefix="spotbugs-"))
-        self._exclude = self._work / "exclude-security.xml"
-        self._exclude.write_text(
-            "<FindBugsFilter>\n"
-            '  <Match><Bug category="SECURITY"/></Match>\n'
-            "</FindBugsFilter>\n",
-            encoding="utf-8",
-        )
+        # instead of documentation (48293d3 audit M1). Written when a run
+        # needs it, into a scratch dir removed after the run (D235).
+
+    def _exclude_filter(self) -> Path:
+        path = self.scratch() / "exclude-security.xml"
+        if not path.exists():
+            path.write_text(
+                "<FindBugsFilter>\n"
+                '  <Match><Bug category="SECURITY"/></Match>\n'
+                "</FindBugsFilter>\n",
+                encoding="utf-8",
+            )
+        return path
 
     def version_argv(self) -> tuple[str, ...]:
         return ("spotbugs", "-version")
@@ -347,7 +349,7 @@ class SpotBugsAdapter(BaseAdapter):
         dirs = self._target_dirs(root, class_dirs)
         return Invocation(
             argv=("spotbugs", "-textui", "-exitcode", "-xml:withMessages",
-                  "-exclude", str(self._exclude),
+                  "-exclude", str(self._exclude_filter()),
                   *(str(directory) for directory in dirs)),
             findings_exit_codes=self.findings_exit_codes,
         )

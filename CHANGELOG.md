@@ -12,6 +12,20 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.4.6 - 2026-10-26
+
+**An audit no longer leaves temp directories behind.** No published number
+moves.
+
+- **The defect (D235).** jscpd, complexipy, checkstyle and spotbugs each made
+  a scratch directory every time the adapter was built — on every audit,
+  whether or not the tool ran — and never removed it. One machine held
+  74,535 of them, 13.5 GB. Scratch is now made only when a tool runs and is
+  removed once its output is read. The test suite stopped leaving them too.
+  Directories an earlier version left are not removed for you: delete
+  `jscpd-*`, `complexipy-*`, `checkstyle-*` and `spotbugs-*` from your
+  system temp directory.
+
 ## 4.4.5 - 2026-10-26
 
 **The audit of `main` runs again, and a range git cannot resolve is refused

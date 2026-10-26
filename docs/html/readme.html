@@ -36,7 +36,7 @@
 <p><strong>A deterministic, offline maintainability audit whose output is a <em>bounded
 work order</em> for an AI coding agent</strong> — a copy-paste prompt, per finding, that
 says <em>fix exactly these and refactor nothing else</em>. Chat-primary; CLI for CI.
-Version <strong>4.4.6</strong>.</p>
+Version <strong>5.0.0</strong>.</p>
 <blockquote>
 <h2 id="calibrated-against-201-mature-open-source-repositories-in-fifteen-languages"><strong>Calibrated against 201 mature open-source repositories in fifteen languages.</strong></h2>
 <p>Every grade is a measured multiple of real code, not a threshold someone
@@ -75,7 +75,9 @@ brew install pmd checkstyle spotbugs   # JVM languages, optional
 <code>test_the_readme_names_the_analyzer_pool_ci_installs</code> fails if the two ever
 disagree. CI installs it at the versions in <code>constraints/analyzers.txt</code>, the
 ones the scale was calibrated with; add <code>-c constraints/analyzers.txt</code> from a
-source checkout to match them. Nothing here is required — the audit runs
+source checkout to match them. An analyzer held below its latest release
+is held in <code>constraints/held.txt</code>, which says why (lizard stays at 1.24.0,
+because 1.24.3 fails to parse JavaScript that 1.24.0 reads). Nothing here is required — the audit runs
 without any of it and tells you what it could not measure.</p>
 <p><strong>Install secure-code-agent for the security pillar.</strong> Every audit runs it; it is
 installed alongside rather than as a dependency, so the two tools release
@@ -534,7 +536,7 @@ instead of an invokable skill:
 <a href="ide-agent-integration.html#invokable-skill--slash-command">docs/ide-agent-integration.md</a>.</p>
 <h2 id="github-action">GitHub Action</h2>
 <p>This repo ships <code>action.yml</code>, usable as a composite action:</p>
-<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v4.4.6
+<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v5.0.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **4.4.6**.
+Version **5.0.0**.
 
 > ## **Calibrated against 201 mature open-source repositories in fifteen languages.**
 >
@@ -52,7 +52,9 @@ This is the exact set CI installs, and
 `test_the_readme_names_the_analyzer_pool_ci_installs` fails if the two ever
 disagree. CI installs it at the versions in `constraints/analyzers.txt`, the
 ones the scale was calibrated with; add `-c constraints/analyzers.txt` from a
-source checkout to match them. Nothing here is required — the audit runs
+source checkout to match them. An analyzer held below its latest release
+is held in `constraints/held.txt`, which says why (lizard stays at 1.24.0,
+because 1.24.3 fails to parse JavaScript that 1.24.0 reads). Nothing here is required — the audit runs
 without any of it and tells you what it could not measure.
 
 **Install secure-code-agent for the security pillar.** Every audit runs it; it is
@@ -494,7 +496,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v4.4.6
+- uses: marshallguillory86/maintainability-agent@v5.0.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

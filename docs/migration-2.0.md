@@ -78,14 +78,23 @@ The constants below are derived by `tools/calibration/measure.py` from the
 pinned corpus and are reproducible from it.
 
 <!-- constants:begin -->
-| Dimension | 1.x | 2.0 | 3.0 | 4.0 |
-|---|---|---|---|---|
-| `file_size` | 0.0858 | 0.0952 | 0.0938 | 0.0871 |
-| `declarations` | 0.1005 | 0.0908 | 0.0962 | 0.0929 |
-| `duplication` | 0.28 | 0.3222 | 0.3144 | 0.2973 |
-| `risk` | 0.0737 | 0.0826 | 0.0341 | 0.0249 |
-| `gates` | 0.05 | 0.05 | 0.05 | 0.05 |
-| **`CALIBRATION_C`** | **5.8843** | **8.7161** | **4.2565** | **4.3092** |
+| Dimension | 1.x | 2.0 | 3.0 | 4.0 | 5.0 |
+|---|---|---|---|---|---|
+| `file_size` | 0.0858 | 0.0952 | 0.0938 | 0.0871 | 0.0871 |
+| `declarations` | 0.1005 | 0.0908 | 0.0962 | 0.0929 | 0.0944 |
+| `duplication` | 0.28 | 0.3222 | 0.3144 | 0.2973 | 0.2973 |
+| `risk` | 0.0737 | 0.0826 | 0.0341 | 0.0249 | 0.0249 |
+| `gates` | 0.05 | 0.05 | 0.05 | 0.05 | 0.05 |
+| **`CALIBRATION_C`** | **5.8843** | **8.7161** | **4.2565** | **4.3092** | **4.35** |
+
+**5.0 re-pins the analyzer pool** (2026-10-26). Every row was re-measured on
+the refreshed pins, with lizard held at 1.24.0 because 1.24.3 fails to parse
+JavaScript that 1.24.0 reads. It is also the first measurement in which
+pylint and cohesion contribute, which they should have done since 4.3.0:
+they read Python declarations as denser. Only `declarations` moved. 14 of
+201 repositories move at the published decimal and **2 change grade — go
+C→B, manim B→C** — with the grade counts unchanged. Published grades move,
+so it is a major version, on the same reasoning as 3.0 and 4.0.
 
 **4.0 anchors Kotlin and Shell** (2026-10-02). The corpus grew from 180
 repositories to 201 — fifteen Kotlin, six Shell — and every row was

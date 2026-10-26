@@ -228,9 +228,31 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # readings moved; no built-in reading did. Every reference and CALIBRATION_C
 # re-derived to the same four decimals, and no repository's score moved at
 # the published decimal or changed grade, so the constants stand as shipped.
+#
+# **2026-10-26, the pool re-pinned (#296).** All 201 rows were re-measured on
+# the refreshed analyzer pins, with lizard held at 1.24.0 because 1.24.3
+# exits 1 on JavaScript that 1.24.0 parses (`constraints/held.txt`). This is
+# also the first measurement since D226 (4.3.0) in which pylint and cohesion
+# contribute: on the stored rows they had run on none of the 201, and now
+# run on 71 and 64. They read Python declarations as denser — youtube-dl's
+# analyzer declarations 0.126 -> 0.223, manim's 0.026 -> 0.063 — and give go
+# and WRF a declarations reading they did not have. Measured with the old
+# constants, the corpus median rolled up to 3.9, so they are re-derived:
+#
+#     file_size      0.0871 -> 0.0871
+#     declarations   0.0929 -> 0.0944
+#     duplication    0.2973 -> 0.2973
+#     risk           0.0249 -> 0.0249
+#     gates          0.05   -> 0.05
+#     CALIBRATION_C  4.3092 -> 4.3500
+#
+# 14 of 201 repositories move at the published decimal (11 by +0.1 or
+# more, 3 by -0.1) and **2 change grade: go C->B, manim B->C**. The grade
+# counts are unchanged (A=3, B=98, C=96, D=4) and the median rolls up to
+# exactly 4.0000 again.
 DIMENSION_REFERENCES: dict[str, float] = {
     "file_size": 0.0871,
-    "declarations": 0.0929,
+    "declarations": 0.0944,
     "duplication": 0.2973,
     "risk": 0.0249,
     # Fixed, not corpus-derived — see ``_derive.FIXED_REFERENCES``, which
@@ -298,7 +320,8 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 # (three of five references moved at once, `duplication` most of all).
 # 2026-09-08: 8.7161 -> 4.2565, the 3.0.0 recalibration above.
 # 2026-10-02: 4.2565 -> 4.3092, Kotlin and Shell anchored (4.0.0) above.
-CALIBRATION_C = 4.3092
+# 2026-10-26: 4.3092 -> 4.3500, the pool re-pinned and pylint/cohesion read (#296).
+CALIBRATION_C = 4.3500
 
 #: When the reference corpus these constants were derived from was measured.
 #: A calibration describes the code of its moment, and the one number here

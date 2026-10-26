@@ -152,7 +152,7 @@ jobs:
         run: |
           python3 -m venv /tmp/resolve
           /tmp/resolve/bin/python -m pip install --upgrade pip
-          /tmp/resolve/bin/python -m pip install \
+          /tmp/resolve/bin/python -m pip install -c constraints/held.txt \
             cohesion complexipy flake8 fortitude-lint interrogate lizard \
             multimetric mypy pydocstyle pylint radon ruff vulture
           {
@@ -217,7 +217,7 @@ jobs:
         run: |
           python3 -m venv /tmp/analyzer-drift
           /tmp/analyzer-drift/bin/python -m pip install --upgrade pip
-          /tmp/analyzer-drift/bin/python -m pip install \
+          /tmp/analyzer-drift/bin/python -m pip install -c constraints/held.txt \
             cohesion complexipy flake8 fortitude-lint interrogate lizard \
             multimetric mypy pydocstyle pylint radon ruff vulture
       - name: Fail visibly if the analyzer resolution drifted

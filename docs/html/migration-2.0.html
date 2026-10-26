@@ -84,6 +84,7 @@ pinned corpus and are reproducible from it.</p>
 <th>2.0</th>
 <th>3.0</th>
 <th>4.0</th>
+<th>5.0</th>
 </tr>
 </thead>
 <tbody>
@@ -93,6 +94,7 @@ pinned corpus and are reproducible from it.</p>
 <td>0.0952</td>
 <td>0.0938</td>
 <td>0.0871</td>
+<td>0.0871</td>
 </tr>
 <tr>
 <td><code>declarations</code></td>
@@ -100,12 +102,14 @@ pinned corpus and are reproducible from it.</p>
 <td>0.0908</td>
 <td>0.0962</td>
 <td>0.0929</td>
+<td>0.0944</td>
 </tr>
 <tr>
 <td><code>duplication</code></td>
 <td>0.28</td>
 <td>0.3222</td>
 <td>0.3144</td>
+<td>0.2973</td>
 <td>0.2973</td>
 </tr>
 <tr>
@@ -114,9 +118,11 @@ pinned corpus and are reproducible from it.</p>
 <td>0.0826</td>
 <td>0.0341</td>
 <td>0.0249</td>
+<td>0.0249</td>
 </tr>
 <tr>
 <td><code>gates</code></td>
+<td>0.05</td>
 <td>0.05</td>
 <td>0.05</td>
 <td>0.05</td>
@@ -128,9 +134,18 @@ pinned corpus and are reproducible from it.</p>
 <td><strong>8.7161</strong></td>
 <td><strong>4.2565</strong></td>
 <td><strong>4.3092</strong></td>
+<td><strong>4.35</strong></td>
 </tr>
 </tbody>
 </table></div>
+<p><strong>5.0 re-pins the analyzer pool</strong> (2026-10-26). Every row was re-measured on
+the refreshed pins, with lizard held at 1.24.0 because 1.24.3 fails to parse
+JavaScript that 1.24.0 reads. It is also the first measurement in which
+pylint and cohesion contribute, which they should have done since 4.3.0:
+they read Python declarations as denser. Only <code>declarations</code> moved. 14 of
+201 repositories move at the published decimal and <strong>2 change grade — go
+C→B, manim B→C</strong> — with the grade counts unchanged. Published grades move,
+so it is a major version, on the same reasoning as 3.0 and 4.0.</p>
 <p><strong>4.0 anchors Kotlin and Shell</strong> (2026-10-02). The corpus grew from 180
 repositories to 201 — fifteen Kotlin, six Shell — and every row was
 re-measured on the re-pinned analyzer pool. Separated on the 180 shared

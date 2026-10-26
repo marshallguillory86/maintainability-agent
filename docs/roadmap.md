@@ -141,6 +141,14 @@ change 4 grades and adding the two languages changes 9 (8 B→C, 1 C→B), so
 it is a major, on 3.0.0's reasoning. COBOL is now the only unanchored
 language.
 
+**The pool was re-pinned again in 5.0.0 (2026-10-26, #296).** The weekly
+drift check found newer releases; all 201 repositories were re-measured on
+them, with lizard held at 1.24.0 in `constraints/held.txt` because 1.24.3
+cannot parse JavaScript that 1.24.0 reads. pylint and cohesion contribute to
+the corpus for the first time since D226, which moved the declarations
+reference 0.0929 → 0.0944 and `CALIBRATION_C` 4.3092 → 4.35; 2 of 201
+repositories change grade, so it is a major.
+
 **The foundation work behind the pause is done** — the re-pin (3.12.0),
 the recalibration (4.0.0), and the loose ends that came with them. Language
 support stays paused until the maintainer decides otherwise. What came next

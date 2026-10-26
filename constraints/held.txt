@@ -1,0 +1,9 @@
+# Analyzers held back on purpose. Applied by both jobs that resolve the pool
+# (resolve-constraints and analyzer-drift in quality-gates.yml), so a hold
+# survives the next refresh and the weekly check does not report it as drift.
+# Every hold says why, and is lifted when the reason is gone.
+
+# 1.24.3 fails with "Fail to parse file" on JavaScript 1.24.0 reads (axios's
+# tests/unit/adapters/fetch.test.js) and exits 1 for the whole batch, so lizard
+# contributed nothing on 26 of the 201 corpus repositories (#296, 2026-10-26).
+lizard==1.24.0

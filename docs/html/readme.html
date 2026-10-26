@@ -71,10 +71,12 @@ the commonest reason it looks thin.</p>
 npm install -g jscpd eslint            # duplication + JavaScript/TypeScript
 brew install pmd checkstyle spotbugs   # JVM languages, optional
 </code></pre>
-<p>Unpinned on purpose: this is the exact set CI installs and calibrates against,
-and <code>test_the_readme_names_the_analyzer_pool_ci_installs</code> fails if the two ever
-disagree. Nothing here is required — the audit runs without any of it and tells
-you what it could not measure.</p>
+<p>This is the exact set CI installs, and
+<code>test_the_readme_names_the_analyzer_pool_ci_installs</code> fails if the two ever
+disagree. CI installs it at the versions in <code>constraints/analyzers.txt</code>, the
+ones the scale was calibrated with; add <code>-c constraints/analyzers.txt</code> from a
+source checkout to match them. Nothing here is required — the audit runs
+without any of it and tells you what it could not measure.</p>
 <p><strong>Install secure-code-agent for the security pillar.</strong> Every audit runs it; it is
 installed alongside rather than as a dependency, so the two tools release
 independently. Without it the report says the security pillar was not measured
@@ -164,6 +166,7 @@ record — and those checks read a diff's <strong>shape</strong>, never whether 
 <h2 id="install">Install</h2>
 <pre><code class="language-bash">python3 -m pip install maintainability-agent
 maintainability-agent --root . --config maintainability-agent.json
+maintainability-agent --update    # later: upgrade, re-sync the skill, restart stale MCP servers
 </code></pre>
 <p>Or run from a source checkout without installing:</p>
 <pre><code class="language-bash">python3 -m maintainability_audit --root . --config maintainability-agent.json
@@ -211,6 +214,17 @@ test command, a breached threshold) — never on a letter grade, and never on a
 withheld estimate. For PR work, add <code>--changed-only main...HEAD</code> to audit the
 diff; on a change too small to support a rate, the estimate and grade are
 withheld and the scope is named as the reason.</p>
+<p><strong>Hold the code a change touches to a stricter bar.</strong> <code>policy.changed_code</code> in
+<code>maintainability-agent.json</code> sets tighter function limits for what a change
+adds or alters, so a team can gate new work without first fixing every old
+function:</p>
+<pre><code class="language-json">&quot;policy&quot;: {&quot;changed_code&quot;: {&quot;max_function_lines&quot;: 40, &quot;max_complexity&quot;: 10}}
+</code></pre>
+<p>On a <code>--changed-only</code> run, a function the change touched is held to it and
+untouched code is judged by the standard as before. A policy only tightens — a
+looser limit is refused when the config loads — and it decides the gate, never
+the grade: breaches fail <code>--fail-on-gate</code> and are listed under <em>Changed-code
+policy</em>, and the score is unchanged.</p>
 <h3 id="checking-that-the-agent-did-the-work">Checking that the agent did the work</h3>
 <p>The work order tells an agent to fix exactly these findings and refactor nothing
 else. Four flags check that the diff obeyed it — reading its <em>shape</em>, never
@@ -509,8 +523,9 @@ Copilot Chat:</p>
 <pre><code class="language-bash">maintainability-agent --install-skill        # writes ~/.claude/skills
 </code></pre>
 <p><code>maintainability-agent --update</code> upgrades the install to the newest release —
-never a downgrade — re-syncs the skill, and says when the MCP server needs a
-restart; <code>maintainability-agent --install-updater</code> runs it hourly (macOS launch
+never a downgrade — re-syncs the skill, and stops any MCP server still on an
+older version that is not mid-audit, so the host starts the new one on its
+next call; <code>maintainability-agent --install-updater</code> runs it hourly (macOS launch
 agent). Run <code>--install-skill</code> by hand after any other upgrade — a drifted skill
 teaches agents a dead workflow,
 so a differing installed copy is refused with the list of differences. Per-host

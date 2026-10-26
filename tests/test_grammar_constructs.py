@@ -80,15 +80,6 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
             "does not count it."
         ),
     },
-    ".ts": {
-        "optionalParameter": (
-            "lizard counts `title?: string` as a decision. An optional "
-            "parameter is a type-level marker and decides nothing — the "
-            "exact defect this project fixed in its own C-family pattern, "
-            "found here in the tool being checked against. Useful as a "
-            "reminder that lizard is a second opinion and not an oracle."
-        ),
-    },
     ".cs": {
         "ForEach": (
             "lizard does not count `foreach`, which is the gap D212 "
@@ -140,15 +131,6 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
             "recorded in their own scanners."
         ),
     },
-    ".js": {
-        "ternaryAndCoalesce": (
-            "A ternary and a `??` are two decisions; lizard scores three. "
-            "D78 is the standing lesson on this line: `?.`, `??` and `?` "
-            "are three different operators and counting them loosely made "
-            "a complexity-1 function score 12. This project counts each "
-            "once and optional chaining not at all."
-        ),
-    },
     ".php": {
         "elvisOperator": (
             "lizard does not count `?:`. PHP's short ternary chooses "
@@ -187,23 +169,6 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
             "`unless cond` is `if !cond`: two paths, one decision. Ruby "
             "programmers reach for it constantly, and not counting it "
             "would make a guard-heavy method read as branchless."
-        ),
-    },
-    ".rs": {
-        "let_else": (
-            "lizard does not count `let … else`. Stable since Rust 1.65, "
-            "it is the idiomatic early return for a refutable pattern: "
-            "the binding succeeds, or the `else` block diverges. Two "
-            "paths, one decision, and no `if` token anywhere in it — "
-            "which is exactly why nothing saw it until it was looked "
-            "for (D128)."
-        ),
-        "match_arms": (
-            "lizard reads a whole `match` as one decision. Two real arms "
-            "and a wildcard is three paths, which is the same shape as two "
-            "`case`s and a `default` — and lizard already agrees with this "
-            "project that Go's version of that is 3. The wildcard is not "
-            "counted, as `default:` is not."
         ),
     },
 }

@@ -12,6 +12,17 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.4.4 - 2026-10-26
+
+**A production file whose name starts with `test` pairs with its test.**
+Testability can rise for a repository that holds one.
+
+- **The defect (D233, issue #306).** pFUnit's camelCase rule
+  (`testFooBar_mod.F90` covers `fooBar_mod.F90`) was applied to every
+  language, so `test-rp.mjs`, `tester.py` and `testing.mjs` lost their first
+  four letters and never paired with the tests that cover them. The rule now
+  applies to Fortran tests only.
+
 ## 4.4.3 - 2026-10-15
 
 **`--update` puts every MCP server on the new version itself.** No published

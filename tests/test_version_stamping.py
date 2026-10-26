@@ -61,17 +61,19 @@ def test_the_tree_is_already_stamped() -> None:
     assert "already current" in result.stdout, result.stdout
 
 
-def test_a_document_that_stops_matching_is_refused_not_skipped() -> None:
+def test_a_document_that_stops_matching_is_refused_not_skipped(tmp_path: Path) -> None:
     """Silently stamping three of four is how v3.7.9 was tagged.
 
     A rule whose pattern no longer matches means the tool has quietly
     stopped maintaining that document. It exits non-zero and names the
     pattern rather than reporting success.
+
+    Covers existing behaviour: unchanged except that it takes `tmp_path`
+    instead of a bare `mkdtemp` that was never removed (D235).
     """
     import shutil
-    import tempfile
 
-    scratch = Path(tempfile.mkdtemp())
+    scratch = tmp_path
     copy = scratch / "repo"
     copy.mkdir()
     for relative in ("README.md", "SECURITY.md", "docs/release-plan.md",

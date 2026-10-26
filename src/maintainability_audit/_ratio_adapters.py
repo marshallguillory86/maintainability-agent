@@ -20,7 +20,6 @@ for analyzability and testability. Two kinds of number, two modules.
 from __future__ import annotations
 
 import json
-import tempfile
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
@@ -64,8 +63,8 @@ class JscpdAdapter(BaseAdapter):
         # picks the destination when it builds the invocation and reads it
         # back when parsing. A scratch directory rather than the scanned
         # tree: writing into the repository under audit would change what
-        # the next tool sees.
-        self._report_dir = Path(tempfile.mkdtemp(prefix="jscpd-"))
+        # the next tool sees. Made on first use and removed after the
+        # run (`BaseAdapter.scratch`, D235).
 
     def version_argv(self) -> tuple[str, ...]:
         return _npx("jscpd", "--version")
@@ -91,11 +90,11 @@ class JscpdAdapter(BaseAdapter):
         ignore = ("--ignore", ",".join(patterns)) if patterns else ()
         return Invocation(
             argv=(*_npx("jscpd"), str(root), "--reporters", "json", "--silent",
-                  *ignore, "--output", str(self._report_dir)),
+                  *ignore, "--output", str(self.scratch())),
         )
 
     def _read(self, result: ToolResult) -> Extraction:
-        report = self._report_dir / "jscpd-report.json"
+        report = self.scratch() / "jscpd-report.json"
         raw = report.read_text(encoding="utf-8") if report.exists() else result.stdout
         if not raw.strip():
             # No report file and no stdout is "ran, produced nothing",

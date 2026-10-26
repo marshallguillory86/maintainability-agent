@@ -14,7 +14,6 @@ import csv
 import io
 import json
 import re
-import tempfile
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
@@ -196,7 +195,6 @@ class ComplexipyAdapter(BaseAdapter):
             slug="complexipy", emits="metric", executable="complexipy",
             concepts=("cognitive_complexity",), findings_exit_codes=(0, 1),
         )
-        self._work = Path(tempfile.mkdtemp(prefix="complexipy-"))
 
     def target_files(self, root: Path, excludes: Sequence[str] = ()) -> tuple[str, ...]:
         return expand_files(root.resolve(), excludes)
@@ -212,11 +210,11 @@ class ComplexipyAdapter(BaseAdapter):
         return Invocation(
             argv=(self.executable, *targets, "--output-format", "json", "--quiet"),
             findings_exit_codes=self.findings_exit_codes,
-            cwd=self._work,
+            cwd=self.scratch(),
         )
 
     def _read(self, result: ToolResult) -> Extraction:
-        report = self._work / "complexipy-results.json"
+        report = self.scratch() / "complexipy-results.json"
         if not report.exists():
             raise ValueError("complexipy wrote no results file")
         entries = json.loads(report.read_text(encoding="utf-8"))

@@ -422,6 +422,12 @@ def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
                 "concern it covers is reported unexamined."
             ),
         )
+    finally:
+        # Every path, the backstop's included: a scratch dir left behind is
+        # one per run, forever (D235).
+        release = getattr(adapter, "release", None)
+        if release is not None:
+            release()
 
 
 def _cover_one(selected: Selected, root: Path, probe: Probe, timeout: int,

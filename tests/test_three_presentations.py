@@ -145,10 +145,14 @@ def test_the_four_required_charts_render_with_history(audited) -> None:
         assert chart in html, f"required chart {chart} is missing"
 
 
-def test_schema_one_records_are_gaps_on_pillar_and_practice_charts(audited) -> None:
-    """The rollup series may use them; the new series may not invent them."""
+def test_schema_one_records_are_gaps_on_pillar_and_practice_charts(audited, tmp_path) -> None:
+    """The rollup series may use them; the new series may not invent them.
+
+    Covers existing behaviour: unchanged except that it takes `tmp_path`
+    instead of a bare `mkdtemp` that was never removed (D235).
+    """
     _root, report, records = audited
-    schema1 = read_history(_write_schema1_beside(records))
+    schema1 = read_history(_write_schema1_beside(tmp_path))
     mixed = schema1 + records
 
     html = render_html(report, mixed)
@@ -179,10 +183,8 @@ def test_empty_history_is_an_empty_state(audited) -> None:
     )
 
 
-def _write_schema1_beside(records: list) -> Path:
-    import tempfile
-
-    path = Path(tempfile.mkdtemp()) / "old.jsonl"
+def _write_schema1_beside(directory: Path) -> Path:
+    path = directory / "old.jsonl"
     path.write_text(SCHEMA_1_LINE + "\n", encoding="utf-8")
     return path
 

@@ -292,7 +292,7 @@ def _summary(entry: dict) -> dict:
     return summary
 
 
-def test_the_corpus_harness_still_runs() -> None:
+def test_the_corpus_harness_still_runs(tmp_path: Path) -> None:
     """The calibration must stay reproducible — P6.
 
     `tools/calibration/measure.py` handed a raw summary dict to
@@ -306,15 +306,17 @@ def test_the_corpus_harness_still_runs() -> None:
     — the network half stays manual — but it exercises the same function
     the corpus run calls, so a signature change breaks the suite instead
     of the next recalibration.
+
+    Covers existing behaviour: unchanged except that it takes `tmp_path`
+    instead of a bare `mkdtemp` that was never removed (D235).
     """
     import subprocess
     import sys
-    import tempfile
 
     sys.path.insert(0, str(CORPUS_DIR))
     from measure import measure  # noqa: PLC0415
 
-    root = Path(tempfile.mkdtemp()) / "tiny"
+    root = tmp_path / "tiny"
     root.mkdir()
     subprocess.run(["git", "init", "-q", str(root)], check=True)
     (root / "README.md").write_text("# tiny\n", encoding="utf-8")

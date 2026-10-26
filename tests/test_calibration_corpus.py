@@ -306,6 +306,9 @@ def test_the_corpus_harness_still_runs(tmp_path: Path) -> None:
     — the network half stays manual — but it exercises the same function
     the corpus run calls, so a signature change breaks the suite instead
     of the next recalibration.
+
+    Covers existing behaviour: unchanged except that it takes `tmp_path`
+    instead of a bare `mkdtemp` that was never removed (D235).
     """
     import subprocess
     import sys

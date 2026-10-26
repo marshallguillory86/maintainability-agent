@@ -146,7 +146,11 @@ def test_the_four_required_charts_render_with_history(audited) -> None:
 
 
 def test_schema_one_records_are_gaps_on_pillar_and_practice_charts(audited, tmp_path) -> None:
-    """The rollup series may use them; the new series may not invent them."""
+    """The rollup series may use them; the new series may not invent them.
+
+    Covers existing behaviour: unchanged except that it takes `tmp_path`
+    instead of a bare `mkdtemp` that was never removed (D235).
+    """
     _root, report, records = audited
     schema1 = read_history(_write_schema1_beside(tmp_path))
     mixed = schema1 + records

@@ -67,6 +67,9 @@ def test_a_document_that_stops_matching_is_refused_not_skipped(tmp_path: Path) -
     A rule whose pattern no longer matches means the tool has quietly
     stopped maintaining that document. It exits non-zero and names the
     pattern rather than reporting success.
+
+    Covers existing behaviour: unchanged except that it takes `tmp_path`
+    instead of a bare `mkdtemp` that was never removed (D235).
     """
     import shutil
 

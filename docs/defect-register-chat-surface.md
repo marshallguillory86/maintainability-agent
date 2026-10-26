@@ -8959,11 +8959,10 @@ Every other name keeps its whole stem; the pFUnit pairing is unchanged.
 
 *Closing test:* `test_a_production_file_named_test_something_pairs_with_its_test`
 in `tests/test_a_production_name_keeps_its_test_prefix.py`, beside the stem
-of a production file in four languages and the pFUnit convention it must
-keep.
+of a production file in four languages. The pFUnit convention it must keep
+is held by `test_subject_stem_pairs_the_fortran_conventions`.
 
-*Mutation:* eight of the nine failed before the change; the pFUnit case,
-which must keep passing, passed throughout.
+*Mutation:* all eight failed before the change.
 
 ## Disposition
 

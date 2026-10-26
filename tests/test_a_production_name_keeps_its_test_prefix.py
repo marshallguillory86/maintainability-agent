@@ -39,9 +39,3 @@ def test_a_production_file_named_test_something_pairs_with_its_test(production: 
 ])
 def test_the_stem_of_a_production_file_is_its_own_name(path: str, stem: str) -> None:
     assert subject_stem(path) == stem
-
-
-def test_the_pfunit_convention_still_pairs() -> None:
-    """The rule that caused it keeps working where it belongs."""
-    assert subject_stem("tests/testFooBar_mod.F90") == "foobar"
-    assert subject_stem("tests/testGravity_mod.F90") == subject_stem("src/gravity_mod.f90")

@@ -69,8 +69,13 @@ jobs:
           # and the grade, and names the scope as the reason (ADR 005).
           # You get findings on what changed and no invented number.
           #
-          # Blank this to audit the whole tree on every pull request.
-          changed-only: origin/${{ github.base_ref }}...HEAD
+          # Blank this to audit the whole tree on every push.
+          #
+          # This runs on pushes to main, where the pull request's base
+          # branch is empty: the range it used resolved to `origin/...HEAD`,
+          # and the job failed on every push from 2026-10-15 (D234). The push's own range is `before...HEAD`; a manual run
+          # has no `before`, so it audits the last commit.
+          changed-only: ${{ github.event.before || 'HEAD~1' }}...HEAD
 
           # Hard gates only — a missing README, an undocumented test
           # command, a configured threshold breached. The job does not

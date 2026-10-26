@@ -43,7 +43,7 @@ from .config import (
     load_config,
     repository_path,
 )
-from .git_tools import changed_paths
+from .git_tools import GitCommandFailed, changed_paths
 from .instructions import (
     INSTRUCTION_TARGETS,
     UnknownTarget,
@@ -492,7 +492,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     selection = _selection_from(parser, args.work)
-    only_paths = changed_paths(root, args.changed_only) if args.changed_only else None
+    try:
+        only_paths = changed_paths(root, args.changed_only) if args.changed_only else None
+    except GitCommandFailed as unresolved:
+        # A range git cannot resolve is a bad input, said so by name, not a
+        # traceback a pipeline cannot tell from a broken tool (D234).
+        print(f"maintainability-agent: --changed-only {args.changed_only} cannot be "
+              f"resolved ({unresolved})", file=sys.stderr)
+        return 2
     external_findings = read_sarif_inputs(args.sarif_input)
     report = build_report(root, config, only_paths=only_paths,
                           changed_revspec=args.changed_only,

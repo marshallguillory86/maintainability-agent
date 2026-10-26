@@ -6,6 +6,7 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#445-2026-10-26">4.4.5 - 2026-10-26</a></li>
 <li><a href="#444-2026-10-26">4.4.4 - 2026-10-26</a></li>
 <li><a href="#443-2026-10-15">4.4.3 - 2026-10-15</a></li>
 <li><a href="#442-2026-10-15">4.4.2 - 2026-10-15</a></li>
@@ -546,6 +547,16 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="445-2026-10-26">4.4.5 - 2026-10-26</h2>
+<p><strong>The audit of <code>main</code> runs again, and a range git cannot resolve is refused
+by name.</strong> No published number moves.</p>
+<ul>
+<li><strong>The defect (D234).</strong> Since CI moved the maintainability audit from pull
+  requests to pushes on main (Decision 18), it diffed against the pull
+  request's base branch, which is empty on a push, so it failed on every push
+  to main — with a traceback. It now audits the push's own range, and
+  <code>--changed-only</code> with a range git cannot resolve exits 2 and names it.</li>
+</ul>
 <h2 id="444-2026-10-26">4.4.4 - 2026-10-26</h2>
 <p><strong>A production file whose name starts with <code>test</code> pairs with its test.</strong>
 Testability can rise for a repository that holds one.</p>

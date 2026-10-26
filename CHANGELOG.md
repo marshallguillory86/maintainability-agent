@@ -12,6 +12,17 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.4.5 - 2026-10-26
+
+**The audit of `main` runs again, and a range git cannot resolve is refused
+by name.** No published number moves.
+
+- **The defect (D234).** Since CI moved the maintainability audit from pull
+  requests to pushes on main (Decision 18), it diffed against the pull
+  request's base branch, which is empty on a push, so it failed on every push
+  to main — with a traceback. It now audits the push's own range, and
+  `--changed-only` with a range git cannot resolve exits 2 and names it.
+
 ## 4.4.4 - 2026-10-26
 
 **A production file whose name starts with `test` pairs with its test.**

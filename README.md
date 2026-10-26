@@ -48,10 +48,12 @@ npm install -g jscpd eslint            # duplication + JavaScript/TypeScript
 brew install pmd checkstyle spotbugs   # JVM languages, optional
 ```
 
-Unpinned on purpose: this is the exact set CI installs and calibrates against,
-and `test_the_readme_names_the_analyzer_pool_ci_installs` fails if the two ever
-disagree. Nothing here is required — the audit runs without any of it and tells
-you what it could not measure.
+This is the exact set CI installs, and
+`test_the_readme_names_the_analyzer_pool_ci_installs` fails if the two ever
+disagree. CI installs it at the versions in `constraints/analyzers.txt`, the
+ones the scale was calibrated with; add `-c constraints/analyzers.txt` from a
+source checkout to match them. Nothing here is required — the audit runs
+without any of it and tells you what it could not measure.
 
 **Install secure-code-agent for the security pillar.** Every audit runs it; it is
 installed alongside rather than as a dependency, so the two tools release
@@ -162,6 +164,7 @@ The full argument, including what this deliberately does not compete on:
 ```bash
 python3 -m pip install maintainability-agent
 maintainability-agent --root . --config maintainability-agent.json
+maintainability-agent --update    # later: upgrade, re-sync the skill, restart stale MCP servers
 ```
 
 Or run from a source checkout without installing:
@@ -224,6 +227,21 @@ test command, a breached threshold) — never on a letter grade, and never on a
 withheld estimate. For PR work, add `--changed-only main...HEAD` to audit the
 diff; on a change too small to support a rate, the estimate and grade are
 withheld and the scope is named as the reason.
+
+**Hold the code a change touches to a stricter bar.** `policy.changed_code` in
+`maintainability-agent.json` sets tighter function limits for what a change
+adds or alters, so a team can gate new work without first fixing every old
+function:
+
+```json
+"policy": {"changed_code": {"max_function_lines": 40, "max_complexity": 10}}
+```
+
+On a `--changed-only` run, a function the change touched is held to it and
+untouched code is judged by the standard as before. A policy only tightens — a
+looser limit is refused when the config loads — and it decides the gate, never
+the grade: breaches fail `--fail-on-gate` and are listed under *Changed-code
+policy*, and the score is unchanged.
 
 ### Checking that the agent did the work
 
@@ -461,8 +479,9 @@ maintainability-agent --install-skill        # writes ~/.claude/skills
 ```
 
 `maintainability-agent --update` upgrades the install to the newest release —
-never a downgrade — re-syncs the skill, and says when the MCP server needs a
-restart; `maintainability-agent --install-updater` runs it hourly (macOS launch
+never a downgrade — re-syncs the skill, and stops any MCP server still on an
+older version that is not mid-audit, so the host starts the new one on its
+next call; `maintainability-agent --install-updater` runs it hourly (macOS launch
 agent). Run `--install-skill` by hand after any other upgrade — a drifted skill
 teaches agents a dead workflow,
 so a differing installed copy is refused with the list of differences. Per-host

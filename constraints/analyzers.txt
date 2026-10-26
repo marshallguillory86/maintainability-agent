@@ -16,7 +16,7 @@ fortitude-lint==0.10.0
 interrogate==1.7.0
 isort==9.0.2
 librt==0.16.0
-lizard==1.24.3
+lizard==1.24.0
 mando==0.7.1
 mccabe==0.7.0
 multimetric==2.4.5

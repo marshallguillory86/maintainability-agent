@@ -12,6 +12,33 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 5.0.0 - 2026-10-26
+
+**Grades move: this is a recalibration.** The analyzer pool was re-pinned and
+every corpus repository re-measured on it. On the 201 repositories, 2 change
+grade — go C→B, manim B→C — and 14 move at the published decimal. The grade
+counts are unchanged and the corpus median still scores exactly 4.0. If you
+track a grade over time, expect a step at this release; the trend already
+reports it as a break, because the calibration constant changed.
+
+### Changed — the analyzer pool is re-pinned (#296)
+
+- `constraints/analyzers.txt` moves to current releases: astroid 4.3.4,
+  complexipy 8.2.0, fortitude-lint 0.10.0, multimetric 2.4.5, pyflakes 4.0.3,
+  pylint 4.1.3 and ruff 0.17.2, among others.
+- **lizard is held at 1.24.0.** 1.24.3 fails with "Fail to parse file" on
+  JavaScript that 1.24.0 reads, and exits 1 for the whole batch, so lizard
+  measured nothing on 26 of the 201 corpus repositories. A hold now lives in
+  `constraints/held.txt` with its reason, and both the job that resolves the
+  pins and the weekly drift check apply it, so the next refresh keeps it and
+  the drift check does not report it.
+- This is the first corpus measurement in which pylint and cohesion
+  contribute, which they should have done since 4.3.0 (D226). They read
+  Python declarations as denser, and that is what moved the scale: the
+  declarations reference goes 0.0929 → 0.0944 and `CALIBRATION_C` 4.3092 →
+  4.35. The other references did not move. The full record is in
+  `_calibration.py` and `docs/migration-2.0.md`.
+
 ## 4.4.6 - 2026-10-26
 
 **An audit no longer leaves temp directories behind.** No published number

@@ -135,6 +135,15 @@ def render_risk_markdown(report: dict[str, Any]) -> list[str]:
     return markdown_table("Risk Pattern Findings", ["File", "Line", "Rule", "Text"], rows)
 
 
+def render_skipped_tests_markdown(report: dict[str, Any]) -> list[str]:
+    """Skipped, pending and expected-failure tests, with their credit (Decision 19)."""
+    honesty = report.get("test_honesty") or {}
+    rows = [[f"`{item['path']}:{item['line']}`", item["text"].replace("|", "\\|")]
+            for item in honesty.get("skipped") or []]
+    table = markdown_table("Skipped Tests — never counted as passing", ["Location", "Text"], rows)
+    return [*table, f"_{honesty['credit']}_", ""] if table else []
+
+
 def render_near_duplicate_markdown(report: dict[str, Any]) -> list[str]:
     """Declarations that are near-copies, each paired with its original.
 

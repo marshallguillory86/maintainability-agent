@@ -136,6 +136,7 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
             "_test_execution",
             # Path pairing and TDD-shaped constructs. Not chronology.
             "_test_pairing",
+            "_test_honesty",
             # Reads build manifests to name the command that runs the tests.
             # A scanner because it reads the tree; it never runs anything,
             # and it only ever supplies a setup question's default.

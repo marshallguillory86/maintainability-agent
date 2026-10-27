@@ -501,6 +501,11 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
         and not is_withheld(withheld, i, risk_ids.get((i["path"], i["name"], i["line"])))
     ]
     lines.extend(bulleted_section("Risk pattern findings to verify:", risks))
+    skipped = [f"`{i['path']}:{i['line']}` {i['text']}"
+               for i in ((report.get("test_honesty") or {}).get("skipped") or [])[:20]]
+    lines.extend(bulleted_section(
+        "Skipped tests, which never count as passing (report only; run or remove each "
+        "only if the task asks):", skipped))
     dupes = [
         f"Repeated block appears {i['count']} times near: {', '.join(i['locations'][:5])}"
         for i in report["duplicate_blocks"][:5]

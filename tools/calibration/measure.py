@@ -196,8 +196,20 @@ def _analyzer_row(path: Path, config: dict) -> tuple[dict | None, dict | None, d
             },
             "unexamined": analysis.gaps(),
             "single_source": analysis.single_source_concerns(),
+            # A tool that applied and measured nothing, and why. Without it
+            # a row that lost radon to a timeout looked like one radon never
+            # applied to, so the corpus moved with the machine unrecorded
+            # (#312). Not installed or not applicable is not a loss.
+            "did_not_contribute": {
+                item.slug: "parse-error" if item.parse_error else item.outcome
+                for item in sorted(analysis.coverage, key=lambda item: item.slug)
+                if not item.contributed and item.outcome in _LOST_OUTCOMES
+            },
         },
     )
+
+
+_LOST_OUTCOMES = frozenset({"ran", "timed-out", "failed", "not-working"})
 
 
 def stored_measurements() -> list[dict]:

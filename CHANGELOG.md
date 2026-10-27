@@ -12,6 +12,15 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+- **A corpus row names the analyzer it lost, and why (#312).** The 5.0.0
+  re-measure lost one tool on each of seven repositories and the rows could
+  not say why, because they listed only the tools that contributed. On
+  fastapi it was radon timing out: one 7,304-line test file costs it 109 of
+  its 120 seconds, so whether it finishes depends on the machine. Each row
+  now carries `did_not_contribute` — a timeout, a failure or unreadable
+  output — while a tool that does not apply stays out. No published number
+  moves.
+
 ## 5.0.0 - 2026-10-26
 
 **Grades move: this is a recalibration.** The analyzer pool was re-pinned and

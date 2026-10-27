@@ -423,14 +423,20 @@ _HONESTY_KINDS = (
 )
 
 
+def _test_honesty_rows(honesty: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """(finding, location, evidence) for every test-honesty and Spectables finding."""
+    rows = [(label, f"{item['path']}:{item['line']}", item["text"])
+            for key, label in _HONESTY_KINDS for item in honesty.get(key) or []]
+    specs = honesty.get("spectables") or {}
+    return rows + [(f"Spectables: {item['check']}", f"{item['path']}:{item['line']}", item["message"])
+                   for item in specs.get("findings") or []]
+
+
 def _test_honesty_section(report: dict[str, Any]) -> list[str]:
     """Decision 19: test-honesty findings and Spectables checks, credited, nothing scored."""
     honesty = report.get("test_honesty") or {}
     specs = honesty.get("spectables") or {}
-    rows = [(label, f"{item['path']}:{item['line']}", item["text"])
-            for key, label in _HONESTY_KINDS for item in honesty.get(key) or []]
-    rows += [(f"Spectables: {item['check']}", f"{item['path']}:{item['line']}", item["message"])
-             for item in specs.get("findings") or []]
+    rows = _test_honesty_rows(honesty)
     if not rows and not specs.get("files"):
         return []
     parts = ["<h2>Test honesty</h2>", f"<p>{escape(honesty.get('credit') or '')}</p>"]

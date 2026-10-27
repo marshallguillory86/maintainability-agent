@@ -451,6 +451,29 @@ def _escalated_fingerprints(report: dict[str, Any]) -> set[str]:
     }
 
 
+#: The test-honesty lists (Decision 19): key path in the block, heading, and
+#: how one item reads. All report only, so each heading says so.
+_HONESTY_LISTS = (
+    (("skipped",), "Skipped tests, which never count as passing (report only; run or "
+     "remove each only if the task asks):", "{path}:{line}` {text}"),
+    (("computed_expected",), "Tests that compute their own expected value (report only; "
+     "state the value only if the task asks):", "{path}:{line}` {text}"),
+    (("spectables", "findings"), "Spectables specification mistakes (report only; fix "
+     "only if the task asks):", "{path}:{line}` {check}: {message}"),
+)
+
+
+def test_honesty_sections(report: dict[str, Any]) -> list[str]:
+    """The test-honesty findings as report-only evidence, twenty of each at most."""
+    lines: list[str] = []
+    for keys, heading, shape in _HONESTY_LISTS:
+        items: Any = report.get("test_honesty") or {}
+        for key in keys:
+            items = (items or {}).get(key) or []
+        lines.extend(bulleted_section(heading, ["`" + shape.format(**i) for i in items[:20]]))
+    return lines
+
+
 def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
     """The inspect-first lists, minus everything the prompt withheld.
 
@@ -501,20 +524,7 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
         and not is_withheld(withheld, i, risk_ids.get((i["path"], i["name"], i["line"])))
     ]
     lines.extend(bulleted_section("Risk pattern findings to verify:", risks))
-    honesty = report.get("test_honesty") or {}
-    skipped = [f"`{i['path']}:{i['line']}` {i['text']}" for i in (honesty.get("skipped") or [])[:20]]
-    lines.extend(bulleted_section(
-        "Skipped tests, which never count as passing (report only; run or remove each "
-        "only if the task asks):", skipped))
-    computed = [f"`{i['path']}:{i['line']}` {i['text']}"
-                for i in (honesty.get("computed_expected") or [])[:20]]
-    lines.extend(bulleted_section(
-        "Tests that compute their own expected value (report only; state the value "
-        "only if the task asks):", computed))
-    specs = [f"`{i['path']}:{i['line']}` {i['check']}: {i['message']}"
-             for i in ((honesty.get("spectables") or {}).get("findings") or [])[:20]]
-    lines.extend(bulleted_section(
-        "Spectables specification mistakes (report only; fix only if the task asks):", specs))
+    lines.extend(test_honesty_sections(report))
     dupes = [
         f"Repeated block appears {i['count']} times near: {', '.join(i['locations'][:5])}"
         for i in report["duplicate_blocks"][:5]

@@ -135,13 +135,21 @@ def render_risk_markdown(report: dict[str, Any]) -> list[str]:
     return markdown_table("Risk Pattern Findings", ["File", "Line", "Rule", "Text"], rows)
 
 
+_HONESTY_TABLES = (
+    ("skipped", "Skipped Tests — never counted as passing"),
+    ("computed_expected", "Tests That Compute Their Expected Value"),
+)
+
+
 def render_skipped_tests_markdown(report: dict[str, Any]) -> list[str]:
-    """Skipped, pending and expected-failure tests, with their credit (Decision 19)."""
+    """The test-honesty findings, credited once beneath them (Decision 19)."""
     honesty = report.get("test_honesty") or {}
-    rows = [[f"`{item['path']}:{item['line']}`", item["text"].replace("|", "\\|")]
-            for item in honesty.get("skipped") or []]
-    table = markdown_table("Skipped Tests — never counted as passing", ["Location", "Text"], rows)
-    return [*table, f"_{honesty['credit']}_", ""] if table else []
+    lines: list[str] = []
+    for key, title in _HONESTY_TABLES:
+        rows = [[f"`{item['path']}:{item['line']}`", item["text"].replace("|", "\\|")]
+                for item in honesty.get(key) or []]
+        lines.extend(markdown_table(title, ["Location", "Text"], rows))
+    return [*lines, f"_{honesty['credit']}_", ""] if lines else []
 
 
 def render_near_duplicate_markdown(report: dict[str, Any]) -> list[str]:

@@ -12,7 +12,9 @@ precision is unmeasured.
 
 from __future__ import annotations
 
+import ast
 import re
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +23,8 @@ from ._oracle import SUPPRESSION_MARKERS, _is_quoted
 from .source import SourceIndex
 
 CREDIT = ("After Ken Pugh's AlignThree Spectables (https://alignthree.com): "
-          "a test that is not written, or not run, never counts as passing.")
+          "a test that is not written, or not run, never counts as passing, "
+          "and a test that computes its own expected value is testing itself.")
 
 _SKIP_LABELS = frozenset({"skipped test", "disabled test", "ignored test"})
 
@@ -58,6 +61,119 @@ def skipped_tests(root: Path, files: list[Path], source: SourceIndex) -> list[di
     return found
 
 
+_ARITHMETIC = (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod, ast.Pow)
+_VARIABLE = (ast.Name, ast.Attribute, ast.Subscript)
+_EQUALITY_METHODS = frozenset({"assertEqual", "assertEquals"})
+
+
+_LITERAL_CONTAINERS = (ast.Set, ast.List, ast.Dict, ast.Tuple)
+
+
+def _calls(node: ast.AST) -> bool:
+    return any(isinstance(child, ast.Call) for child in ast.walk(node))
+
+
+def _builds_text(node: ast.AST) -> bool:
+    """A `/` or `+` over a string: a path join or a concatenation, not arithmetic."""
+    return any((isinstance(leaf, ast.Constant) and isinstance(leaf.value, (str, bytes)))
+               or isinstance(leaf, ast.JoinedStr) for leaf in ast.walk(node))
+
+
+def _computes(node: ast.AST, from_calls: set[str]) -> bool:
+    """Arithmetic on a variable, with no call: an expectation worked out, not stated.
+
+    Arithmetic on literals alone (`2 * 60`) is a stated value written
+    legibly. A variable holding another call's result (`plain + 1`, with
+    `plain = measure(b)`) makes the comparison a relation between two
+    results, which is a legitimate test, not a computed expectation.
+    """
+    if _calls(node) or _builds_text(node):
+        return False
+    if any(isinstance(leaf, ast.Name) and leaf.id in from_calls for leaf in ast.walk(node)):
+        return False
+    return any(isinstance(child, ast.BinOp) and isinstance(child.op, _ARITHMETIC)
+               and any(isinstance(leaf, _VARIABLE) for leaf in ast.walk(child))
+               for child in ast.walk(node))
+
+
+def _subject(node: ast.AST) -> bool:
+    """Whether this side is the code under test: a call, not a literal holding one."""
+    return not isinstance(node, _LITERAL_CONTAINERS) and _calls(node)
+
+
+def _equalities(function: ast.AST) -> list[tuple[ast.AST, ast.AST, int]]:
+    """Each `assert a == b` and `assertEqual(a, b)` in `function`, as (a, b, line)."""
+    found = []
+    for node in ast.walk(function):
+        if (isinstance(node, ast.Assert) and isinstance(node.test, ast.Compare)
+                and len(node.test.ops) == 1 and isinstance(node.test.ops[0], ast.Eq)):
+            found.append((node.test.left, node.test.comparators[0], node.lineno))
+        elif (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+              and node.func.attr in _EQUALITY_METHODS and len(node.args) >= 2):
+            found.append((node.args[0], node.args[1], node.lineno))
+    return found
+
+
+def _computed_lines(tree: ast.AST) -> set[int]:
+    """Lines comparing a call's result with an expectation computed beside it."""
+    lines: set[int] = set()
+    for function in ast.walk(tree):
+        if isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            lines |= _FunctionScope(function).computed_lines()
+    return lines
+
+
+class _FunctionScope:
+    """One test function's local names, read once, for its comparisons."""
+
+    def __init__(self, function: ast.AST) -> None:
+        self.function = function
+        # One hop through a local name: `expected = price * qty` or
+        # `result = total(items)` stands for its value.
+        self.assigned = {target.id: node.value for node in ast.walk(function)
+                         if isinstance(node, ast.Assign)
+                         for target in node.targets if isinstance(target, ast.Name)}
+        self.from_calls = {name for name, value in self.assigned.items() if _calls(value)}
+        self.reads = Counter(node.id for node in ast.walk(function)
+                             if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load))
+
+    def resolved(self, side: ast.AST) -> ast.AST:
+        return self.assigned.get(side.id, side) if isinstance(side, ast.Name) else side
+
+    def expectation(self, side: ast.AST) -> bool:
+        # A name read anywhere else also built the input (`range(count)`),
+        # so comparing against it is an invariant, not a worked-out answer.
+        if isinstance(side, ast.Name) and self.reads[side.id] > 1:
+            return False
+        return _computes(self.resolved(side), self.from_calls)
+
+    def computed_lines(self) -> set[int]:
+        return {line for left, right, line in _equalities(self.function)
+                if (_subject(self.resolved(left)) and self.expectation(right))
+                or (_subject(self.resolved(right)) and self.expectation(left))}
+
+
+def computed_expectations(root: Path, files: list[Path], source: SourceIndex) -> list[dict[str, Any]]:
+    """Every Python test comparison whose expected value is computed in the test."""
+    found: list[dict[str, Any]] = []
+    for path in sorted(files):
+        rel = path.relative_to(root).as_posix()
+        if path.suffix != ".py" or not is_test_path(rel):
+            continue
+        text = source.lines(path)
+        try:
+            tree = ast.parse("\n".join(text))
+        except (SyntaxError, ValueError):
+            continue
+        found.extend({"path": rel, "line": line, "text": text[line - 1].strip()[:180]}
+                     for line in sorted(_computed_lines(tree)))
+    return found
+
+
 def test_honesty(root: Path, files: list[Path], source: SourceIndex) -> dict[str, Any]:
     """The report block: findings and the credit they carry."""
-    return {"skipped": skipped_tests(root, files, source), "credit": CREDIT}
+    return {
+        "skipped": skipped_tests(root, files, source),
+        "computed_expected": computed_expectations(root, files, source),
+        "credit": CREDIT,
+    }

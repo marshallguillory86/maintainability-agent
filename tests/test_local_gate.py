@@ -1,5 +1,4 @@
-# Written by the Claude Sonnet test seat (Codex at its usage limit); Codex reviews.
-# His decision 2026-10-15: macOS is verified by an enforced local gate, not a CI runner.
+# Decision 2026-10-15: macOS is verified by an enforced local gate, not a CI runner.
 """The enforced local gate that is the macOS evidence.
 
 `verify-macos` was removed from CI so each test runs once, on Linux. The

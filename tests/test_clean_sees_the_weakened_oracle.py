@@ -110,7 +110,7 @@ index 1111111..2222222 100644
 
 
 def test_a_renamed_test_that_changes_a_value_is_not_a_deletion() -> None:
-    """Grok, 2026-09-27: removed lines were keyed by the old name, added by the new."""
+    """Audit, 2026-09-27: removed lines were keyed by the old name, added by the new."""
     from maintainability_audit._oracle import oracle_weakening
     from maintainability_audit.git_tools import _added_from_diff, _removed_from_diff
 

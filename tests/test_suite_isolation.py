@@ -122,8 +122,6 @@ def test_git_location_variables_from_the_launcher_never_reach_fixture_repositori
 ) -> None:
     """D231: a suite launched from a git hook wrote into the real repository.
 
-    Written by the Claude Sonnet test seat (Codex at its usage limit); Codex reviews.
-
     When pytest ran inside a git pre-push hook, the hook had exported
     `GIT_DIR` (and the rest of what `git rev-parse --local-env-vars` lists).
     Every fixture `git init`, `git config` and `git commit` then acted on the

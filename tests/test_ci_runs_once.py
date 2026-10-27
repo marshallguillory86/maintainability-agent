@@ -1,6 +1,4 @@
-"""Written by the Claude Sonnet test seat (Codex at its usage limit); Codex reviews.
-
-CI was judged too slow and too costly. The evidence: Quality Gates
+"""CI was judged too slow and too costly. The evidence: Quality Gates
 ran twice per PR (push on every branch plus pull_request), MA audited itself
 twice (maintainability.yml plus the Quality Gates audit job), a Windows probe
 failed every run while blocking nothing, and Sonar ran on every PR.

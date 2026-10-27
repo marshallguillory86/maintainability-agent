@@ -6,7 +6,7 @@ reply — before anyone had said "run". The preflight reads the audited
 tree's `secure-code-agent.json` and probes each scanner's configured
 command with `--version`, and that file may name a program on PATH with
 any arguments. A tree setting bandit's command to `python -c "<anything>"`
-ran it on the auditor's machine the moment it was asked about (Grok's
+ran it on the auditor's machine the moment it was asked about (the
 audit of 4.0.0). "Nothing is audited until the user has been asked twice"
 did not hold for the one thing that runs first.
 

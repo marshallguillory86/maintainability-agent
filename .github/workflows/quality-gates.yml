@@ -20,7 +20,7 @@ on:
   # No push trigger. On every branch it ran each pull request twice (push
   # and pull_request), ~10 minutes each (2026-10-15, judged too slow and
   # too costly), and on main it re-ran tests a merge had
-  # already passed (RULES.md: each test runs once). Every PR runs the
+  # already passed (each test runs once). Every PR runs the
   # required checks once, through pull_request; main is audited by
   # maintainability.yml.
   pull_request:
@@ -66,7 +66,7 @@ env:
 jobs:
   verify:
     name: Verify (lint, deps, tests, coverage)
-    # The one test job (RULES.md: each test runs once; Decision 18). Not on a
+    # The one test job (each test runs once; Decision 18). Not on a
     # merge to main: the pull request already ran it. macOS is covered by the
     # local gate, which runs this suite on the maintainer's Mac before every
     # push.

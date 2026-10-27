@@ -12,9 +12,10 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
-- **Decision 18 and the CI notes are reworded.** The decision record, two
-  test docstrings and a workflow comment now state what was decided and why.
-  Nothing in the package changes.
+- **Decision 18, the CI notes and source comments are reworded.** The
+  decision record, test docstrings, code comments, workflow comments and the
+  defect register now state what was found, decided and fixed. No
+  behaviour changes.
 
 ## 5.0.1 - 2026-10-27
 

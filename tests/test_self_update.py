@@ -1,6 +1,5 @@
 """The updater is a product command: it never downgrades and re-syncs the skill.
 
-Written by the Claude Sonnet test seat (Codex at its usage limit); Codex reviews.
 Defect: the updater downgraded and never re-synced the skill (2026-09-22/10-15).
 
 Seams: ``maintainability_audit._runner.run`` is replaced with a recording fake

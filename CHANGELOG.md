@@ -12,6 +12,8 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 5.0.1 - 2026-10-27
+
 - **A corpus row names the analyzer it lost, and why (#312).** The 5.0.0
   re-measure lost one tool on each of seven repositories and the rows could
   not say why, because they listed only the tools that contributed. On

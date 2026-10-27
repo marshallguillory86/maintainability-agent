@@ -149,7 +149,28 @@ def render_skipped_tests_markdown(report: dict[str, Any]) -> list[str]:
         rows = [[f"`{item['path']}:{item['line']}`", item["text"].replace("|", "\\|")]
                 for item in honesty.get(key) or []]
         lines.extend(markdown_table(title, ["Location", "Text"], rows))
+    lines.extend(_spectables_markdown(honesty.get("spectables") or {}))
     return [*lines, f"_{honesty['credit']}_", ""] if lines else []
+
+
+def _spectables_markdown(block: dict[str, Any]) -> list[str]:
+    """What the audit found in the repository's Spectables specifications."""
+    if not block.get("files"):
+        return []
+    rows = [[f"`{item['path']}:{item['line']}`", item["check"], item["message"].replace("|", "\\|")]
+            for item in block.get("findings") or []]
+    lines = [
+        "## Spectables Specifications",
+        "",
+        f"Read {block['files']} `.spectable` file(s). [Spectables]({block['link']}), by Ken Pugh, "
+        "writes and runs these specifications; this audit reports three authoring checks "
+        "from its grammar. Unknown types are not checked.",
+        "",
+    ]
+    if not rows:
+        return [*lines, "No authoring mistakes found.", ""]
+    return [*lines, "| Location | Check | Detail |", "|---|---|---|",
+            *("| " + " | ".join(row) + " |" for row in rows), ""]
 
 
 def render_near_duplicate_markdown(report: dict[str, Any]) -> list[str]:

@@ -108,6 +108,7 @@ flowchart TB
     _semantic_ts["_semantic_ts"]
     _test_pairing["_test_pairing"]
     _test_honesty["_test_honesty"]
+    _spectables["_spectables"]
     _test_execution["_test_execution"]
     _test_commands["_test_commands"]
   end

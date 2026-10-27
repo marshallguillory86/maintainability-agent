@@ -511,6 +511,10 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
     lines.extend(bulleted_section(
         "Tests that compute their own expected value (report only; state the value "
         "only if the task asks):", computed))
+    specs = [f"`{i['path']}:{i['line']}` {i['check']}: {i['message']}"
+             for i in ((honesty.get("spectables") or {}).get("findings") or [])[:20]]
+    lines.extend(bulleted_section(
+        "Spectables specification mistakes (report only; fix only if the task asks):", specs))
     dupes = [
         f"Repeated block appears {i['count']} times near: {', '.join(i['locations'][:5])}"
         for i in report["duplicate_blocks"][:5]

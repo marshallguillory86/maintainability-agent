@@ -1,6 +1,6 @@
 """Written by the Claude Sonnet test seat (Codex at its usage limit); Codex reviews.
 
-His words: 'The CI is ridiculously unacceptable'. The evidence: Quality Gates
+CI was judged too slow and too costly. The evidence: Quality Gates
 ran twice per PR (push on every branch plus pull_request), MA audited itself
 twice (maintainability.yml plus the Quality Gates audit job), a Windows probe
 failed every run while blocking nothing, and Sonar ran on every PR.
@@ -36,8 +36,8 @@ def test_maintainability_workflow_does_not_audit_every_pull_request_again() -> N
 
 
 def test_no_windows_job_runs_at_all() -> None:
-    """Decision 18 (his words: "just turn this shit off"): Windows is not
-    tested in CI; Windows users report problems as issues or PRs."""
+    """Decision 18: Windows is not tested in CI; Windows users report
+    problems as issues or PRs."""
     assert "probe-windows" not in jobs("quality-gates.yml")
     for path in WORKFLOWS.glob("*.yml"):
         assert "windows-" not in path.read_text(encoding="utf-8"), path.name

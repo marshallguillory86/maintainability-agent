@@ -39,6 +39,38 @@ import measure  # noqa: E402
 import verify_corpus  # noqa: E402
 
 
+def test_a_tool_that_ran_and_measured_nothing_is_named_in_the_row(tmp_path: Path, monkeypatch) -> None:
+    """A corpus row says which analyzer did not contribute, and why (#312).
+
+    The 5.0.0 re-measure lost one tool on each of seven repositories, and
+    the rows could not say why: they listed the tools that contributed and
+    dropped the rest. On fastapi it was radon timing out — one 7,304-line
+    test file costs it 109 of its 120 seconds — so the row moved with the
+    speed of the machine and nothing recorded it. A tool that does not
+    apply to the repository is not a loss and stays out.
+    """
+    from maintainability_audit._analysis import Analysis, ToolCoverage
+
+    coverage = [
+        ToolCoverage(slug="lizard", outcome="ran"),
+        ToolCoverage(slug="radon", outcome="timed-out", detail="radon exceeded 120s."),
+        ToolCoverage(slug="mypy", outcome="failed", detail="exit 2"),
+        ToolCoverage(slug="interrogate", outcome="ran", parse_error="bad json"),
+        ToolCoverage(slug="pmd", outcome="not-applicable"),
+        ToolCoverage(slug="pylint", outcome="not-installed"),
+    ]
+    monkeypatch.setattr(measure, "analyze", lambda path, config: Analysis(coverage=coverage))
+    monkeypatch.setattr(measure, "analyzer_pressures", lambda *a: {})
+    monkeypatch.setattr(measure, "analyzer_production_pressures", lambda *a: {})
+
+    _all, _production, row = measure._analyzer_row(tmp_path, {"thresholds": {}})
+
+    assert row["tools"] == ["lizard"]
+    assert row["did_not_contribute"] == {
+        "interrogate": "parse-error", "mypy": "failed", "radon": "timed-out",
+    }
+
+
 def test_an_existing_corpus_is_not_overwritten_without_saying_so(tmp_path: Path) -> None:
     """The defect: a pinned corpus replaced by a side effect of `--out`."""
     destination = tmp_path / "corpus.json"

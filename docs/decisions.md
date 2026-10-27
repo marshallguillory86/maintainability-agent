@@ -390,7 +390,7 @@ nothing in the supported platforms is weakened to make Windows pass.
 ### Decision 19: Test honesty and Spectables specs, after Ken Pugh
 
 - Recorded: 2026-10-27
-- Status: **Accepted, chosen by the maintainer 2026-10-27.** Tracked as [#313](https://github.com/marshallguillory86/maintainability-agent/issues/313).
+- Status: **Accepted, chosen by the maintainer 2026-10-27.** Tracked as [#313](https://github.com/marshallguillory86/maintainability-agent/issues/313). Shipped in 5.1.0: skipped tests, Python computed expectations, and three of the four Spectables checks. Unknown types wait on a published list of Spectables' built-in types; the first feature spec in Spectables form is `docs/specs/test-honesty.spectable`.
 
 Ken Pugh's [AlignThree Spectables](https://alignthree.com) states rules about
 tests that this tool can check in any repository. Its guide warns that glue

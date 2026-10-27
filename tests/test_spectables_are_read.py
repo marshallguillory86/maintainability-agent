@@ -106,6 +106,12 @@ def test_the_three_mistakes_are_reported_by_file_line_and_check(report: dict) ->
     }
 
 
+def test_a_short_row_is_described_in_plain_words(report: dict) -> None:
+    short = next(f for f in report["test_honesty"]["spectables"]["findings"]
+                 if f["check"] == "column-count")
+    assert short["message"] == "row has 1 cell; the table's first row has 2"
+
+
 def test_a_reference_resolves_across_files_and_through_every_define_form(report: dict) -> None:
     # =NoName (one-line), =EmptyCart (table form), =TBR (bare Define table, another file).
     messages = " ".join(f["message"] for f in report["test_honesty"]["spectables"]["findings"])
@@ -140,6 +146,20 @@ def test_the_report_names_each_finding_and_links_spectables(report: dict) -> Non
     markdown = render_markdown(report)
     assert "spec/Cart.spectable:18" in markdown
     assert "alignthree.com" in markdown
+
+
+def test_the_html_report_carries_every_test_honesty_finding_and_its_credit(tmp_path: Path) -> None:
+    from maintainability_audit.renderers import render_html
+
+    root = _tree(tmp_path, {"spec/Types.spectable": TYPES, "spec/Cart.spectable": CART,
+                            "tests/test_a.py": "import pytest\n@pytest.mark.skip\ndef test_a():\n"
+                                               "    assert add(a, b) == a + b\n"})
+    html = render_html(_report(root), [])
+
+    for location in ("spec/Cart.spectable:18", "tests/test_a.py:2", "tests/test_a.py:4"):
+        assert location in html
+    assert "Ken Pugh" in html
+    assert "alignthree.com" in html
 
 
 def test_the_finding_moves_no_score(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

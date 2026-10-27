@@ -36,7 +36,7 @@
 <p><strong>A deterministic, offline maintainability audit whose output is a <em>bounded
 work order</em> for an AI coding agent</strong> — a copy-paste prompt, per finding, that
 says <em>fix exactly these and refactor nothing else</em>. Chat-primary; CLI for CI.
-Version <strong>5.0.1</strong>.</p>
+Version <strong>5.1.0</strong>.</p>
 <blockquote>
 <h2 id="calibrated-against-201-mature-open-source-repositories-in-fifteen-languages"><strong>Calibrated against 201 mature open-source repositories in fifteen languages.</strong></h2>
 <p>Every grade is a measured multiple of real code, not a threshold someone
@@ -307,6 +307,13 @@ signals on:</p>
   already-installed <code>tsc</code>, including workspace projects (ADR 003)</li>
 <li><strong>test effectiveness</strong> from an opted-in suite run and parsed coverage
   (Class 5, default off — the one place the agent may execute the tree)</li>
+<li><strong>test honesty</strong>, after Ken Pugh's
+  <a href="https://alignthree.com">AlignThree Spectables</a>: skipped, pending and
+  expected-failure tests, which never count as passing, and Python tests that
+  compute their own expected value instead of stating it. Where a repository
+  keeps <code>.spectable</code> specifications, three authoring checks from the
+  Spectables grammar are reported too. All of it is reported only and moves
+  no score (Decision 19)</li>
 <li>an ISO/IEC 25010-inspired 0–5 estimate per category, and a verified grade —
   or a disclosed withholding when the evidence is thin.</li>
 </ul>
@@ -536,7 +543,7 @@ instead of an invokable skill:
 <a href="ide-agent-integration.html#invokable-skill--slash-command">docs/ide-agent-integration.md</a>.</p>
 <h2 id="github-action">GitHub Action</h2>
 <p>This repo ships <code>action.yml</code>, usable as a composite action:</p>
-<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v5.0.1
+<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v5.1.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD
@@ -590,6 +597,12 @@ tool stays free and open. It just helps keep the work going.</p>
   evidence an LLM cannot hold across sessions, and that a tool positioned
   between the two should carry it. A contribution of insight rather than code,
   and it changed what this project is for.</li>
+<li><strong>Ken Pugh</strong> (<a href="https://alignthree.com">AlignThree</a>) — shared Spectables,
+  whose rules about tests became the test-honesty findings: an unwritten or
+  skipped test never counts as passing, and a test that computes its own
+  expected value is testing itself. Where a repository keeps Spectables
+  specifications, this tool reads them and points to Spectables for writing
+  and running them.</li>
 </ul>
 <h2 id="license">License</h2>
 <p>MIT</p>

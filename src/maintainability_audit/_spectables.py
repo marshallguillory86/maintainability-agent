@@ -30,7 +30,7 @@ SUFFIX = ".spectable"
 
 _DEFINE_NAMED = re.compile(r"^\s*Define\s+([A-Za-z_]\w*)")
 _DEFINE_BARE = re.compile(r"^\s*Define\s*$")
-_SCENARIO = re.compile(r"^\s*Scenario:?\s+(.+?)\s*$")
+_SCENARIO = re.compile(r"^\s*Scenario:?\s+(\S.*)")
 _REFERENCE = re.compile(r"^=([A-Za-z_]\w*)$")
 _UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")
 
@@ -50,51 +50,58 @@ class _Spec:
         self.defines: set[str] = set()
         self.references: list[tuple[int, str]] = []
         self.findings: list[dict[str, Any]] = []
-        self._read(lines)
-
-    def _finding(self, line: int, check: str, message: str) -> None:
-        self.findings.append({"path": self.rel, "line": line, "check": check, "message": message})
-
-    def _read(self, lines: list[str]) -> None:
-        width: int | None = None
-        bare_define = False
-        name_column: int | None = None
+        self._scenarios: dict[str, int] = {}
+        # The table being read: its first row's width, and for a bare
+        # `Define` table the column whose cells each declare a name.
+        self._width: int | None = None
+        self._name_column: int | None = None
+        self._bare_define = False
         in_docstring = False
-        scenarios: dict[str, int] = {}
         for number, line in enumerate(lines, 1):
             stripped = line.strip()
             if stripped == '"""':
                 in_docstring = not in_docstring
+            elif in_docstring or stripped.startswith("#"):
                 continue
-            if in_docstring or stripped.startswith("#"):
-                continue
-            if not stripped.startswith("|"):
-                width, name_column = None, None
-                bare_define = bool(_DEFINE_BARE.match(line)) or (bare_define and not stripped)
-                if match := _DEFINE_NAMED.match(line):
-                    self.defines.add(match.group(1))
-                if match := _SCENARIO.match(line):
-                    name = " ".join(match.group(1).split())
-                    if name in scenarios:
-                        self._finding(number, "duplicate-scenario",
-                                      f"scenario `{name}` repeats the one on line {scenarios[name]}")
-                    else:
-                        scenarios[name] = number
-                continue
-            cells = _cells(line)
-            if width is None:
-                width = len(cells)
-                if bare_define and "Name" in cells:
-                    name_column = cells.index("Name")
-                bare_define = False
+            elif stripped.startswith("|"):
+                self._row(number, _cells(line))
             else:
-                if len(cells) != width:
-                    self._finding(number, "column-count",
-                                  f"row has {len(cells)} cells; the table's first row has {width}")
-                if name_column is not None and name_column < len(cells) and cells[name_column]:
-                    self.defines.add(cells[name_column])
-            self.references.extend((number, match.group(1)) for cell in cells
-                                   if (match := _REFERENCE.match(cell)))
+                self._text(number, line)
+
+    def _finding(self, line: int, check: str, message: str) -> None:
+        self.findings.append({"path": self.rel, "line": line, "check": check, "message": message})
+
+    def _text(self, number: int, line: str) -> None:
+        """A line outside a table: it ends the table and may declare or name."""
+        self._width, self._name_column = None, None
+        self._bare_define = bool(_DEFINE_BARE.match(line)) or (self._bare_define and not line.strip())
+        if match := _DEFINE_NAMED.match(line):
+            self.defines.add(match.group(1))
+        if match := _SCENARIO.match(line):
+            name = " ".join(match.group(1).split())
+            if name in self._scenarios:
+                self._finding(number, "duplicate-scenario",
+                              f"scenario `{name}` repeats the one on line {self._scenarios[name]}")
+            else:
+                self._scenarios[name] = number
+
+    def _row(self, number: int, cells: list[str]) -> None:
+        """A table row: the first sets the width; each later one is held to it."""
+        if self._width is None:
+            self._width = len(cells)
+            if self._bare_define and "Name" in cells:
+                self._name_column = cells.index("Name")
+            self._bare_define = False
+        else:
+            if len(cells) != self._width:
+                noun = "cell" if len(cells) == 1 else "cells"
+                self._finding(number, "column-count",
+                              f"row has {len(cells)} {noun}; the table's first row has {self._width}")
+            column = self._name_column
+            if column is not None and column < len(cells) and cells[column]:
+                self.defines.add(cells[column])
+        self.references.extend((number, match.group(1)) for cell in cells
+                               if (match := _REFERENCE.match(cell)))
 
 
 def spectable_files(root: Path, config: dict[str, Any], only_paths: set[str] | None) -> list[Path]:

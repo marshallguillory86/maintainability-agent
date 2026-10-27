@@ -12,6 +12,33 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 5.1.0 - 2026-10-27
+
+**New, reported only: test honesty, after Ken Pugh's
+[AlignThree Spectables](https://alignthree.com) (Decision 19, #313).** No
+score, grade, gate or calibration constant moves; every published number is
+what 5.0.1 printed. The report gains a `test_honesty` block, and the Markdown
+and HTML reports and the remediation prompt show it:
+
+- **Skipped tests.** Skip, pending and expected-failure markers in test files,
+  by file and line. A suite reports them as something other than a failure, so
+  a skip reads as a pass.
+- **Tests that compute their own expected value.** Python test comparisons
+  whose one side calls the code under test while the other does arithmetic on
+  variables (`assert add(a, b) == a + b`). The rule is narrow on purpose: on
+  this repository's suite it reports nothing, and path joins, literal
+  arithmetic, relations between two results and input sizes are not flagged.
+- **Spectables specifications.** `.spectable` files are read where a
+  repository keeps them, and three authoring mistakes from the published
+  grammar are reported: a row with the wrong number of cells, a repeated
+  scenario name, and an `=Name` cell naming no `Define`. On Ken Pugh's own 94
+  example specifications it reports nothing. Unknown types are not checked,
+  because no list of built-in types is published.
+
+The README's acknowledgements credit Ken Pugh, and this feature's own
+specification is written as a Spectables file at
+`docs/specs/test-honesty.spectable`.
+
 - **Decision 18, the CI notes and source comments are reworded.** The
   decision record, test docstrings, code comments, workflow comments and the
   defect register now state what was found, decided and fixed. No

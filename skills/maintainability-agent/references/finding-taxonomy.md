@@ -32,6 +32,16 @@ Treat risk-pattern matches as review triggers. Confirm whether the match is exec
 
 Fix real risks directly. For false positives, explain why the match is safe and prefer configuration refinement over code contortions.
 
+## Test Honesty
+
+Reported only; these move no score and are not work by themselves. After Ken Pugh's AlignThree Spectables (https://alignthree.com).
+
+A skipped, pending or expected-failure test never counts as passing. Run it, remove it, or record why it is skipped; never delete one only to clear the list.
+
+A test that computes its own expected value (`assert add(a, b) == a + b`) passes whatever the code does. Replace the arithmetic with the stated value it should produce. If the comparison is a real relation between two results, say so rather than rewriting it.
+
+A Spectables finding (`column-count`, `duplicate-scenario`, `undefined-reference`) is an authoring mistake in a `.spectable` file. Fix the specification, not the generated tests.
+
 ## Missing Expected Files Or Commands
 
 Add missing docs or command declarations only when the repo actually owns those workflows. Do not invent fake tests, placeholder docs, or misleading commands to satisfy the gate.

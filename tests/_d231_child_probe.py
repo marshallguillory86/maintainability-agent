@@ -1,7 +1,5 @@
 """Child-only probe for D231; inert unless `MA_D231_CHILD=1` is set.
 
-Written by the Claude Sonnet test seat (Codex at its usage limit); Codex reviews.
-
 `test_suite_isolation.py` spawns pytest on this file with git's location
 variables pointing at a sentinel repository. The normal suite never
 collects it (no `test_` prefix); a path named on the command line is

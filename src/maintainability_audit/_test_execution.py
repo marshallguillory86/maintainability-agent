@@ -297,7 +297,7 @@ def _coverage_fingerprint(root: Path) -> dict[str, int]:
     for name in COVERAGE_ARTIFACTS:
         report = root / name
         # Every step of the route, not only the last: a symlinked
-        # `coverage/` directory led the read out of the tree (Grok, 2026-09-28).
+        # `coverage/` directory led the read out of the tree (audit, 2026-09-28).
         route = [root / Path(*Path(name).parts[:depth]) for depth in range(1, len(Path(name).parts) + 1)]
         if any(step.is_symlink() for step in route) or not report.is_file():
             continue

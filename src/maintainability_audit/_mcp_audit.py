@@ -272,7 +272,7 @@ def _artifact_paths(root: Path, config: dict[str, Any], baseline_path: str | Non
 
     A report saved over one of them — or creating one that does not exist
     yet — would be read back as configuration, history or a baseline
-    (Grok, 2026-09-28).
+    (audit, 2026-09-28).
     """
     history = repository_path(root, (config.get("paths") or {}).get("history"), DEFAULT_HISTORY_PATH)
     baseline = repository_path(root, baseline_path, str(DEFAULT_BASELINE_PATH))
@@ -306,7 +306,7 @@ def report_target(root: Path, roots: tuple[Path, ...], format: str,
         chosen = chosen / REPORT_FILENAMES[format]
     # Normalised, never resolved: resolving here followed a symlinked
     # directory before the writer's route check could see it, so the
-    # audited tree chose where the report landed (Grok, 2026-09-27).
+    # audited tree chose where the report landed (audit, 2026-09-27).
     target = Path(os.path.normpath(chosen))
     base = next((Path(b) for b in (root, *roots)
                  if target.is_relative_to(Path(b)) or target.is_relative_to(Path(b).resolve())), None)
@@ -328,7 +328,7 @@ def _refuse_a_file_it_did_not_write(target: Path) -> None:
     """A save replaces the last report and nothing else.
 
     `output_path` could name the repository config, the scan history or a
-    source file, and the report replaced it (Grok, 2026-09-27). A file
+    source file, and the report replaced it (audit, 2026-09-27). A file
     already there is replaced only when its first line is this tool's
     banner.
     """

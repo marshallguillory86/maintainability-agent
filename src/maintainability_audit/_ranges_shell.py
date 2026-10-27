@@ -78,7 +78,7 @@ def _heredoc_at(line: str, index: int, pending: list[tuple[str, bool]],
     # heredoc waiting for a line `n`, `$((1 << n))` blanked every function
     # after it — a population lost, not under-reported (audit of 3.9.0).
     # `before` is the masked prefix: a `((` inside a string is not
-    # arithmetic (Grok, 2026-09-27).
+    # arithmetic (audit, 2026-09-27).
     if before.count("((") > before.count("))"):
         return None
     heredoc = _SH_HEREDOC_RE.match(line, index)

@@ -332,7 +332,7 @@ def _diff_path(line: str) -> str:
     Git quotes a path holding a space, a quote, a backslash or a non-ASCII
     byte (`--- "a/my test.py"`, octal escapes for the bytes), and a reader
     that expected the bare form dropped the file entirely, so `clean` never
-    saw it (Grok, 2026-09-28). `/dev/null` names no file.
+    saw it (audit, 2026-09-28). `/dev/null` names no file.
     """
     raw = line[4:].strip()
     if raw.startswith('"') and raw.endswith('"') and len(raw) >= 2:
@@ -351,7 +351,7 @@ def _unquote_c(quoted: str) -> str:
 def _lines_from_diff(output: str, sign: str) -> dict[str, list[tuple[int, str]]]:
     """Added (`+`) or removed (`-`) lines per path, as (line number, text).
 
-    Two rules keep a hunk's content from being read as structure (Grok,
+    Two rules keep a hunk's content from being read as structure (audit,
     2026-09-27). **Headers only count before a file's first `@@`**: inside
     a hunk, `--- a/x` is a removed line reading `-- a/x`. And **every line
     is keyed by the file's new name** — a rename moves `--- a/old` to

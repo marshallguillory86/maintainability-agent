@@ -1,6 +1,5 @@
 """D232: running MCP servers are registered so ``--update`` can stop stale ones.
 
-Written by the Claude Sonnet test seat (Codex at its usage limit); Codex reviews.
 After an upgrade the old server kept serving old code and /mcp reloads
 nothing. ``_mcp_servers`` keeps one record per server under
 ``<home>/.local/share/maintainability-agent/servers`` and stops, by SIGTERM,

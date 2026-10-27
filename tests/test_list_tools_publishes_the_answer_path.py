@@ -6,7 +6,7 @@ defect it guards is invisible in the source — the function has always
 taken a `setup` parameter, and only what `list_tools()` serves says
 whether a host can use it.
 
-Moved out of `test_setup_answers_are_the_same_setup` (written by Codex for
+Moved out of `test_setup_answers_are_the_same_setup` (written for
 the D193 cycle) so that file's citations stay evidence. Every assertion is
 that file's, unchanged.
 """

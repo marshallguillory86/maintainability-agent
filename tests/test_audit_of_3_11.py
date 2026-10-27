@@ -1,4 +1,4 @@
-"""Grok's audit of v3.11.0, 2026-09-28: each verified finding, failing first.
+"""The audit of v3.11.0, 2026-09-28: each verified finding, failing first.
 
 1. Git quotes a path with a space or a quote (`--- "a/my file.py"`); the
    diff reader dropped the file, so `clean` never saw it. (High)

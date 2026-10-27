@@ -142,7 +142,7 @@ _SHAPES = (
 _ASSERTS = re.compile(r"^(?:assert\b|self\.assert\w*\(|assert\w*\(|expect\(|\w+\.should\b)")
 #: A call to a helper the assertions could have moved into: a private
 #: name, or one that says it checks. Any call used to count, so an added
-#: `print(...)` excused a deleted assertion (Grok, 2026-09-28).
+#: `print(...)` excused a deleted assertion (audit, 2026-09-28).
 _CALLS = re.compile(r"^(?:self\.)?(?:_\w*|\w*(?:check|verify|assert|expect|ensure)\w*)\(", re.IGNORECASE)
 #: The start of a whole test, so its deletion is named as such.
 _TEST_HEADER = re.compile(r"^(?:async\s+)?def\s+test\w*\(|^(?:it|test)\(|^@Test\b")

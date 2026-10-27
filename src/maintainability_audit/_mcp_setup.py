@@ -425,7 +425,7 @@ def test_command_pending(root: Path) -> bool:
 
     answers = user_config_answers() or {}
     # The person's yes only. A repository file saying `requested` could
-    # force the question after the person declined (Grok, 2026-09-27) —
+    # force the question after the person declined (audit, 2026-09-27) —
     # the same authority D147 strips from it before the merge.
     requested = bool((answers.get("test_execution") or {}).get("requested"))
     return requested and repository_key(root) not in _consents(answers)

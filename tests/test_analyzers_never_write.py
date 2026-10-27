@@ -1,6 +1,4 @@
-"""Written by the Claude Sonnet test seat (Codex at its usage limit); Codex reviews.
-
-Defect: an analyzer rewrote the audited repository (2026-10-14).
+"""Defect: an analyzer rewrote the audited repository (2026-10-14).
 
 MA's contract is that it never edits source. The ruff adapter ran
 `ruff check` in the audited repository, ruff honoured that repository's own

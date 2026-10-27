@@ -136,7 +136,7 @@ def test_the_terminal_asks_and_records_this_repositorys_command(
 
 
 def test_a_repository_cannot_ask_on_the_persons_behalf(tmp_path) -> None:
-    """Grok: `requested` in the repository file forced the question after a decline."""
+    """Audit: `requested` in the repository file forced the question after a decline."""
     first, repo = _repo(tmp_path, "first"), _repo(tmp_path, "tree")
     apply_answers(first, {**FULL, "run_tests": "no"})
     (repo / "maintainability-agent.json").write_text(

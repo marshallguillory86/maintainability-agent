@@ -80,7 +80,7 @@ def test_the_html_report_names_the_link(tmp_path: Path) -> None:
 
 
 def test_the_bounded_chat_view_names_the_link_too(tmp_path: Path) -> None:
-    """Chat is the default presentation and renders `complete=False` (Grok, 4.0.0).
+    """Chat is the default presentation and renders `complete=False` (audit of 4.0.0).
 
     The first version named the link only in the complete report, so the
     surface most people read showed one file scanned and no skip.
@@ -93,7 +93,7 @@ def test_the_bounded_chat_view_names_the_link_too(tmp_path: Path) -> None:
 
 
 def test_a_link_out_of_the_tree_is_not_counted_as_read(tmp_path: Path) -> None:
-    """The scan drops a link that leaves the tree (D36); the read share counted it (Grok, 4.0.0).
+    """The scan drops a link that leaves the tree (D36); the read share counted it (audit of 4.0.0).
 
     `iter_files` never opens it, and `unread_source` reported it as read
     source, so the share of the repository the score describes was

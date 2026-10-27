@@ -122,7 +122,7 @@ def test_a_reference_resolves_across_files_and_through_every_define_form(report:
 def test_the_files_read_are_counted_and_spectables_is_linked(report: dict) -> None:
     block = report["test_honesty"]["spectables"]
     assert block["files"] == 2
-    assert "alignthree.com" in block["link"]
+    assert block["link"] == "https://alignthree.com"
 
 
 def test_an_excluded_spectable_is_not_read(tmp_path: Path) -> None:
@@ -145,7 +145,7 @@ def test_the_report_names_each_finding_and_links_spectables(report: dict) -> Non
 
     markdown = render_markdown(report)
     assert "spec/Cart.spectable:18" in markdown
-    assert "alignthree.com" in markdown
+    assert "[Spectables](https://alignthree.com)" in markdown
 
 
 def test_the_html_report_carries_every_test_honesty_finding_and_its_credit(tmp_path: Path) -> None:
@@ -159,7 +159,7 @@ def test_the_html_report_carries_every_test_honesty_finding_and_its_credit(tmp_p
     for location in ("spec/Cart.spectable:18", "tests/test_a.py:2", "tests/test_a.py:4"):
         assert location in html
     assert "Ken Pugh" in html
-    assert "alignthree.com" in html
+    assert '<a href="https://alignthree.com">Spectables</a>' in html
 
 
 def test_the_finding_moves_no_score(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -21,6 +21,7 @@ from ._markdown_sections import (
     render_idiom_markdown,
     render_near_duplicate_markdown,
     render_risk_markdown,
+    render_skipped_tests_markdown,
 )
 from ._scan_view import (
     analyzer_coverage_markdown,
@@ -327,6 +328,7 @@ def _complete_markdown(report: dict[str, Any], score: dict[str, Any],
         ["File", "Declaration", "Line", "Lines", "Complexity", "Cognitive", "Status"],
         hot_rows))
     lines.extend(render_risk_markdown(report))
+    lines.extend(render_skipped_tests_markdown(report))
     lines.extend(render_near_duplicate_markdown(report))
     lines.extend(render_dead_code_markdown(report))
     lines.extend(render_idiom_markdown(report))

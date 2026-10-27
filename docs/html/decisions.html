@@ -21,6 +21,7 @@
 <li><a href="#decision-16-shell-is-measured-by-shellcheck">Decision 16: Shell is measured by ShellCheck</a></li>
 <li><a href="#decision-17-the-developers-own-analyzers-are-read-from-their-pipeline">Decision 17: The developer's own analyzers are read from their pipeline</a></li>
 <li><a href="#decision-18-windows-is-not-tested-in-ci">Decision 18: Windows is not tested in CI</a></li>
+<li><a href="#decision-19-test-honesty-and-spectables-specs-after-ken-pugh">Decision 19: Test honesty and Spectables specs, after Ken Pugh</a></li>
 </ul>
 </li>
 <li><a href="#statuses">Statuses</a></li>
@@ -465,6 +466,36 @@ and proved only what was already known. It is deleted, not rescheduled. The
 platform statement stands: POSIX is supported, Windows is not claimed. A
 Windows problem arrives as an issue or a pull request and is weighed then;
 nothing in the supported platforms is weakened to make Windows pass.</p>
+<h3 id="decision-19-test-honesty-and-spectables-specs-after-ken-pugh">Decision 19: Test honesty and Spectables specs, after Ken Pugh</h3>
+<ul>
+<li>Recorded: 2026-10-27</li>
+<li>Status: <strong>Accepted, chosen by the maintainer 2026-10-27.</strong> Tracked as <a href="https://github.com/marshallguillory86/maintainability-agent/issues/313">#313</a>. Shipped in 5.1.0: skipped tests, Python computed expectations, and three of the four Spectables checks. Unknown types wait on a published list of Spectables' built-in types; the first feature spec in Spectables form is <code>docs/specs/test-honesty.spectable</code>.</li>
+</ul>
+<p>Ken Pugh's <a href="https://alignthree.com">AlignThree Spectables</a> states rules about
+tests that this tool can check in any repository. Its guide warns that glue
+code which computes a result "is testing itself", and its generated stubs fail
+until they are written, so an unwritten step can never pass. Four things are
+adopted from it, each credited to him where a reader meets it:</p>
+<ol>
+<li><strong>A skipped test is not a passing one.</strong> Skip, pending and expected-failure
+   markers in a test suite are reported.</li>
+<li><strong>A test states its expected value.</strong> A test whose expected value is
+   computed in the test, rather than written down, is reported.</li>
+<li><strong>Spectables files are read.</strong> Where a repository keeps <code>.spectable</code> specs,
+   the checks Spectables' own Analyze runs — unknown types, undefined
+   references, column-count mismatches, duplicate scenario names — are
+   reported, with a link to Spectables for the tool that writes and runs them.</li>
+<li><strong>This repository's own feature specs</strong> are written as Given/When/Then with
+   example tables.</li>
+</ol>
+<p><strong>None of it scores or gates.</strong> The findings are reported and reach the
+remediation prompt, on <a href="adr-003-deterministic-semantic-policy.html">ADR 003</a>'s
+terms for results whose precision is unmeasured. No weight, band, grade or
+calibration constant moves, so no corpus re-measure is needed. Giving any of
+them score weight is a separate decision, made only with its cost stated:
+recalibrations have taken hours and moved little. Nothing from Spectables'
+software is run or bundled; if its grammar text is ever copied, its MIT notice
+ships with it.</p>
 <h2 id="statuses">Statuses</h2>
 <ul>
 <li><strong>Proposed</strong> — written up with options; not yet decided. May be edited freely.</li>

@@ -387,6 +387,37 @@ platform statement stands: POSIX is supported, Windows is not claimed. A
 Windows problem arrives as an issue or a pull request and is weighed then;
 nothing in the supported platforms is weakened to make Windows pass.
 
+### Decision 19: Test honesty and Spectables specs, after Ken Pugh
+
+- Recorded: 2026-10-27
+- Status: **Accepted, chosen by the maintainer 2026-10-27.** Tracked as [#313](https://github.com/marshallguillory86/maintainability-agent/issues/313). Shipped in 5.1.0: skipped tests, Python computed expectations, and three of the four Spectables checks. Unknown types wait on a published list of Spectables' built-in types; the first feature spec in Spectables form is `docs/specs/test-honesty.spectable`.
+
+Ken Pugh's [AlignThree Spectables](https://alignthree.com) states rules about
+tests that this tool can check in any repository. Its guide warns that glue
+code which computes a result "is testing itself", and its generated stubs fail
+until they are written, so an unwritten step can never pass. Four things are
+adopted from it, each credited to him where a reader meets it:
+
+1. **A skipped test is not a passing one.** Skip, pending and expected-failure
+   markers in a test suite are reported.
+2. **A test states its expected value.** A test whose expected value is
+   computed in the test, rather than written down, is reported.
+3. **Spectables files are read.** Where a repository keeps `.spectable` specs,
+   the checks Spectables' own Analyze runs — unknown types, undefined
+   references, column-count mismatches, duplicate scenario names — are
+   reported, with a link to Spectables for the tool that writes and runs them.
+4. **This repository's own feature specs** are written as Given/When/Then with
+   example tables.
+
+**None of it scores or gates.** The findings are reported and reach the
+remediation prompt, on [ADR 003](adr-003-deterministic-semantic-policy.md)'s
+terms for results whose precision is unmeasured. No weight, band, grade or
+calibration constant moves, so no corpus re-measure is needed. Giving any of
+them score weight is a separate decision, made only with its cost stated:
+recalibrations have taken hours and moved little. Nothing from Spectables'
+software is run or bundled; if its grammar text is ever copied, its MIT notice
+ships with it.
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

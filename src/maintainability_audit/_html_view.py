@@ -100,6 +100,7 @@ def render_html(report: dict[str, Any], records: list[Any]) -> str:
         *_unidentified_paths_section(report),
         *_dangling_links_section(report),
         *_semantic_section(report),
+        *_test_honesty_section(report),
         "</body></html>",
     ]
     return "\n".join(parts)
@@ -414,6 +415,41 @@ def _semantic_row(finding: dict[str, Any]) -> str:
         f"<td>{escape(where)}</td>"
         f"<td>{escape(str(finding.get('message') or ''))}</td></tr>"
     )
+
+
+_HONESTY_KINDS = (
+    ("skipped", "Skipped test — never counted as passing"),
+    ("computed_expected", "Test computes its own expected value"),
+)
+
+
+def _test_honesty_rows(honesty: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """(finding, location, evidence) for every test-honesty and Spectables finding."""
+    rows = [(label, f"{item['path']}:{item['line']}", item["text"])
+            for key, label in _HONESTY_KINDS for item in honesty.get(key) or []]
+    specs = honesty.get("spectables") or {}
+    return rows + [(f"Spectables: {item['check']}", f"{item['path']}:{item['line']}", item["message"])
+                   for item in specs.get("findings") or []]
+
+
+def _test_honesty_section(report: dict[str, Any]) -> list[str]:
+    """Decision 19: test-honesty findings and Spectables checks, credited, nothing scored."""
+    honesty = report.get("test_honesty") or {}
+    specs = honesty.get("spectables") or {}
+    rows = _test_honesty_rows(honesty)
+    if not rows and not specs.get("files"):
+        return []
+    parts = ["<h2>Test honesty</h2>", f"<p>{escape(honesty.get('credit') or '')}</p>"]
+    if specs.get("files"):
+        parts.append(f"<p>Read {specs['files']} <code>.spectable</code> file(s). "
+                     f"<a href=\"{escape(specs['link'])}\">Spectables</a>, by Ken Pugh, writes and "
+                     "runs these specifications. Unknown types are not checked.</p>")
+    if rows:
+        parts.append("<table><tr><th>Finding</th><th>Location</th><th>Evidence</th></tr>")
+        parts.extend(f"<tr><td>{escape(label)}</td><td>{escape(where)}</td><td>{escape(text)}</td></tr>"
+                     for label, where, text in rows)
+        parts.append("</table>")
+    return parts
 
 
 def _semantic_section(report: dict[str, Any]) -> list[str]:

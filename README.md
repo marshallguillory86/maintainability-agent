@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **5.0.1**.
+Version **5.1.0**.
 
 > ## **Calibrated against 201 mature open-source repositories in fifteen languages.**
 >
@@ -339,6 +339,13 @@ signals on:
   already-installed `tsc`, including workspace projects (ADR 003)
 - **test effectiveness** from an opted-in suite run and parsed coverage
   (Class 5, default off — the one place the agent may execute the tree)
+- **test honesty**, after Ken Pugh's
+  [AlignThree Spectables](https://alignthree.com): skipped, pending and
+  expected-failure tests, which never count as passing, and Python tests that
+  compute their own expected value instead of stating it. Where a repository
+  keeps `.spectable` specifications, three authoring checks from the
+  Spectables grammar are reported too. All of it is reported only and moves
+  no score (Decision 19)
 - an ISO/IEC 25010-inspired 0–5 estimate per category, and a verified grade —
   or a disclosed withholding when the evidence is thin.
 
@@ -496,7 +503,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v5.0.1
+- uses: marshallguillory86/maintainability-agent@v5.1.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD
@@ -564,6 +571,12 @@ tool stays free and open. It just helps keep the work going.
   evidence an LLM cannot hold across sessions, and that a tool positioned
   between the two should carry it. A contribution of insight rather than code,
   and it changed what this project is for.
+- **Ken Pugh** ([AlignThree](https://alignthree.com)) — shared Spectables,
+  whose rules about tests became the test-honesty findings: an unwritten or
+  skipped test never counts as passing, and a test that computes its own
+  expected value is testing itself. Where a repository keeps Spectables
+  specifications, this tool reads them and points to Spectables for writing
+  and running them.
 
 ## License
 

@@ -30,7 +30,9 @@ from ._security_work_order import carried as carried_work_order
 from ._semantic import semantic_findings
 from ._semantic_policy import load_semantic_policy
 from ._semantic_ts import discover_type_analysis
+from ._spectables import spectables
 from ._test_execution import run_test_suite
+from ._test_honesty import test_honesty
 from ._test_pairing import describe_tdd
 from ._work_order import work_order
 from .config import analyzers_run_default
@@ -561,6 +563,9 @@ def build_report(
     report["practice"] = practice_level(root, config).as_dict()
     report["pillars"] = _pillars_with_delegation(report, root, security_pillar, changed_revspec, config)
     _attach_semantics(report, root, config, {p.relative_to(root).as_posix() for p in source_files})
+    # After the score is sealed: reported, never rubric input (Decision 19).
+    report["test_honesty"] = test_honesty(root, source_files, source)
+    report["test_honesty"]["spectables"] = spectables(root, config, only_paths)
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.
     report["work_order"] = work_order(report, thresholds=config["thresholds"])

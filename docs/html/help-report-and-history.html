@@ -8,6 +8,7 @@
 <li><a href="#headline">Headline</a></li>
 <li><a href="#the-security-pillar">The security pillar</a></li>
 <li><a href="#when-declaration-rates-are-withheld">When declaration rates are withheld</a></li>
+<li><a href="#test-honesty">Test honesty</a></li>
 <li><a href="#history-recurrence-and-baselines">History, recurrence, and baselines</a></li>
 <li><a href="#economic-context">Economic context</a></li>
 </ul>
@@ -62,6 +63,30 @@ widens what is scanned, not what can be parsed.</p>
 written mostly in an unparsed language can show few declaration findings while
 being large, and its verified grade may be withheld for want of evidence. Both
 are the disclosure working, not the scan failing.</p>
+<h2 id="test-honesty">Test honesty</h2>
+<p>After Ken Pugh's <a href="https://alignthree.com">AlignThree Spectables</a>, the report
+names three things about a test suite. None of them moves the score or a gate,
+and none becomes a work-order item by itself:</p>
+<ul>
+<li><strong>Skipped tests.</strong> A skip, pending or expected-failure marker in a test file
+  (<code>@pytest.mark.skip</code>, <code>xfail</code>, <code>unittest.skip</code>, <code>it.skip</code>, <code>xit</code>,
+  <code>test.todo</code> and the like). A suite reports these as something other than a
+  failure, so a skip reads as a pass to anyone who only sees the result.</li>
+<li><strong>Tests that compute their expected value.</strong> In Python test files, a
+  comparison whose one side calls the code under test and whose other side
+  does arithmetic on variables, such as <code>assert add(a, b) == a + b</code>. The test
+  re-does the work and passes whatever the code returns. Arithmetic on
+  literals (<code>2 * 60</code>), path joins, relations between two results and an input
+  size compared with an output are not reported.</li>
+<li><strong>Spectables specifications.</strong> Where the repository keeps <code>.spectable</code>
+  files, the report reads them and names three authoring mistakes from the
+  Spectables grammar: a table row with the wrong number of cells, a repeated
+  scenario name in one file, and an <code>=Name</code> cell that names no <code>Define</code>.
+  Unknown types are not checked, because Spectables publishes no list of its
+  built-in types. Spectables itself writes and runs these specifications.</li>
+</ul>
+<p>The Markdown and HTML reports show each finding by file and line, with the
+credit beneath them; the remediation prompt lists them as report-only.</p>
 <h2 id="history-recurrence-and-baselines">History, recurrence, and baselines</h2>
 <p>Scan history is an input to the next report. Comparable records form a trend;
 a finding that clears and later returns contributes recurrence evidence. When

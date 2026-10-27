@@ -135,6 +135,44 @@ def render_risk_markdown(report: dict[str, Any]) -> list[str]:
     return markdown_table("Risk Pattern Findings", ["File", "Line", "Rule", "Text"], rows)
 
 
+_HONESTY_TABLES = (
+    ("skipped", "Skipped Tests — never counted as passing"),
+    ("computed_expected", "Tests That Compute Their Expected Value"),
+)
+
+
+def render_skipped_tests_markdown(report: dict[str, Any]) -> list[str]:
+    """The test-honesty findings, credited once beneath them (Decision 19)."""
+    honesty = report.get("test_honesty") or {}
+    lines: list[str] = []
+    for key, title in _HONESTY_TABLES:
+        rows = [[f"`{item['path']}:{item['line']}`", item["text"].replace("|", "\\|")]
+                for item in honesty.get(key) or []]
+        lines.extend(markdown_table(title, ["Location", "Text"], rows))
+    lines.extend(_spectables_markdown(honesty.get("spectables") or {}))
+    return [*lines, f"_{honesty['credit']}_", ""] if lines else []
+
+
+def _spectables_markdown(block: dict[str, Any]) -> list[str]:
+    """What the audit found in the repository's Spectables specifications."""
+    if not block.get("files"):
+        return []
+    rows = [[f"`{item['path']}:{item['line']}`", item["check"], item["message"].replace("|", "\\|")]
+            for item in block.get("findings") or []]
+    lines = [
+        "## Spectables Specifications",
+        "",
+        f"Read {block['files']} `.spectable` file(s). [Spectables]({block['link']}), by Ken Pugh, "
+        "writes and runs these specifications; this audit reports three authoring checks "
+        "from its grammar. Unknown types are not checked.",
+        "",
+    ]
+    if not rows:
+        return [*lines, "No authoring mistakes found.", ""]
+    return [*lines, "| Location | Check | Detail |", "|---|---|---|",
+            *("| " + " | ".join(row) + " |" for row in rows), ""]
+
+
 def render_near_duplicate_markdown(report: dict[str, Any]) -> list[str]:
     """Declarations that are near-copies, each paired with its original.
 

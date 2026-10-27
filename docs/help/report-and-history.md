@@ -60,6 +60,32 @@ written mostly in an unparsed language can show few declaration findings while
 being large, and its verified grade may be withheld for want of evidence. Both
 are the disclosure working, not the scan failing.
 
+## Test honesty
+
+After Ken Pugh's [AlignThree Spectables](https://alignthree.com), the report
+names three things about a test suite. None of them moves the score or a gate,
+and none becomes a work-order item by itself:
+
+- **Skipped tests.** A skip, pending or expected-failure marker in a test file
+  (`@pytest.mark.skip`, `xfail`, `unittest.skip`, `it.skip`, `xit`,
+  `test.todo` and the like). A suite reports these as something other than a
+  failure, so a skip reads as a pass to anyone who only sees the result.
+- **Tests that compute their expected value.** In Python test files, a
+  comparison whose one side calls the code under test and whose other side
+  does arithmetic on variables, such as `assert add(a, b) == a + b`. The test
+  re-does the work and passes whatever the code returns. Arithmetic on
+  literals (`2 * 60`), path joins, relations between two results and an input
+  size compared with an output are not reported.
+- **Spectables specifications.** Where the repository keeps `.spectable`
+  files, the report reads them and names three authoring mistakes from the
+  Spectables grammar: a table row with the wrong number of cells, a repeated
+  scenario name in one file, and an `=Name` cell that names no `Define`.
+  Unknown types are not checked, because Spectables publishes no list of its
+  built-in types. Spectables itself writes and runs these specifications.
+
+The Markdown and HTML reports show each finding by file and line, with the
+credit beneath them; the remediation prompt lists them as report-only.
+
 ## History, recurrence, and baselines
 
 Scan history is an input to the next report. Comparable records form a trend;

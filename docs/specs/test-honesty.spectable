@@ -1,0 +1,38 @@
+Specification Test honesty
+Description Decision 19, after Ken Pugh's AlignThree Spectables. Every finding here is reported only and moves no score.
+
+Entity Finding
+| Attribute | Type    | Default | Notes                         |
+| Path      | String  |         | relative to the audited root  |
+| Line      | Integer | 0       | one-based                     |
+| Check     | String  |         | which rule produced it        |
+
+BusinessRule Skipped tests
+Description A skip marker in a test file is reported; the same text elsewhere, or quoted, is not.
+Examples: SkipInput
+| File              | Line text                     | Reported |
+| tests/test_a.py   | @pytest.mark.skip             | yes      |
+| tests/test_a.py   | @pytest.mark.xfail            | yes      |
+| src/a.test.js     | test.todo('renders');         | yes      |
+| src/app.py        | @pytest.mark.skip             | no       |
+| tests/test_a.py   | note = '@pytest.mark.skip'    | no       |
+
+BusinessRule Computed expectations
+Description A Python test comparison whose expected value is arithmetic on variables, beside a call, is reported.
+Examples: ExpectationInput
+| Assertion                                | Reported | Why                                   |
+| assert add(a, b) == a + b                | yes      | the expectation re-does the work      |
+| assert add(2, 3) == 5                    | no       | the value is stated                   |
+| assert minutes(2) == 2 * 60              | no       | arithmetic on literals is stated      |
+| assert locate(p) == p / name             | no       | a path join, not arithmetic           |
+| assert single == plain + 1               | no       | a relation between two results        |
+
+BusinessRule Spectables authoring checks
+Description Where a repository keeps .spectable files, three mistakes from the published grammar are reported. Unknown types are not, because no list of built-in types is published.
+Examples: SpecInput
+| Specification content                          | Check               | Reported |
+| a row with fewer cells than its first row      | column-count        | yes      |
+| a cell =Missing with no Define named Missing   | undefined-reference | yes      |
+| a cell =TBR declared by a bare Define table    | undefined-reference | no       |
+| two scenarios named Add items in one file      | duplicate-scenario  | yes      |
+| a table inside a docstring                     | column-count        | no       |

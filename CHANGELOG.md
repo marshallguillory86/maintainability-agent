@@ -12,6 +12,10 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+- **Decision 18 and the CI notes are reworded.** The decision record, two
+  test docstrings and a workflow comment now state what was decided and why.
+  Nothing in the package changes.
+
 ## 5.0.1 - 2026-10-27
 
 - **A corpus row names the analyzer it lost, and why (#312).** The 5.0.0

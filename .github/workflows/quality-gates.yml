@@ -18,8 +18,8 @@ name: Quality Gates
 
 on:
   # No push trigger. On every branch it ran each pull request twice (push
-  # and pull_request), ~10 minutes each (2026-10-15, his words: "The CI is
-  # ridiculously unacceptable"), and on main it re-ran tests a merge had
+  # and pull_request), ~10 minutes each (2026-10-15, judged too slow and
+  # too costly), and on main it re-ran tests a merge had
   # already passed (RULES.md: each test runs once). Every PR runs the
   # required checks once, through pull_request; main is audited by
   # maintainability.yml.

@@ -378,7 +378,7 @@ chosen.
 ### Decision 18: Windows is not tested in CI
 
 - Recorded: 2026-10-15
-- Status: **Accepted, chosen by the maintainer 2026-10-15.** His words: "just turn this shit off. I am not going to test windows ... windows users can submit PRs or defects to the repo if they want it fixed."
+- Status: **Accepted, chosen by the maintainer 2026-10-15.** Windows is not tested here; Windows users who want a problem fixed report it as an issue or a pull request.
 
 The `windows-latest` probe failed on every run — the POSIX-only calls the
 README names — and blocked nothing, so it cost run time on every pull request

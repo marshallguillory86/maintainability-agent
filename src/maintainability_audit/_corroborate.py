@@ -26,6 +26,7 @@ from pathlib import Path
 from statistics import fmean
 
 from ._metrics_types import Measurement
+from ._walk import walk
 
 # Equal weight unless a tool has a stated reason to be trusted more or less
 # on a concept. Deliberately the default: an unequal weight is a judgment,
@@ -238,7 +239,7 @@ def normalize_source_path(root: Path, path: str) -> str:
         return path
     suffix = f"/{path}"
     matches = [
-        candidate for candidate in root.rglob(Path(path).name)
+        candidate for candidate in walk(root, Path(path).name)
         if candidate.as_posix().endswith(suffix)
     ]
     if len(matches) == 1:

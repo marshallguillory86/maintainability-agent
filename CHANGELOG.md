@@ -12,6 +12,25 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 5.1.1 - 2026-10-30
+
+- **A directory that vanishes mid-walk no longer crashes the audit (D236).**
+  Fifteen walks of the audited tree used `rglob`, which went into `.git` and
+  raised `FileNotFoundError` when a directory it had listed was gone by the
+  time it opened it: a git worktree being added or removed, or an IDE or build
+  writing beside the audit, ended the audit with a traceback. Every walk now
+  goes through one walker that never enters `.git`, never follows a
+  symlinked directory out of the tree, and treats a directory it cannot open
+  as empty. A structural test refuses `rglob` anywhere else in the package.
+- **The README speaks five more languages, briefly, and carries a badge row
+  (Decision 20).** Short pages in Spanish, German, French, Hindi and
+  Simplified Chinese say what the tool is and how to install and run it, and
+  point to the English README as the complete copy. Each is marked as a
+  machine translation and carries no version number, so a README change never
+  leaves one stale. The badges show the published version, Python versions,
+  licence, the self-audit of `main` and downloads. Nothing in the package
+  changes.
+
 ## 5.1.0 - 2026-10-27
 
 **New, reported only: test honesty, after Ken Pugh's

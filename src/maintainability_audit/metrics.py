@@ -23,6 +23,7 @@ from ._metrics_types import KNOWN_SOURCE_SUFFIXES, FileMetric, FunctionMetric
 # callers already use, and the move is not their business.
 from ._metrics_types import is_test_path as is_test_path
 from ._operator_reads import PathNotAllowed, read_source_file
+from ._walk import walk
 from .declarations import DECLARATION_SUFFIXES, detect_functions
 from .source import SourceIndex, index_or_new
 
@@ -134,7 +135,7 @@ def dangling_source_links(root: Path, config: dict[str, Any]) -> list[str]:
     """Source-suffixed symlinks to nothing, as repository-relative paths."""
     excludes = config["paths"]["exclude_patterns"]
     found = []
-    for path in root.rglob("*"):
+    for path in walk(root, "*"):
         if path.suffix not in KNOWN_SOURCE_SUFFIXES or not dangling(path):
             continue
         rel = str(path.relative_to(root)).replace(os.sep, "/")
@@ -148,7 +149,7 @@ def iter_files(root: Path, config: dict[str, Any], only_paths: set[str] | None =
     excludes = config["paths"]["exclude_patterns"]
     resolved_root = root.resolve()
     out: list[Path] = []
-    for path in root.rglob("*"):
+    for path in walk(root, "*"):
         if path.is_dir():
             continue
         if not within(resolved_root, path):
@@ -199,7 +200,7 @@ def unread_source(root: Path, config: dict[str, Any]) -> tuple[list[dict[str, An
     unread: Counter[str] = Counter()
     read = 0
     resolved_root = root.resolve()
-    for path in root.rglob("*"):
+    for path in walk(root, "*"):
         if path.is_dir():
             continue
         if path.suffix not in KNOWN_SOURCE_SUFFIXES:
@@ -268,7 +269,7 @@ def undetected_declarations(root: Path, config: dict[str, Any]) -> list[dict[str
         return []
 
     counted: Counter[str] = Counter()
-    for path in root.rglob("*"):
+    for path in walk(root, "*"):
         if not path.is_file() or path.suffix not in blind:
             continue
         rel = str(path.relative_to(root)).replace(os.sep, "/")

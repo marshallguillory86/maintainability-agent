@@ -24,6 +24,7 @@ from ._generic import parse_checkstyle
 from ._metric_adapters import expand_files
 from ._metrics_types import Finding
 from ._runner import Invocation, ToolResult
+from ._walk import walk
 from ._xml import parse_analyzer_xml
 
 
@@ -297,7 +298,7 @@ class SpotBugsAdapter(BaseAdapter):
                 candidate = repository_path(root, str(relative), str(relative))
             except PathNotAllowed:
                 continue
-            if candidate.is_dir() and any(candidate.rglob("*.class")):
+            if candidate.is_dir() and any(walk(candidate, "*.class")):
                 found.append(candidate)
         return tuple(found)
 
@@ -330,7 +331,7 @@ class SpotBugsAdapter(BaseAdapter):
             (
                 path.stat().st_mtime
                 for directory in self._target_dirs(root, class_dirs)
-                for path in directory.rglob("*.class")
+                for path in walk(directory, "*.class")
             ),
             default=0.0,
         )

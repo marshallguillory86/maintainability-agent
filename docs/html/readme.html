@@ -32,11 +32,17 @@
 </ul>
 </div>
 </aside>
-<main><div class="meta">Project</div><h1>Maintainability Agent</h1><p><img alt="maintainability-agent — a deterministic audit whose output is a bounded work order for your AI coding agent: fix exactly these findings, refactor nothing else" src="https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/docs/cover.png" /></p>
+<main><div class="meta">Project</div><h1>Maintainability Agent</h1><p><strong>English</strong> | <a href="readme.es.html">Español</a> | <a href="readme.de.html">Deutsch</a> | <a href="readme.fr.html">Français</a> | <a href="readme.hi.html">हिन्दी</a> | <a href="readme.zh-cn.html">简体中文</a></p>
+<p><a href="https://pypi.org/project/maintainability-agent/"><img alt="PyPI" src="https://img.shields.io/pypi/v/maintainability-agent" /></a>
+<a href="https://pypi.org/project/maintainability-agent/"><img alt="Python" src="https://img.shields.io/pypi/pyversions/maintainability-agent" /></a>
+<a href="../../LICENSE"><img alt="License" src="https://img.shields.io/github/license/marshallguillory86/maintainability-agent" /></a>
+<a href="https://github.com/marshallguillory86/maintainability-agent/actions/workflows/maintainability.yml"><img alt="Self-audit" src="https://img.shields.io/github/actions/workflow/status/marshallguillory86/maintainability-agent/maintainability.yml?branch=main&amp;label=self-audit" /></a>
+<a href="https://pypistats.org/packages/maintainability-agent"><img alt="Downloads" src="https://img.shields.io/pypi/dm/maintainability-agent" /></a></p>
+<p><img alt="maintainability-agent — a deterministic audit whose output is a bounded work order for your AI coding agent: fix exactly these findings, refactor nothing else" src="https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/docs/cover.png" /></p>
 <p><strong>A deterministic, offline maintainability audit whose output is a <em>bounded
 work order</em> for an AI coding agent</strong> — a copy-paste prompt, per finding, that
 says <em>fix exactly these and refactor nothing else</em>. Chat-primary; CLI for CI.
-Version <strong>5.1.0</strong>.</p>
+Version <strong>5.1.1</strong>.</p>
 <blockquote>
 <h2 id="calibrated-against-201-mature-open-source-repositories-in-fifteen-languages"><strong>Calibrated against 201 mature open-source repositories in fifteen languages.</strong></h2>
 <p>Every grade is a measured multiple of real code, not a threshold someone
@@ -543,7 +549,7 @@ instead of an invokable skill:
 <a href="ide-agent-integration.html#invokable-skill--slash-command">docs/ide-agent-integration.md</a>.</p>
 <h2 id="github-action">GitHub Action</h2>
 <p>This repo ships <code>action.yml</code>, usable as a composite action:</p>
-<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v5.1.0
+<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v5.1.1
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

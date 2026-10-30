@@ -170,6 +170,7 @@ flowchart TB
     _user_config["_user_config"]
     _stored_grants["_stored_grants"]
     _safe_write["_safe_write"]
+    _walk["_walk"]
     git_tools["git_tools"]
     _scan_history["_scan_history"]
     _finding_match["_finding_match"]
@@ -190,7 +191,7 @@ flowchart TB
   parsing --> foundations
 ```
 
-`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report. `_user_config` owns the XDG user configuration and per-repository seen state; it belongs beside `config` in foundations. `_safe_write` is the single way the agent writes into a tree it is auditing — bounded, symlink-refusing, staged and renamed so no existing inode is opened for writing — and sits in foundations for the same reason: every layer that writes must reach it, and it reaches nothing but `config` (D34). `_semantic` classifies type-backed findings; `_semantic_ts` supplies TypeScript type facts from recordings or an already-installed `tsc`; `_semantic_policy` loads the optional checked-in policy.
+`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report. `_user_config` owns the XDG user configuration and per-repository seen state; it belongs beside `config` in foundations. `_safe_write` is the single way the agent writes into a tree it is auditing — bounded, symlink-refusing, staged and renamed so no existing inode is opened for writing — and sits in foundations for the same reason: every layer that writes must reach it, and it reaches nothing but `config` (D34). `_walk` is the single way the agent walks that tree: it never enters `.git`, never follows a symlinked directory out, and treats a directory that vanished mid-walk as empty, so a worktree git adds during an audit cannot abort it. `_semantic` classifies type-backed findings; `_semantic_ts` supplies TypeScript type facts from recordings or an already-installed `tsc`; `_semantic_policy` loads the optional checked-in policy.
 
 **Chat, MCP, and an interactive CLI TTY are one setup: the same questions.** MCP is the chat transport, not a third questionnaire. `_first_run` and `_mcp_setup` are two transports of `setup_questions`, not two processes. CI and a non-TTY never ask.
 

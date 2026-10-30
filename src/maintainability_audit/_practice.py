@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Any
 
 from ._operator_reads import PathNotAllowed, open_repository_file
+from ._walk import walk
 from .metrics import is_excluded
 
 # A repository holding config but running none of it. See the module
@@ -177,7 +178,7 @@ def _ci_files(root: Path) -> list[Path]:
     for location in CI_LOCATIONS:
         target = root / location
         if target.is_dir():
-            found.extend(p for p in sorted(target.rglob("*")) if p.is_file())
+            found.extend(p for p in sorted(walk(target, "*")) if p.is_file())
         elif target.is_file():
             found.append(target)
     return found
@@ -286,7 +287,7 @@ def _gate_manifests(root: Path, excludes: list[str]) -> list[tuple[str, Path]]:
     this repository's (plan-81dc6870 Class 3)."""
     found: list[tuple[str, Path]] = []
     for name in GATE_MANIFESTS:
-        for path in root.rglob(name):
+        for path in walk(root, name):
             if not path.is_file():
                 continue
             rel = path.relative_to(root).as_posix()

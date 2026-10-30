@@ -1,11 +1,19 @@
 # Maintainability Agent
 
+**English** | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [हिन्दी](README.hi.md) | [简体中文](README.zh-CN.md)
+
+[![PyPI](https://img.shields.io/pypi/v/maintainability-agent)](https://pypi.org/project/maintainability-agent/)
+[![Python](https://img.shields.io/pypi/pyversions/maintainability-agent)](https://pypi.org/project/maintainability-agent/)
+[![License](https://img.shields.io/github/license/marshallguillory86/maintainability-agent)](LICENSE)
+[![Self-audit](https://img.shields.io/github/actions/workflow/status/marshallguillory86/maintainability-agent/maintainability.yml?branch=main&label=self-audit)](https://github.com/marshallguillory86/maintainability-agent/actions/workflows/maintainability.yml)
+[![Downloads](https://img.shields.io/pypi/dm/maintainability-agent)](https://pypistats.org/packages/maintainability-agent)
+
 ![maintainability-agent — a deterministic audit whose output is a bounded work order for your AI coding agent: fix exactly these findings, refactor nothing else](https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/docs/cover.png)
 
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **5.1.0**.
+Version **5.1.1**.
 
 > ## **Calibrated against 201 mature open-source repositories in fifteen languages.**
 >
@@ -503,7 +511,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v5.1.0
+- uses: marshallguillory86/maintainability-agent@v5.1.1
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

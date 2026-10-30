@@ -6,6 +6,7 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#511-2026-10-30">5.1.1 - 2026-10-30</a></li>
 <li><a href="#510-2026-10-27">5.1.0 - 2026-10-27</a></li>
 <li><a href="#501-2026-10-27">5.0.1 - 2026-10-27</a></li>
 <li><a href="#500-2026-10-26">5.0.0 - 2026-10-26</a><ul>
@@ -554,6 +555,25 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="511-2026-10-30">5.1.1 - 2026-10-30</h2>
+<ul>
+<li><strong>A directory that vanishes mid-walk no longer crashes the audit (D236).</strong>
+  Fifteen walks of the audited tree used <code>rglob</code>, which went into <code>.git</code> and
+  raised <code>FileNotFoundError</code> when a directory it had listed was gone by the
+  time it opened it: a git worktree being added or removed, or an IDE or build
+  writing beside the audit, ended the audit with a traceback. Every walk now
+  goes through one walker that never enters <code>.git</code>, never follows a
+  symlinked directory out of the tree, and treats a directory it cannot open
+  as empty. A structural test refuses <code>rglob</code> anywhere else in the package.</li>
+<li><strong>The README speaks five more languages, briefly, and carries a badge row
+  (Decision 20).</strong> Short pages in Spanish, German, French, Hindi and
+  Simplified Chinese say what the tool is and how to install and run it, and
+  point to the English README as the complete copy. Each is marked as a
+  machine translation and carries no version number, so a README change never
+  leaves one stale. The badges show the published version, Python versions,
+  licence, the self-audit of <code>main</code> and downloads. Nothing in the package
+  changes.</li>
+</ul>
 <h2 id="510-2026-10-27">5.1.0 - 2026-10-27</h2>
 <p><strong>New, reported only: test honesty, after Ken Pugh's
 <a href="https://alignthree.com">AlignThree Spectables</a> (Decision 19, #313).</strong> No

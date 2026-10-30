@@ -46,3 +46,17 @@ def test_the_readme_links_the_report_through_pages_at_the_current_version() -> N
 
 def test_the_readme_links_the_rendered_docs_through_pages() -> None:
     assert f"{PAGES}html/" in README
+
+
+def test_the_site_root_is_a_landing_page_with_the_cover() -> None:
+    """Without docs/index.html the domain itself answers 404."""
+    html = (ROOT / "docs" / "index.html").read_text(encoding="utf-8")
+    images = re.findall(r'<img[^>]+src="([^"]+)"', html)
+
+    assert "cover.png" in images
+    assert (ROOT / "docs" / "cover.png").is_file()
+    assert re.search(r'<img[^>]+src="cover\.png"[^>]+alt="[^"]{20,}"', html), "the cover needs real alt text"
+    assert 'href="example-report.html"' in html
+    assert 'href="html/"' in html
+    assert '<html lang="en"' in html
+    assert not re.search(r"<script[^>]+src=|<link[^>]+href=\"https?:", html)

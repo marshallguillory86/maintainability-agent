@@ -38,13 +38,13 @@
 <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/github/license/marshallguillory86/maintainability-agent" /></a>
 <a href="https://github.com/marshallguillory86/maintainability-agent/actions/workflows/maintainability.yml"><img alt="Self-audit" src="https://img.shields.io/github/actions/workflow/status/marshallguillory86/maintainability-agent/maintainability.yml?branch=main&amp;label=self-audit" /></a>
 <a href="https://pypistats.org/packages/maintainability-agent"><img alt="Downloads" src="https://img.shields.io/pypi/dm/maintainability-agent" /></a></p>
-<p><strong>See it:</strong> <a href="https://maintainability-agent.techportfolio.monster/example-report.html">an example HTML report</a>, this repository audited by itself at 5.1.1 ·
+<p><strong>See it:</strong> <a href="https://maintainability-agent.techportfolio.monster/example-report.html">an example HTML report</a>, this repository audited by itself at 5.1.2 ·
 <a href="https://maintainability-agent.techportfolio.monster/html/">the documentation, rendered</a></p>
 <p><img alt="maintainability-agent — a deterministic audit whose output is a bounded work order for your AI coding agent: fix exactly these findings, refactor nothing else" src="https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/docs/cover.png" /></p>
 <p><strong>A deterministic, offline maintainability audit whose output is a <em>bounded
 work order</em> for an AI coding agent</strong> — a copy-paste prompt, per finding, that
 says <em>fix exactly these and refactor nothing else</em>. Chat-primary; CLI for CI.
-Version <strong>5.1.1</strong>.</p>
+Version <strong>5.1.2</strong>.</p>
 <blockquote>
 <h2 id="calibrated-against-201-mature-open-source-repositories-in-fifteen-languages"><strong>Calibrated against 201 mature open-source repositories in fifteen languages.</strong></h2>
 <p>Every grade is a measured multiple of real code, not a threshold someone
@@ -551,7 +551,7 @@ instead of an invokable skill:
 <a href="ide-agent-integration.html#invokable-skill--slash-command">docs/ide-agent-integration.md</a>.</p>
 <h2 id="github-action">GitHub Action</h2>
 <p>This repo ships <code>action.yml</code>, usable as a composite action:</p>
-<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v5.1.1
+<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v5.1.2
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

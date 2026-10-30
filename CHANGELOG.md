@@ -12,6 +12,9 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+- **CI runs secure-code-agent 0.13.1.** Its SARIF no longer marks a run as
+  failed when a scanner covers only part of the tree, so GitHub's code-scanning
+  page stops reporting a configuration error for the security upload.
 - **An accessibility statement and a pull request template.** `ACCESSIBILITY.md`
   says what each output offers assistive technology, what is known not to work
   well (the HTML trend charts have no accessible name and separate series by

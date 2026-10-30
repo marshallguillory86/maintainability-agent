@@ -588,6 +588,8 @@ tool stays free and open. It just helps keep the work going.
   expected value is testing itself. Where a repository keeps Spectables
   specifications, this tool reads them and points to Spectables for writing
   and running them.
+- **Claude** (Anthropic): claude constantly ignores repo rules and fails to
+  write good code.
 
 ## License
 

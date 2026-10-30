@@ -294,7 +294,7 @@ MEASUREMENT_PATH = (
     "_ranges_rust", "_ranges_shell", "_ranges_swift",
     "_bands", "_banner", "_catalog", "_config_defaults", "_criteria_scope",
     "_finding_match", "_operator_reads", "_ratio_adapters", "_runner",
-    "_stored_grants", "_user_config", "_xml", "config", "evidence", "git_tools",
+    "_stored_grants", "_user_config", "_walk", "_xml", "config", "evidence", "git_tools",
 )
 
 #: Reachable from the list above and deliberately not in it, each with the

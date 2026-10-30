@@ -12,6 +12,12 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+- **An example report and the documentation, online.** The README links a real
+  HTML report, this repository audited by itself at 5.1.1, and the rendered
+  documentation, both served by GitHub Pages at
+  maintainability-agent.techportfolio.monster. A test holds the link, the
+  version it names and the report's self-containment; regenerating the report
+  is a release step.
 - **CI runs secure-code-agent 0.13.1.** Its SARIF no longer marks a run as
   failed when a scanner covers only part of the tree, so GitHub's code-scanning
   page stops reporting a configuration error for the security upload.

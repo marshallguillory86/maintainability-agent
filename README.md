@@ -8,6 +8,9 @@
 [![Self-audit](https://img.shields.io/github/actions/workflow/status/marshallguillory86/maintainability-agent/maintainability.yml?branch=main&label=self-audit)](https://github.com/marshallguillory86/maintainability-agent/actions/workflows/maintainability.yml)
 [![Downloads](https://img.shields.io/pypi/dm/maintainability-agent)](https://pypistats.org/packages/maintainability-agent)
 
+**See it:** [an example HTML report](https://maintainability-agent.techportfolio.monster/example-report.html), this repository audited by itself at 5.1.1 ·
+[the documentation, rendered](https://maintainability-agent.techportfolio.monster/html/)
+
 ![maintainability-agent — a deterministic audit whose output is a bounded work order for your AI coding agent: fix exactly these findings, refactor nothing else](https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/docs/cover.png)
 
 **A deterministic, offline maintainability audit whose output is a _bounded

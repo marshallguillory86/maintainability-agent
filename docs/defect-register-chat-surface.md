@@ -9042,8 +9042,9 @@ in `tests/test_a_vanishing_directory_never_crashes_the_audit.py`, beside
 `test_no_module_walks_the_tree_except_through_the_one_walker`, which reads
 every module of the package.
 
-*Mutation:* with `rglob` restored, the audit raised `FileNotFoundError`, and
-the structural test named fifteen call sites in seven modules.
+*Mutation:* with `rglob` restored, the audit raised `FileNotFoundError` on
+Python 3.11 and, on 3.12, which swallows that error, opened 64 directories
+inside `.git`; the structural test named fifteen call sites in seven modules.
 
 ## Disposition
 

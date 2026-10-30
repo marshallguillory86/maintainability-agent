@@ -74,18 +74,32 @@ def test_the_walk_matches_a_name_pattern_like_rglob(tmp_path: Path) -> None:
 def test_a_full_audit_survives_a_directory_that_vanishes_mid_walk(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Whether `rglob` raises on a vanished directory depends on the Python
+    version (3.11 does, 3.12 swallows it), so the claim that holds on every
+    version is the stronger one: the audit never opens a directory in `.git`,
+    and so cannot be ended by one disappearing there."""
     from maintainability_audit.config import load_config
     from maintainability_audit.report import build_report
 
     root = _tree(tmp_path)
     _vanishing(monkeypatch, "worktrees")
     _vanishing(monkeypatch, "gone")
+    opened: list[Path] = []
+    vanishing = os.scandir
+
+    def recording(path: os.PathLike[str] | str = ".") -> os.ScandirIterator[str]:  # type: ignore[type-var]
+        opened.append(Path(path))
+        return vanishing(path)
+
+    monkeypatch.setattr(os, "scandir", recording)
 
     report = build_report(root, copy.deepcopy(load_config(None)), run_analyzers=False)
 
     paths = {item["path"] for item in report["largest_files"]}
     assert "src/app.py" in paths
     assert not any(path.startswith(".git/") for path in paths)
+    inside_git = [p for p in opened if (root / ".git") in (p.resolve(), *p.resolve().parents)]
+    assert inside_git == [], f"the audit opened {len(inside_git)} directories inside .git"
 
 
 def test_no_module_walks_the_tree_except_through_the_one_walker() -> None:

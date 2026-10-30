@@ -12,6 +12,13 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+- **An accessibility statement and a pull request template.** `ACCESSIBILITY.md`
+  says what each output offers assistive technology, what is known not to work
+  well (the HTML trend charts have no accessible name and separate series by
+  colour), and how to report a barrier; a test holds its claims about the
+  outputs. `.github/pull_request_template.md` asks for the failing test, the
+  checks and the changelog entry. Nothing in the package changes.
+
 ## 5.1.1 - 2026-10-30
 
 - **A directory that vanishes mid-walk no longer crashes the audit (D236).**

@@ -1,0 +1,2 @@
+# The local pipeline run before every push: lint and the whole suite under the coverage floor.
+tools/local-gate.sh

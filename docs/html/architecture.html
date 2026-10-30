@@ -180,6 +180,7 @@
     _user_config[&quot;_user_config&quot;]
     _stored_grants[&quot;_stored_grants&quot;]
     _safe_write[&quot;_safe_write&quot;]
+    _walk[&quot;_walk&quot;]
     git_tools[&quot;git_tools&quot;]
     _scan_history[&quot;_scan_history&quot;]
     _finding_match[&quot;_finding_match&quot;]
@@ -199,7 +200,7 @@
   scoring --&gt; parsing
   parsing --&gt; foundations
 </code></pre>
-<p><code>_bands</code> sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). <code>_finding_match</code> owns structured identity and matching; <code>_identity</code> presents the ordinal labels derived from the report. <code>_user_config</code> owns the XDG user configuration and per-repository seen state; it belongs beside <code>config</code> in foundations. <code>_safe_write</code> is the single way the agent writes into a tree it is auditing — bounded, symlink-refusing, staged and renamed so no existing inode is opened for writing — and sits in foundations for the same reason: every layer that writes must reach it, and it reaches nothing but <code>config</code> (D34). <code>_semantic</code> classifies type-backed findings; <code>_semantic_ts</code> supplies TypeScript type facts from recordings or an already-installed <code>tsc</code>; <code>_semantic_policy</code> loads the optional checked-in policy.</p>
+<p><code>_bands</code> sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). <code>_finding_match</code> owns structured identity and matching; <code>_identity</code> presents the ordinal labels derived from the report. <code>_user_config</code> owns the XDG user configuration and per-repository seen state; it belongs beside <code>config</code> in foundations. <code>_safe_write</code> is the single way the agent writes into a tree it is auditing — bounded, symlink-refusing, staged and renamed so no existing inode is opened for writing — and sits in foundations for the same reason: every layer that writes must reach it, and it reaches nothing but <code>config</code> (D34). <code>_walk</code> is the single way the agent walks that tree: it never enters <code>.git</code>, never follows a symlinked directory out, and treats a directory that vanished mid-walk as empty, so a worktree git adds during an audit cannot abort it. <code>_semantic</code> classifies type-backed findings; <code>_semantic_ts</code> supplies TypeScript type facts from recordings or an already-installed <code>tsc</code>; <code>_semantic_policy</code> loads the optional checked-in policy.</p>
 <p><strong>Chat, MCP, and an interactive CLI TTY are one setup: the same questions.</strong> MCP is the chat transport, not a third questionnaire. <code>_first_run</code> and <code>_mcp_setup</code> are two transports of <code>setup_questions</code>, not two processes. CI and a non-TTY never ask.</p>
 <div class="table-wrap"><table>
 <thead>

@@ -22,6 +22,7 @@ from typing import Any
 
 from ._operator_reads import read_source_file
 from ._runner import Invocation, locate, run
+from ._walk import walk
 from .metrics import within
 
 # Where a repository can check in its recorded type analysis. Versioned
@@ -213,7 +214,7 @@ def _typescript_sources(root: Path) -> list[Path]:
     # here or it is not applied here at all.
     resolved_root = root.resolve()
     return sorted(
-        path for path in root.rglob("*")
+        path for path in walk(root, "*")
         if path.suffix in _TS_SUFFIXES
         and path.is_file()
         and within(resolved_root, path)

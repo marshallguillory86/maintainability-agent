@@ -43,18 +43,19 @@ def test_the_gate_and_decision_populations_are_derived_and_not_empty() -> None:
 
 def test_manifest_reading_walks_the_tree_not_only_the_root() -> None:
     """The AST guard for the unnamed member: `_gate_manifests` must walk
-    the tree (`rglob`). A regression to `root / name` — the exact defect —
-    fails here even though no functional case names the module."""
+    the tree (`_walk.walk`, the one walker since D236). A regression to
+    `root / name` — the exact defect — fails here even though no functional
+    case names the module."""
     tree = ast.parse(SRC.read_text(encoding="utf-8"))
     fn = next(
         n for n in ast.walk(tree)
         if isinstance(n, ast.FunctionDef) and n.name == "_gate_manifests"
     )
     called = {
-        n.func.attr for n in ast.walk(fn)
-        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+        n.func.id for n in ast.walk(fn)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
     }
-    assert "rglob" in called, "_gate_manifests no longer walks the tree for nested manifests"
+    assert "walk" in called, "_gate_manifests no longer walks the tree for nested manifests"
 
 
 @pytest.mark.parametrize("manifest", sorted(GATE_MANIFESTS))

@@ -20,6 +20,7 @@ from pathlib import Path
 from ._adapters import BaseAdapter, Extraction
 from ._metrics_types import Measurement
 from ._runner import Invocation, ToolResult
+from ._walk import walk
 
 
 def _rows(text: str) -> list[list[str]]:
@@ -54,7 +55,7 @@ def expand_files(
     resolved_root = root.resolve()
     eligible = [
         str(path)
-        for path in sorted(root.rglob("*"))
+        for path in sorted(walk(root, "*"))
         if path.suffix in suffixes
         and path.is_file()
         and within(resolved_root, path)

@@ -44,6 +44,7 @@ from typing import Any
 from ._banner import banner_says_generated
 from ._metrics_types import KNOWN_SOURCE_SUFFIXES, is_test_path
 from ._operator_reads import PathNotAllowed, read_source_file
+from ._walk import walk
 from .metrics import is_excluded
 
 # The inventory names languages the way a person does; the analyzer
@@ -248,7 +249,7 @@ def _ignored_build_output(root: Path) -> dict[str, str]:
 def _generated_directories(root: Path, excludes: tuple[str, ...]) -> dict[str, str]:
     """Directories a `package.json` script deletes and rebuilds, then ignored build output."""
     found: dict[str, str] = {}
-    for manifest in root.rglob("package.json"):
+    for manifest in walk(root, "package.json"):
         relative = manifest.relative_to(root).as_posix()
         if is_excluded(relative, list(excludes)):
             continue
@@ -315,7 +316,7 @@ def _vendored_directories(root: Path) -> dict[str, str]:
             found.setdefault(entry.group(1).strip("./"), "declared a submodule in .gitmodules")
 
     # A script named for the directory it overwrites from upstream.
-    for script in root.rglob("sync-*"):
+    for script in walk(root, "sync-*"):
         if not script.is_file():
             continue
         match = SYNC_SCRIPT.match(script.stem)
@@ -348,7 +349,7 @@ def _asset_snapshot_directories(root: Path, excludes: tuple[str, ...]) -> dict[s
     would drop real code from the score (plan-81dc6870 Class 4).
     """
     by_dir: dict[str, list[Path]] = {}
-    for path in root.rglob("*"):
+    for path in walk(root, "*"):
         relative = path.relative_to(root).as_posix()
         directory = path.parent.relative_to(root).as_posix()
         if path.is_file() and directory not in ("", ".") and not is_excluded(relative, list(excludes)):
@@ -514,7 +515,7 @@ def discover(root: Path, config: dict[str, Any]) -> Inventory:
     # tree's HTML, XML and JSON are scored too unless classified here (D175).
     read = set((config.get("paths") or {}).get("include_extensions", ()))
     not_ours_dirs = (*generated_dirs, *vendored_dirs)
-    for path in sorted(root.rglob("*")):
+    for path in sorted(walk(root, "*")):
         if not path.is_file():
             continue
         relative = path.relative_to(root).as_posix()

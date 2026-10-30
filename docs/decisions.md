@@ -418,6 +418,22 @@ recalibrations have taken hours and moved little. Nothing from Spectables'
 software is run or bundled; if its grammar text is ever copied, its MIT notice
 ships with it.
 
+### Decision 20: Short translated READMEs, and a badge row
+
+- Recorded: 2026-10-30
+- Status: **Accepted, chosen by the maintainer 2026-10-30.**
+
+The README gains a language row and a badge row. Each translation (Spanish,
+German, French, Hindi, Simplified Chinese) is a short page, not the full
+README: what the tool is, how to install and run it, and a link to the English
+README, which stays the only complete and authoritative copy. Each page says it
+is a machine translation and carries no version number, so it does not go
+stale when the README changes. A full translation was considered and not
+chosen: every README change would have to be translated five times in the same
+commit, by translations nobody here can review. The badges are shields.io
+images of the published package, the licence and the CI workflow; they read
+live data and need no upkeep.
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

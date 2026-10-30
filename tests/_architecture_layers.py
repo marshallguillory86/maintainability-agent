@@ -82,6 +82,7 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
                # must reach it and it may reach nothing but `config`
                # (D34).
                "_safe_write",
+               "_walk",
                # ADR 009's structured identity and matching relation is a
                # foundation shared by the gate, recurrence and presentation.
                "_finding_match",

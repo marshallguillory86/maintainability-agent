@@ -159,6 +159,9 @@ def test_the_release_build_compares_the_artifact_to_the_tag() -> None:
     compared it to nothing, so a wheel whose metadata disagreed with the
     tag would have been printed and published.
 
+    A merged version bump has no pushed tag at build time, so the decided tag
+    is what ships.
+
     That is the failure D198's own entry cites from the sibling project:
     a wheel stamped with one version while every report it produced
     carried another.
@@ -177,7 +180,7 @@ def test_the_release_build_compares_the_artifact_to_the_tag() -> None:
     assert "importlib.metadata" in step, (
         "the build step does not read the installed artifact's own version"
     )
-    assert "GITHUB_REF_NAME" in step, (
+    assert '"$built" != "${RELEASE_TAG#v}"' in step, (
         "the build step reads the artifact's version but never compares it to the tag"
     )
     # Printing it is not comparing it: that is exactly what was there.

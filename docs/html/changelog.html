@@ -558,6 +558,19 @@ stands, read the <a href="readme.html">README</a>; if you want what is coming, t
 <h2 id="unreleased">Unreleased</h2>
 <ul>
 <li>
+<p><strong>The falsifier prover no longer imports new tools from the original
+  checkout (D237).</strong> Its base run keeps dependencies while dropping every
+  <code>PYTHONPATH</code> entry inside the original checkout, so a deleted tool cannot
+  make a base falsifier pass vacuously.</p>
+</li>
+<li>
+<p><strong>Merging a version bump now releases.</strong> <code>cut-release.yml</code> runs no tests and
+  dispatches <code>release.yml</code> on <code>main</code> when the version is new. The release
+  workflow verifies the wheel with the full suite, waits for the owner's
+  <code>pypi</code> approval, publishes, then cuts the <code>v*</code> tag and creates the GitHub
+  Release; pushing an existing tag remains recovery-only.</p>
+</li>
+<li>
 <p><strong>Grok joins the co-author allowlist</strong> (<code>Grok &lt;noreply@x.ai&gt;</code>), beside Claude
   and Codex.</p>
 </li>

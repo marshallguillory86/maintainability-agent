@@ -53,6 +53,11 @@ def triggers(workflow: str) -> dict[str, list[str]]:
     return _sub_blocks(_top_block(_code_lines(workflow), "on"), 2)
 
 
+def job_bodies(workflow: str) -> dict[str, str]:
+    """Job id -> its body text, from the ``jobs:`` block."""
+    return {key: "\n".join(lines) for key, lines in _sub_blocks(_top_block(_code_lines(workflow), "jobs"), 2).items()}
+
+
 def jobs(workflow: str) -> dict[str, dict[str, str]]:
     """Job id -> {"name": ..., "if": ...} ("" when absent)."""
     result: dict[str, dict[str, str]] = {}
@@ -63,3 +68,24 @@ def jobs(workflow: str) -> dict[str, dict[str, str]]:
             "if": " ".join(s.strip() for s in fields.get("if", [])).lstrip("> ").strip(),
         }
     return result
+
+
+def workflow_steps(workflow: str) -> list[dict[str, str]]:
+    """Read the workflow's named steps without adding a YAML dependency."""
+    steps: list[dict[str, str]] = []
+    inside = False
+    for line in workflow.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- name:") and line.startswith("      - name:"):
+            steps.append({"name": stripped[len("- name:"):].strip(), "if": "", "run": ""})
+            inside = True
+            continue
+        if not inside or not steps:
+            continue
+        if line and not line.startswith("       ") and not stripped.startswith("- "):
+            inside = False
+            continue
+        if stripped.startswith("if:"):
+            steps[-1]["if"] = stripped[3:].strip()
+        steps[-1]["run"] += line + "\n"
+    return steps

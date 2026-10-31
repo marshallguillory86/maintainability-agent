@@ -434,6 +434,34 @@ commit, by translations nobody here can review. The badges are shields.io
 images of the published package, the licence and the CI workflow; they read
 live data and need no upkeep.
 
+### Decision 21: Release on a merged version bump
+
+- Recorded: 2026-10-31
+- Status: **Accepted, approved by the owner 2026-10-31.**
+
+For this repository, a merged version bump is the release. The process is split
+between two workflows: a merge to `main` runs `cut-release.yml`, which runs no
+tests because the pipeline rule is that a merge runs only the deploy. When the
+version is new, it dispatches `release.yml` on `main`. `release.yml` decides
+whether to release, refuses a commit that is not on `main`, builds and runs the
+full suite against the wheel, waits for the owner's approval in the `pypi`
+environment, publishes to PyPI, cuts the `v*` tag and creates the GitHub
+Release. The `v*` tag ruleset prevents update, deletion and force-push of
+release tags.
+
+Applying the plan found one platform limitation: a personal-account
+repository cannot make GitHub Actions a ruleset bypass actor. The ruleset
+therefore blocks update, deletion and force-push of `v*` tags but not their
+creation. Creation remains with collaborators who have push access; today,
+that is only the owner.
+
+The owner answered two follow-up questions on 2026-10-31. This package keeps
+the deployment environment name `pypi`, because PyPI's Trusted Publisher is
+registered against that name; the `live` name in the cross-repo plan is for
+application deploys. This package publishes only from a commit on `main`,
+behind the owner's required-reviewer approval, and cuts the `v*` tag after the
+publish; the plan's "only from a `v*` tag" applies to application deploys.
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

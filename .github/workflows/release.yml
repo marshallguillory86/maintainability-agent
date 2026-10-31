@@ -1,6 +1,13 @@
 name: Release
 
-# Publishes to PyPI when a version tag is pushed.
+# Publishes to PyPI when a merge to main changes the version. Nobody pushes
+# a tag: `cut-release.yml` sees on the merge that `v<version>` does not
+# exist yet and dispatches this workflow on main. Here the build verifies
+# the artifact, the `pypi` environment waits for the owner's approval, and
+# the tag is cut only after PyPI has accepted the upload. A merge that does
+# not bump the version releases nothing. This workflow has no push-to-main
+# trigger of its own, because a merge runs no tests and this one runs the
+# full suite against the wheel.
 #
 # Authentication is PyPI Trusted Publishing (OIDC): GitHub mints a
 # short-lived token for this specific workflow in this specific
@@ -14,7 +21,7 @@ name: Release
 #   Workflow name:    release.yml
 #   Environment name: pypi
 #
-# Release process after that — tagging is the only manual step:
+# Release process after that — merging is the only step:
 #   1. bump the version in ONE place: `src/maintainability_audit/__init__.py`.
 #      `pyproject.toml` derives it through `[tool.setuptools.dynamic]` and
 #      `config.VERSION` re-exports it (D198). Writing it into either of
@@ -33,22 +40,22 @@ name: Release
 #      notes from that section, and `test_the_changelog_covers_the_shipping_version`
 #      fails without it rather than letting the job substitute a placeholder
 #      (D204).
-#   4. merge to main
-#   5. git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z
+#   4. merge to main, then approve the `pypi` deployment when it asks
 #
 # Steps 1-3 are all checked by the ordinary suite, which the build job below
 # re-runs against the installed wheel. Following this list by hand and
 # getting it wrong is a red build, not a bad release.
 #
-# Pushing the tag runs three jobs: build+verify the artifact, publish it
-# to PyPI, and cut the GitHub Release with notes read from the CHANGELOG
-# section for that version. All three are idempotent — a re-pushed or
-# re-pointed tag re-runs cleanly (PyPI skips an existing version, the
-# GitHub Release is updated rather than duplicated) instead of going red.
+# The dispatched run has five jobs: decide (release or not, and the tag),
+# build+verify the artifact, publish it to PyPI, cut the tag, and the
+# GitHub Release with notes read from the CHANGELOG section for that
+# version.
 #
-# `workflow_dispatch` builds and publishes whatever version is on the
-# chosen ref (the GitHub-Release job is tag-only), for the first run or
-# to recover a failed publish.
+# Recovery: a failed or interrupted release is re-run from the Actions page,
+# or dispatched again on main; an untagged version is then tagged after the
+# publish, and a tagged one is published again, which PyPI skips. Pushing
+# an existing tag also re-runs the release for it. The `v*` tag ruleset
+# refuses moving or deleting a release tag.
 
 on:
   push:
@@ -59,9 +66,28 @@ permissions:
   contents: read
 
 jobs:
+  # Seconds, on every merge to main. Everything else in this file waits for
+  # its answer, so a merge that does not bump the version costs one short
+  # job and publishes nothing.
+  decide:
+    name: Decide whether this run releases
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.decision.outputs.release }}
+      create_tag: ${{ steps.decision.outputs.create_tag }}
+      tag: ${{ steps.decision.outputs.tag }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - id: decision
+        run: python3 tools/release_decision.py
+
   build:
     name: Build and verify
+    needs: decide
+    if: needs.decide.outputs.release == 'true'
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.decide.outputs.tag }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -77,14 +103,30 @@ jobs:
       - name: Install build tooling
         run: python3 -m pip install --upgrade build twine
 
+      # Only a commit that reached main through a reviewed pull request is
+      # released. The `pypi` environment accepts v* tags, and a tag can be
+      # pushed on any commit, so without this an unmerged commit would
+      # reach the approval. Unconditional, so `workflow_dispatch` from
+      # another branch is refused too. The full-history checkout above
+      # is what makes `origin/main` available here.
+      - name: Refuse to release a commit that is not on main
+        run: |
+          set -euo pipefail
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_SHA is not on main; only merged commits are released"
+            exit 1
+          fi
+
       # A tag that disagrees with the packaged version publishes the
       # wrong thing under the right name, and PyPI uploads cannot be
       # replaced. Fail before building rather than after uploading.
+      #
+      # On every path, not only a tag push: the decided tag is what this
+      # run will publish and then cut, whichever event started it.
       - name: Verify the tag matches the packaged version
-        if: startsWith(github.ref, 'refs/tags/')
         run: |
           set -euo pipefail
-          tag="${GITHUB_REF_NAME#v}"
+          tag="${RELEASE_TAG#v}"
           # Read the single source, not `pyproject`, which derives the
           # version rather than stating it (D198).
           #
@@ -170,8 +212,8 @@ jobs:
           built=$(python3 -c "from importlib.metadata import version; print(version('maintainability-agent'))")
           echo "built wheel reports version $built"
           maintainability-agent --version
-          if [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ "$built" != "${GITHUB_REF_NAME#v}" ]; then
-            echo "::error::The built wheel carries $built, but the tag is $GITHUB_REF_NAME"
+          if [ "$built" != "${RELEASE_TAG#v}" ]; then
+            echo "::error::The built wheel carries $built, but the release tag is $RELEASE_TAG"
             exit 1
           fi
           # Under the pool's pins, as every job that runs the suite is.
@@ -197,9 +239,9 @@ jobs:
     name: Publish to PyPI
     needs: build
     runs-on: ubuntu-latest
-    # Named environment so PyPI can scope the trusted publisher to it,
-    # and so a required reviewer can be added later without touching
-    # this file.
+    # Named environment so PyPI can scope the trusted publisher to it. The
+    # environment requires the owner's approval and deploys only from main
+    # or a v* tag, so this job waits for one click before anything uploads.
     environment:
       name: pypi
       url: https://pypi.org/p/maintainability-agent
@@ -217,10 +259,50 @@ jobs:
           # already has. A duplicate becomes a no-op instead of a red run.
           skip-existing: true
 
+  # After the publish, never before: a tag names a version PyPI has, so a
+  # build that fails or an approval that is declined leaves no tag behind
+  # and the next merge decides again. Idempotent for a re-run: a tag that
+  # already names this commit is accepted, and one naming any other commit
+  # fails rather than being moved.
+  create-tag:
+    name: Cut the release tag
+    needs: [decide, publish]
+    if: needs.decide.outputs.create_tag == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the one tag this run decided on
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Tag the released commit
+        env:
+          TAG: ${{ needs.decide.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # The peeled ref is the commit an annotated tag points at.
+          existing=$(git ls-remote origin "refs/tags/$TAG^{}" "refs/tags/$TAG" | sort -k2 | tail -1 | cut -f1)
+          if [ -n "$existing" ]; then
+            if [ "$existing" = "$GITHUB_SHA" ]; then
+              echo "$TAG already names $GITHUB_SHA"
+              exit 0
+            fi
+            echo "::error::$TAG already exists on another commit; a release tag is never moved"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG"
+
   github-release:
     name: GitHub Release
-    needs: [build, publish]
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: [decide, publish, create-tag]
+    # A merge reaches here through create-tag; a pushed tag skips it,
+    # because the tag already exists. `workflow_dispatch` publishes without
+    # a tag, so it has no Release to cut.
+    if: >-
+      always() && needs.publish.result == 'success' &&
+      (needs.create-tag.result == 'success' ||
+      (needs.create-tag.result == 'skipped' && startsWith(github.ref, 'refs/tags/')))
     runs-on: ubuntu-latest
     permissions:
       contents: write # create or update the Release object for this tag
@@ -229,7 +311,7 @@ jobs:
       - name: Publish the GitHub Release from the changelog
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ needs.decide.outputs.tag }}
         run: |
           set -euo pipefail
           version="${TAG#v}"

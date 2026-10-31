@@ -75,10 +75,16 @@ Include:
 
 ## Releasing
 
-Publishing to PyPI is automated. Pushing a version tag builds, verifies and
-publishes; there are no credentials to manage because authentication uses
-PyPI Trusted Publishing (OIDC), which mints a short-lived token scoped to
-`release.yml` in this repository.
+Publishing to PyPI is automated in two workflows. Merging a version bump to
+`main` runs `cut-release.yml`, which runs no tests: the pipeline rule is that a
+merge runs only the deploy. If the version is new, it dispatches `release.yml`
+on `main`. That workflow decides whether to release, refuses a commit that is
+not on `main`, builds and runs the full suite against the wheel, waits for the
+owner to approve the `pypi` deployment, publishes, cuts the tag and creates
+the GitHub Release. There are no credentials to manage because
+authentication uses PyPI Trusted Publishing (OIDC), which mints a short-lived
+token scoped to `release.yml` in this repository. `tools/release_decision.py`
+is the shared release decision.
 
 ```bash
 # 1. bump the version in ONE place
@@ -89,11 +95,9 @@ python3 tools/stamp_version.py   # 2. writes the four documents that state it
 #    2b. regenerate docs/example-report.html from a clean checkout at a
 #        neutral path (the report prints its root), and set the README's
 #        "See it" caption to the new version
-# 3. add the CHANGELOG entry (## X.Y.Z), open a PR, merge it
-# 4. tag the merged commit and push
-git checkout main && git pull
-git tag -a vX.Y.Z -m "vX.Y.Z — one-line summary"
-git push origin vX.Y.Z
+# 3. add the CHANGELOG entry (## X.Y.Z)
+# 4. open the version-bump PR and merge it to main
+# 5. the owner approves the pypi deployment when the workflow asks
 ```
 
 Step 2 is not optional and is not a formatting chore. The README's version
@@ -114,8 +118,26 @@ source, and again if the **built wheel** disagrees with the tag (D205). It
 installs that wheel and runs both the test suite and the tool's own
 `--fail-on-gate` audit against it, so what ships is what was verified.
 
-Cutting the GitHub Release is automatic — the tag triggers a job that creates
-it, or refreshes its notes on a re-run. There is nothing to do by hand.
+Merging the version-bump PR is the release. `cut-release.yml` dispatches
+`release.yml` on `main` only when the version is new. Its `decide` job uses
+`tools/release_decision.py`; after the build has run the full suite against the
+wheel, the owner approves `pypi`, and PyPI accepts the upload, `create-tag`
+cuts the `vX.Y.Z` tag and `github-release` creates the GitHub Release from the
+CHANGELOG. There is nothing to tag by hand.
+
+### Recovery
+
+If a publish succeeded but a later release job failed, re-run `release.yml`
+from the Actions page, or dispatch `release.yml` on `main` again. If the
+existing release tag must be retried directly, push that existing tag only:
+
+```bash
+git push origin vX.Y.Z
+```
+
+The `v*` tag ruleset prevents moving or deleting a release tag. Pushing an
+existing tag is recovery for an interrupted release, not the normal release
+step.
 
 If the default thresholds changed in the release, recalibrate first —
 the constants are the anchor for every score the tool emits:

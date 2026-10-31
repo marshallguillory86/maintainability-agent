@@ -132,6 +132,31 @@ def _new_entries(base: str) -> dict[str, str]:
     return {ident: body for ident, body in after.items() if ident not in before}
 
 
+def base_environment(tree: Path, parent_root: Path, path_entries: list[str]) -> dict[str, str]:
+    """The environment a base run imports from: the worktree, never the checkout.
+
+    The worktree's own source goes first and the parent's path follows,
+    rather than replacing it: naming only the worktree left the child
+    unable to import pytest itself on any interpreter whose pytest lives
+    outside the default path, and a child that cannot start is the case
+    `_refuse_a_run_that_never_happened` exists for.
+
+    But no entry inside the original checkout follows it. The prover's
+    own `sys.path[0]` is the checkout's `tools/`, so a test importing a
+    tool the change *added* still found HEAD's copy there after the
+    worktree deleted it, and passed at the base without proving anything.
+    That is how eight falsifiers on PR #325 looked vacuous: the same
+    class as the `src` shadowing above, through a different directory.
+    """
+    parent = parent_root.resolve()
+    tree_src = str(tree / "src")
+    kept = [
+        entry for entry in path_entries
+        if entry and entry != tree_src and not Path(entry).resolve().is_relative_to(parent)
+    ]
+    return {**os.environ, "PYTHONPATH": os.pathsep.join([tree_src, *kept])}
+
+
 def _prove(base: str, node_ids: list[str], tree: Path) -> tuple[list[str], list[str]]:
     """Run `node_ids` against the base's world. Returns (failed, passed).
 
@@ -165,17 +190,7 @@ def _prove(base: str, node_ids: list[str], tree: Path) -> tuple[list[str], list[
     # correctly here for months while every behaviour falsifier passed
     # vacuously.
     #
-    # The worktree's own source goes first and the parent's path follows,
-    # rather than replacing it: naming only the worktree left the child
-    # unable to import pytest itself on any interpreter whose pytest
-    # lives outside the default path, and a child that cannot start is
-    # the case immediately below.
-    environment = {
-        **os.environ,
-        "PYTHONPATH": os.pathsep.join(
-            [str(tree / "src"), *(entry for entry in sys.path if entry)]
-        ),
-    }
+    environment = base_environment(tree, ROOT, sys.path)
     failed, passed = [], []
     for node in node_ids:
         result = subprocess.run(  # noqa: S603

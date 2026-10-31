@@ -53,6 +53,11 @@ def triggers(workflow: str) -> dict[str, list[str]]:
     return _sub_blocks(_top_block(_code_lines(workflow), "on"), 2)
 
 
+def job_bodies(workflow: str) -> dict[str, str]:
+    """Job id -> its body text, from the ``jobs:`` block."""
+    return {key: "\n".join(lines) for key, lines in _sub_blocks(_top_block(_code_lines(workflow), "jobs"), 2).items()}
+
+
 def jobs(workflow: str) -> dict[str, dict[str, str]]:
     """Job id -> {"name": ..., "if": ...} ("" when absent)."""
     result: dict[str, dict[str, str]] = {}

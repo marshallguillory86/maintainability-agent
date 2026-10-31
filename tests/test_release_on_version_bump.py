@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from _workflow_text import workflow_steps
+from _workflow_text import job_bodies, triggers, workflow_steps
 
 ROOT = Path(__file__).resolve().parents[1]
 RELEASE = ROOT / ".github" / "workflows" / "release.yml"
@@ -27,34 +27,17 @@ def _cut_release_workflow() -> str:
     return CUT_RELEASE.read_text(encoding="utf-8")
 
 
-def _top_blocks(text: str, heading: str, indent: int) -> dict[str, str]:
-    lines = [line for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
-    start = next(i for i, line in enumerate(lines) if line == f"{heading}:")
-    block: dict[str, list[str]] = {}
-    current: str | None = None
-    prefix = " " * indent
-    for line in lines[start + 1 :]:
-        if line and not line.startswith(" "):
-            break
-        if line.startswith(prefix) and not line.startswith(prefix + " "):
-            current = line[indent:].split(":", 1)[0]
-            block[current] = []
-        elif current is not None:
-            block[current].append(line)
-    return {key: "\n".join(value) for key, value in block.items()}
-
-
 def _job_blocks() -> dict[str, str]:
-    return _top_blocks(_workflow(), "jobs", 2)
+    return job_bodies("release.yml")
 
 
 def test_cut_release_triggers_on_main_push() -> None:
     """The push-to-main trigger lives in cut-release.yml, not release.yml."""
-    on = _top_blocks(_cut_release_workflow(), "on", 2)
+    on = triggers("cut-release.yml")
     assert "push" in on
-    assert re.search(r"branches:\s*\[\s*main\s*\]", on["push"])
-    release_on = _top_blocks(_workflow(), "on", 2)
-    assert "branches:" not in release_on.get("push", "")
+    assert re.search(r"branches:\s*\[\s*main\s*\]", "\n".join(on["push"]))
+    release_on = triggers("release.yml")
+    assert "branches:" not in "\n".join(release_on.get("push", []))
 
 
 def test_cut_release_runs_decision_and_dispatches_release() -> None:

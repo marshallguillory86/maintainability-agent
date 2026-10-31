@@ -40,11 +40,13 @@ from __future__ import annotations
 
 import os
 import re
-import subprocess
+import shutil
+import subprocess  # nosec B404 - runs git only, argv lists, never a shell
 from collections.abc import Iterable
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+GIT = shutil.which("git") or "/usr/bin/git"
 SOURCE = ROOT / "src" / "maintainability_audit" / "__init__.py"
 MAIN = "refs/heads/main"
 TAG_PREFIX = "refs/tags/"
@@ -75,9 +77,9 @@ def packaged_version() -> str:
 
 def remote_tags() -> list[str]:
     """Tag names on origin. A failure to ask raises: unknown is not untagged."""
-    listing = subprocess.run(
-        ["git", "ls-remote", "--tags", "--refs", "origin"],
-        cwd=ROOT, check=True, capture_output=True, text=True,
+    listing = subprocess.run(  # nosec B603 - fixed program, fixed argv
+        [GIT, "ls-remote", "--tags", "--refs", "origin"],
+        cwd=ROOT, check=True, capture_output=True, text=True, timeout=120,
     ).stdout
     return [line.split(TAG_PREFIX, 1)[1] for line in listing.splitlines() if TAG_PREFIX in line]
 

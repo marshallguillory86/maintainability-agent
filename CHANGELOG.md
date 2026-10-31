@@ -12,6 +12,9 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+- **Grok joins the co-author allowlist** (`Grok <noreply@x.ai>`), beside Claude
+  and Codex.
+
 - **Commit messages may credit the AI tools that worked on a change.** The
   authorship check now accepts `Co-Authored-By` trailers for Claude
   (`noreply@anthropic.com`) and Codex (`noreply@openai.com`) beside the

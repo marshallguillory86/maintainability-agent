@@ -20,6 +20,7 @@ WORKFLOW = ROOT / ".github" / "workflows" / "authorship.yml"
 COMMIT_IDENTITY = "152444602+marshallguillory86@users.noreply.github.com"
 CLAUDE_ADDRESS = "noreply@anthropic.com"
 CODEX_ADDRESS = "noreply@openai.com"
+GROK_ADDRESS = "noreply@x.ai"
 
 
 def _git(repo: Path, *args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
@@ -408,6 +409,25 @@ def test_a_codex_trailer_passes(
     assert result.returncode == 0, result.stdout
 
 
+@pytest.mark.parametrize(
+    "trailer",
+    [
+        f"Co-Authored-By: Grok <{GROK_ADDRESS}>",
+        f"Co-authored-by: Grok <{GROK_ADDRESS}>",
+    ],
+)
+def test_a_grok_trailer_passes_in_either_key_casing(
+    signed_repo: tuple[Path, Callable[..., str]],
+    trailer: str,
+) -> None:
+    repo, commit = signed_repo
+    commit(message=f"change\n\n{trailer}")
+
+    result = _run_gate(repo, "Commit messages name only the commit identity")
+
+    assert result.returncode == 0, result.stdout
+
+
 def test_claude_and_codex_trailers_together_pass(
     signed_repo: tuple[Path, Callable[..., str]],
 ) -> None:
@@ -417,6 +437,24 @@ def test_claude_and_codex_trailers_together_pass(
             "change\n\n"
             f"Co-Authored-By: Claude Opus 5.5 <{CLAUDE_ADDRESS}>\n"
             f"Co-Authored-By: Codex <{CODEX_ADDRESS}>"
+        )
+    )
+
+    result = _run_gate(repo, "Commit messages name only the commit identity")
+
+    assert result.returncode == 0, result.stdout
+
+
+def test_claude_codex_and_grok_trailers_together_pass(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    repo, commit = signed_repo
+    commit(
+        message=(
+            "change\n\n"
+            f"Co-Authored-By: Claude Opus 5.5 <{CLAUDE_ADDRESS}>\n"
+            f"Co-Authored-By: Codex <{CODEX_ADDRESS}>\n"
+            f"Co-Authored-By: Grok <{GROK_ADDRESS}>"
         )
     )
 
@@ -450,6 +488,9 @@ def test_an_ai_trailer_beside_an_unrelated_address_still_fails(
         "noreply@anthropic.com.evil.example",
         "xnoreply@anthropic.com",
         "noreply@openai.co",
+        "noreply@x.ai.evil.example",
+        "xnoreply@x.ai",
+        "noreply@x.com",
     ],
 )
 def test_an_ai_lookalike_address_fails(
@@ -471,7 +512,7 @@ def test_an_ai_lookalike_address_fails(
 def test_workflow_declares_each_allowed_ai_address_once() -> None:
     """The workflow owns the allowlist; each canonical address is declared once."""
     text = WORKFLOW.read_text(encoding="utf-8")
-    expected = {CLAUDE_ADDRESS, CODEX_ADDRESS}
+    expected = {CLAUDE_ADDRESS, CODEX_ADDRESS, GROK_ADDRESS}
 
     assert {address for address in expected if address in text} == expected
     for address in expected:

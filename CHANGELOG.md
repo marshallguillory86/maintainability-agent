@@ -12,6 +12,12 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+- **Merging a version bump now releases.** `cut-release.yml` runs no tests and
+  dispatches `release.yml` on `main` when the version is new. The release
+  workflow verifies the wheel with the full suite, waits for the owner's
+  `pypi` approval, publishes, then cuts the `v*` tag and creates the GitHub
+  Release; pushing an existing tag remains recovery-only.
+
 - **Grok joins the co-author allowlist** (`Grok <noreply@x.ai>`), beside Claude
   and Codex.
 

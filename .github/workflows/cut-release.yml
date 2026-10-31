@@ -1,0 +1,38 @@
+name: Cut release
+
+# Runs on every merge to main and runs no tests: a merge runs only the
+# deploy, and the full regression belongs to the release itself. It asks
+# `tools/release_decision.py` whether the merge bumped the version, and if
+# it did, starts `release.yml` on main. That run builds, runs the full
+# suite against the wheel, waits for the owner's approval in the `pypi`
+# environment, publishes, and only then cuts the tag.
+#
+# A dispatch rather than a tag push, because a tag pushed with GITHUB_TOKEN
+# starts no other workflow; `workflow_dispatch` is the exception. A merge
+# that does not bump the version stops here after a few seconds.
+#
+# The bump itself (`__version__` in `src/maintainability_audit/__init__.py`,
+# `tools/stamp_version.py`, the CHANGELOG
+# entry) is listed in `release.yml`'s header and in CONTRIBUTING.md.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  cut:
+    name: Start the release when the version is new
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - id: decision
+        run: python3 tools/release_decision.py
+      - name: Start release.yml on main
+        if: steps.decision.outputs.create_tag == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run release.yml --ref main

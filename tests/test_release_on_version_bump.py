@@ -1,0 +1,178 @@
+"""The release workflow follows the version-bump decision boundary.
+
+The old workflow made a tag push the only release event, which put a manual
+credential-bearing step between merging a version bump and publishing it.
+These text-level checks keep the GitHub Actions graph honest without adding a
+YAML dependency to the test environment.
+"""
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+RELEASE = ROOT / ".github" / "workflows" / "release.yml"
+CUT_RELEASE = ROOT / ".github" / "workflows" / "cut-release.yml"
+
+
+def _workflow() -> str:
+    assert RELEASE.exists(), f"{RELEASE} is missing"
+    return RELEASE.read_text(encoding="utf-8")
+
+
+def _cut_release_workflow() -> str:
+    assert CUT_RELEASE.exists(), f"{CUT_RELEASE} is missing"
+    return CUT_RELEASE.read_text(encoding="utf-8")
+
+
+def _top_blocks(text: str, heading: str, indent: int) -> dict[str, str]:
+    lines = [line for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
+    start = next(i for i, line in enumerate(lines) if line == f"{heading}:")
+    block: dict[str, list[str]] = {}
+    current: str | None = None
+    prefix = " " * indent
+    for line in lines[start + 1 :]:
+        if line and not line.startswith(" "):
+            break
+        if line.startswith(prefix) and not line.startswith(prefix + " "):
+            current = line[indent:].split(":", 1)[0]
+            block[current] = []
+        elif current is not None:
+            block[current].append(line)
+    return {key: "\n".join(value) for key, value in block.items()}
+
+
+def _job_blocks() -> dict[str, str]:
+    return _top_blocks(_workflow(), "jobs", 2)
+
+
+def _build_steps() -> list[dict[str, str]]:
+    """Read the build job's steps without adding a YAML dependency."""
+    steps: list[dict[str, str]] = []
+    inside = False
+    for line in _workflow().splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- name:") and line.startswith("      - name:"):
+            steps.append({"name": stripped[len("- name:"):].strip(), "if": "", "run": ""})
+            inside = True
+            continue
+        if not inside or not steps:
+            continue
+        if line and not line.startswith("       ") and not stripped.startswith("- "):
+            inside = False
+            continue
+        if stripped.startswith("if:"):
+            steps[-1]["if"] = stripped[3:].strip()
+        steps[-1]["run"] += line + "\n"
+    return steps
+
+
+def test_release_triggers_on_tags_and_dispatch_but_not_branch_pushes() -> None:
+    """The pipeline rule leaves tests off the merge path and starts release on a tag or dispatch."""
+    workflow = _workflow()
+    on = _top_blocks(workflow, "on", 2)
+    assert "push" in on
+    assert re.search(r"tags:\s*\[\s*[\"']v\*[\"']\s*\]", on["push"])
+    assert "branches:" not in on["push"]
+    assert "workflow_dispatch" in on
+
+
+def test_cut_release_triggers_on_main_push() -> None:
+    """A merge runs no tests; only the deploy decision is started from main."""
+    on = _top_blocks(_cut_release_workflow(), "on", 2)
+    assert "push" in on
+    assert re.search(r"branches:\s*\[\s*main\s*\]", on["push"])
+
+
+def test_cut_release_runs_decision_and_dispatches_release() -> None:
+    """A GITHUB_TOKEN dispatch is the event that starts the separate release workflow."""
+    workflow = _cut_release_workflow()
+    assert "tools/release_decision.py" in workflow
+    assert re.search(
+        r"if:.*create_tag|create_tag.*if:", workflow, flags=re.IGNORECASE | re.DOTALL
+    )
+    assert "gh workflow run release.yml --ref main" in workflow
+
+
+def test_cut_release_has_only_read_contents_and_write_actions_permissions() -> None:
+    """The cut workflow gets only the token permissions needed to dispatch release."""
+    workflow = _cut_release_workflow()
+    permissions_match = re.search(
+        r"(?ms)^permissions:\s*\n(?P<body>(?:^  \w+:\s+\w+\s*$\n?)+)",
+        workflow,
+    )
+    assert permissions_match, "cut-release.yml has no top-level permissions block"
+    permissions = dict(re.findall(r"^  (\w+):\s+(\w+)\s*$", permissions_match["body"], re.M))
+    assert permissions == {"contents": "read", "actions": "write"}
+
+
+def test_cut_release_contains_no_test_runner() -> None:
+    """The merge-triggered workflow obeys the pipeline rule by running no tests."""
+    workflow = _cut_release_workflow().lower()
+    assert "pytest" not in workflow
+    assert "python3 -m pytest" not in workflow
+    assert "tools/local-gate.sh" not in workflow
+
+
+def test_decide_job_runs_the_release_decision_tool() -> None:
+    """One decision job must make the release and tag outputs authoritative."""
+    jobs = _job_blocks()
+    decide = jobs.get("decide", "")
+    assert decide, "release.yml has no decide job"
+    assert "tools/release_decision.py" in decide
+    assert "release" in decide and "create_tag" in decide and "tag" in decide
+
+
+def test_build_needs_decide_and_uses_its_release_output() -> None:
+    """The build must be gated by the decision before publish can proceed."""
+    build = _job_blocks().get("build", "")
+    assert re.search(r"needs:\s*decide\b|needs:\s*\[\s*decide\s*\]", build)
+    assert "needs.decide.outputs.release" in build
+
+
+def test_tag_job_needs_publish_and_is_gated_on_create_tag() -> None:
+    """The tag is cut only after PyPI accepts the built artifact."""
+    jobs = _job_blocks()
+    tag_jobs = {
+        name: body for name, body in jobs.items()
+        if re.search(r"\bgit\s+tag\b", body)
+    }
+    assert tag_jobs, "release.yml has no job that creates the release tag"
+    assert any(re.search(r"needs:.*publish", body) for body in tag_jobs.values())
+    assert any("needs.decide.outputs.create_tag" in body for body in tag_jobs.values())
+
+
+def test_github_release_needs_the_tag_job_and_uses_decided_tag() -> None:
+    """GitHub Release must follow tag creation and use the decision output."""
+    github_release = _job_blocks().get("github-release", "")
+    assert github_release
+    assert re.search(r"needs:.*(?:create-tag|tag)", github_release)
+    assert "needs.decide.outputs.tag" in github_release
+    assert "github.ref_name" not in github_release
+
+
+def test_wheel_version_check_always_compares_with_decided_tag() -> None:
+    """Every release path must verify the wheel against the decided version."""
+    build = _job_blocks().get("build", "")
+    assert "needs.decide.outputs.tag" in build
+    assert "GITHUB_REF_TYPE" not in build
+
+
+def test_build_refuses_commits_not_on_main_before_testing_the_package() -> None:
+    """The pypi environment accepts v* tags, and a tag can be pushed on any commit."""
+    steps = _build_steps()
+    ancestry = [
+        step
+        for step in steps
+        if "git merge-base --is-ancestor" in step["run"]
+        and '"$GITHUB_SHA"' in step["run"]
+        and "origin/main" in step["run"]
+    ]
+    assert ancestry, (
+        "the build must verify that GITHUB_SHA is an ancestor of origin/main "
+        "before a tag or workflow_dispatch path can publish"
+    )
+    gate = ancestry[0]
+    assert not gate["if"], "the main-ancestry check must run on every release path"
+    test_package = next(i for i, step in enumerate(steps) if step["name"] == "Test the built package")
+    assert steps.index(gate) < test_package

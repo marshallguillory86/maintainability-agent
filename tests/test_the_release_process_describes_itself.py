@@ -14,14 +14,12 @@ first thing anyone does with a test that fails on correct-looking work
 is suspect the test. Instructions that fight the gates are how a correct
 gate gets weakened.
 
-The claim is universal and its population is derived: **no document that
-walks a releaser through cutting a release may send them to a file the
-version does not live in, or omit the step that writes the documents
-they no longer type.** The forbidden filenames are the copies D198
-removed. The documents are found by searching the tree for the act only
-a release has — annotating and pushing a version tag — so a third
-document growing its own copy of the process is in the population the
-moment it exists.
+The claim is universal and its population is derived: **every document that
+describes the release decision must name `tools/release_decision.py`, and no
+such document may tell a releaser to push a version tag by hand.** The
+documents are found by searching the tree for the tool that owns the
+decision, so a third document growing its own copy of the process is in the
+population the moment it exists.
 """
 
 from __future__ import annotations
@@ -39,8 +37,7 @@ REMOVED_COPIES = ("pyproject.toml", "config.py")
 def _release_instruction_documents() -> list[Path]:
     """Every tracked text file that walks a releaser through cutting a release.
 
-    Identified by the step only a release process has — telling someone
-    to annotate and push a version tag — rather than by a phrase like
+    Identified by the release decision tool rather than by a phrase like
     "bump the version", which `docs/migration-1.0.md` uses about a
     report's `schema_version`. Keying on the phrase put a document in
     this population that has nothing to do with releasing.
@@ -49,7 +46,7 @@ def _release_instruction_documents() -> list[Path]:
         path
         for path in [*ROOT.glob("*.md"), *(ROOT / "docs").glob("*.md"),
                      *(ROOT / ".github" / "workflows").glob("*.yml")]
-        if "git tag -a v" in path.read_text(encoding="utf-8", errors="ignore")
+        if "tools/release_decision.py" in path.read_text(encoding="utf-8", errors="ignore")
     )
 
 
@@ -106,3 +103,24 @@ def test_every_release_instruction_names_the_stamping_step() -> None:
     assert not missing, (
         f"these documents describe a release without the stamping step: {missing}"
     )
+
+
+def test_release_instructions_do_not_tell_releasers_to_push_tags_by_hand() -> None:
+    """Manual tag pushing must be recovery guidance, not the release step.
+
+    A hand-pushed tag was the old release trigger. The new decision tool must
+    make a merge to main sufficient; only a clearly labelled recovery passage
+    may retain the old command for repairing an interrupted release.
+    """
+    documents = _release_instruction_documents()
+    assert documents, "no document describes cutting a release, so this sweeps nothing"
+
+    offenders: list[str] = []
+    for path in documents:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        for match in re.finditer(r"git\s+push\s+origin\s+vX\.Y\.Z", text):
+            window = text[max(0, match.start() - 500): match.end() + 500]
+            if not re.search(r"recover(?:y|ing)?|interrupted|failed publish", window, re.IGNORECASE):
+                offenders.append(str(path.relative_to(ROOT)))
+
+    assert not offenders, f"manual tag pushing is still a release step in: {offenders}"

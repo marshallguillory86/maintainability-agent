@@ -23,6 +23,7 @@
 <li><a href="#decision-18-windows-is-not-tested-in-ci">Decision 18: Windows is not tested in CI</a></li>
 <li><a href="#decision-19-test-honesty-and-spectables-specs-after-ken-pugh">Decision 19: Test honesty and Spectables specs, after Ken Pugh</a></li>
 <li><a href="#decision-20-short-translated-readmes-and-a-badge-row">Decision 20: Short translated READMEs, and a badge row</a></li>
+<li><a href="#decision-21-release-on-a-merged-version-bump">Decision 21: Release on a merged version bump</a></li>
 </ul>
 </li>
 <li><a href="#statuses">Statuses</a></li>
@@ -512,6 +513,31 @@ chosen: every README change would have to be translated five times in the same
 commit, by translations nobody here can review. The badges are shields.io
 images of the published package, the licence and the CI workflow; they read
 live data and need no upkeep.</p>
+<h3 id="decision-21-release-on-a-merged-version-bump">Decision 21: Release on a merged version bump</h3>
+<ul>
+<li>Recorded: 2026-10-31</li>
+<li>Status: <strong>Accepted, approved by the owner 2026-10-31.</strong></li>
+</ul>
+<p>For this repository, a merged version bump is the release. The process is split
+between two workflows: a merge to <code>main</code> runs <code>cut-release.yml</code>, which runs no
+tests because the pipeline rule is that a merge runs only the deploy. When the
+version is new, it dispatches <code>release.yml</code> on <code>main</code>. <code>release.yml</code> decides
+whether to release, refuses a commit that is not on <code>main</code>, builds and runs the
+full suite against the wheel, waits for the owner's approval in the <code>pypi</code>
+environment, publishes to PyPI, cuts the <code>v*</code> tag and creates the GitHub
+Release. The <code>v*</code> tag ruleset prevents update, deletion and force-push of
+release tags.</p>
+<p>Applying the plan found one platform limitation: a personal-account
+repository cannot make GitHub Actions a ruleset bypass actor. The ruleset
+therefore blocks update, deletion and force-push of <code>v*</code> tags but not their
+creation. Creation remains with collaborators who have push access; today,
+that is only the owner.</p>
+<p>The owner answered two follow-up questions on 2026-10-31. This package keeps
+the deployment environment name <code>pypi</code>, because PyPI's Trusted Publisher is
+registered against that name; the <code>live</code> name in the cross-repo plan is for
+application deploys. This package publishes only from a commit on <code>main</code>,
+behind the owner's required-reviewer approval, and cuts the <code>v*</code> tag after the
+publish; the plan's "only from a <code>v*</code> tag" applies to application deploys.</p>
 <h2 id="statuses">Statuses</h2>
 <ul>
 <li><strong>Proposed</strong> — written up with options; not yet decided. May be edited freely.</li>

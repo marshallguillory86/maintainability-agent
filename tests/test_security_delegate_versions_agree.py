@@ -24,10 +24,35 @@ ROOT = Path(__file__).resolve().parents[1]
 #: anchored on a bare `secure-code-agent==` stopped seeing that job's pin
 #: entirely, which would have let the gate job drift unwatched.
 _PIN = r"secure-code-agent(?:\[[^\]]+\])?==([0-9][0-9.]*)"
+_ACTION_PIN = re.compile(
+    r"uses:\s*marshallguillory86/secure-code-agent/\.github/actions/"
+    r"[^@\s]+@(?P<ref>[^\s#]+)(?:\s+#\s*v(?P<version>[0-9][0-9.]*))?"
+)
 
 
 def _version_tuple(text: str) -> tuple[int, ...]:
     return tuple(int(part) for part in text.split("."))
+
+
+def _workflow_files() -> list[Path]:
+    return sorted((ROOT / ".github" / "workflows").glob("*.yml"))
+
+
+def _pip_pins() -> list[tuple[str, str]]:
+    return [
+        (path.name, pin)
+        for path in _workflow_files()
+        for pin in re.findall(_PIN, path.read_text(encoding="utf-8"))
+    ]
+
+
+def _action_pins() -> list[tuple[str, str | None, str | None]]:
+    return [
+        (path.name, match.group("ref"), match.group("version"))
+        for path in _workflow_files()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if (match := _ACTION_PIN.search(line))
+    ]
 
 
 def test_the_supported_range_and_the_install_remedy_are_one_declaration() -> None:
@@ -62,6 +87,42 @@ def test_every_ci_pin_is_a_release_the_audit_runs() -> None:
     outside = [(name, pin) for name, pin in pins
                if not (SUPPORTED_FLOOR <= _version_tuple(pin) < SUPPORTED_CEILING)]
     assert not outside, f"CI pins a secure-code-agent this audit refuses to run: {outside}"
+
+
+def test_all_ci_pip_pins_name_one_secure_code_agent_version() -> None:
+    pins = _pip_pins()
+    assert len({version for _, version in pins}) == 1, (
+        f"CI secure-code-agent pip pins disagree: {pins}"
+    )
+
+
+def test_sca_action_pins_match_pip_version_and_use_full_shas() -> None:
+    pip_pins = _pip_pins()
+    action_pins = _action_pins()
+    pip_versions = {version for _, version in pip_pins}
+    malformed = [
+        (name, ref)
+        for name, ref, _ in action_pins
+        if ref is None or not re.fullmatch(r"[0-9a-fA-F]{40}", ref)
+    ]
+    missing_or_wrong_comments = [
+        (name, version)
+        for name, _, version in action_pins
+        if version is None or version not in pip_versions or len(pip_versions) != 1
+    ]
+
+    assert not malformed, f"SCA action pins are not full 40-hex SHAs: {malformed}"
+    assert not missing_or_wrong_comments, (
+        f"SCA action comments do not name the sole pip pin version {pip_versions}: "
+        f"{missing_or_wrong_comments}"
+    )
+
+
+def test_secure_code_agent_version_sweep_finds_pip_and_action_pins() -> None:
+    """Covers existing behaviour: the pins were there before; this keeps the
+    one-version tests from passing on a search that finds nothing."""
+    assert _pip_pins(), "no secure-code-agent pip pins found in workflow files"
+    assert _action_pins(), "no secure-code-agent action pins found in workflow files"
 
 
 def _jobs(text: str) -> dict[str, str]:

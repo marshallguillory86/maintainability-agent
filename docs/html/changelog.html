@@ -556,6 +556,12 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<ul>
+<li><strong>The security gate job runs secure-code-agent 0.13.1 too.</strong> 5.1.2 moved the
+  plain pins and left the job that writes the code-scanning SARIF on 0.12.11,
+  through its <code>[required-scanners]</code> install and the <code>install-floor</code> action's
+  SHA. A test now holds every CI pin of the tool, in each form, to one version.</li>
+</ul>
 <h2 id="512-2026-10-30">5.1.2 - 2026-10-30</h2>
 <ul>
 <li><strong>An example report and the documentation, online.</strong> The README links a real

@@ -86,6 +86,9 @@ PyPI Trusted Publishing (OIDC), which mints a short-lived token scoped to
 #    `pyproject.toml` derives it and `config.py` re-exports it (D198);
 #    writing it into either again fails the suite.
 python3 tools/stamp_version.py   # 2. writes the four documents that state it
+#    2b. regenerate docs/example-report.html from a clean checkout at a
+#        neutral path (the report prints its root), and set the README's
+#        "See it" caption to the new version
 # 3. add the CHANGELOG entry (## X.Y.Z), open a PR, merge it
 # 4. tag the merged commit and push
 git checkout main && git pull

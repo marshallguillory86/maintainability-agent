@@ -166,7 +166,7 @@ D223 with the corpus re-measure: ten repositories read differently, every
 constant re-derived identical, and no score or grade moved. 4.2.0 stopped a
 committed docs site counting as source (D224, #292), added
 `paths.exclude_additional`, fixed reads on Windows for want of a flag
-(D225), and moved CI to secure-code-agent 0.12.11. Nothing is scheduled
+(D225), and moved CI to secure-code-agent 0.13.1. Nothing is scheduled
 next; the maintainer chooses it.
 
 **What was next is language support, and that was the whole list.** The

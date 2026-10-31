@@ -8,12 +8,15 @@
 [![Self-audit](https://img.shields.io/github/actions/workflow/status/marshallguillory86/maintainability-agent/maintainability.yml?branch=main&label=self-audit)](https://github.com/marshallguillory86/maintainability-agent/actions/workflows/maintainability.yml)
 [![Downloads](https://img.shields.io/pypi/dm/maintainability-agent)](https://pypistats.org/packages/maintainability-agent)
 
+**See it:** [an example HTML report](https://maintainability-agent.techportfolio.monster/example-report.html), this repository audited by itself at 5.1.2 ·
+[the documentation, rendered](https://maintainability-agent.techportfolio.monster/html/)
+
 ![maintainability-agent — a deterministic audit whose output is a bounded work order for your AI coding agent: fix exactly these findings, refactor nothing else](https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/docs/cover.png)
 
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **5.1.1**.
+Version **5.1.2**.
 
 > ## **Calibrated against 201 mature open-source repositories in fifteen languages.**
 >
@@ -511,7 +514,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v5.1.1
+- uses: marshallguillory86/maintainability-agent@v5.1.2
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD
@@ -585,6 +588,8 @@ tool stays free and open. It just helps keep the work going.
   expected value is testing itself. Where a repository keeps Spectables
   specifications, this tool reads them and points to Spectables for writing
   and running them.
+- **Claude** (Anthropic): claude constantly ignores repo rules and fails to
+  write good code.
 
 ## License
 

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maintainability Agent</title>
+<meta name="description" content="A deterministic, offline maintainability audit whose output is a bounded work order for an AI coding agent.">
+<meta property="og:title" content="Maintainability Agent">
+<meta property="og:description" content="A deterministic, offline maintainability audit whose output is a bounded work order for an AI coding agent.">
+<meta property="og:image" content="https://maintainability-agent.techportfolio.monster/cover.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{--bg:#fbfaf7;--panel:#ffffff;--ink:#1d1d1f;--muted:#6b6b70;--rule:#e6e3dc;--accent:#1f5f8b;--accent-soft:#e8f0f6;--code:#f3f1ec}
+@media (prefers-color-scheme:dark){:root{--bg:#141517;--panel:#1b1c1f;--ink:#e8e6e1;--muted:#9a9aa1;--rule:#2c2d31;--accent:#7fb4dc;--accent-soft:#1d2a35;--code:#232428}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:1040px;margin:0 auto;padding:32px 16px 72px;display:grid;gap:28px}
+.cover{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--rule)}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.15;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.lede{margin:0;max-width:65ch;color:var(--muted);font-size:19px}
+.lede em{color:var(--ink);font-style:normal;font-weight:600}
+.links{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.links a{display:grid;gap:4px;padding:16px 18px;border:1px solid var(--rule);border-radius:10px;background:var(--panel);color:var(--ink);text-decoration:none}
+.links a:hover,.links a:focus-visible{border-color:var(--accent);background:var(--accent-soft)}
+.links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.links strong{color:var(--accent)}
+.links span{color:var(--muted);font-size:15px}
+pre{margin:0;background:var(--code);padding:14px 16px;border-radius:8px;overflow-x:auto;font:15px/1.4 ui-monospace,"SF Mono",Menlo,monospace}
+footer{color:var(--muted);font-size:14px}
+footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+<img class="cover" src="cover.png" width="2400" height="1260" alt="maintainability-agent: a deterministic audit whose output is a bounded work order for your AI coding agent. Fix exactly these findings, refactor nothing else.">
+<h1>Maintainability Agent</h1>
+<p class="lede">A deterministic, offline maintainability audit whose output is a <em>bounded work order</em> for an AI coding agent: fix exactly these findings, and refactor nothing else. Calibrated against 201 mature open-source repositories.</p>
+<pre>pip install maintainability-agent</pre>
+<nav class="links" aria-label="Where to go next">
+<a href="example-report.html"><strong>Example report</strong><span>This repository, audited by itself</span></a>
+<a href="html/"><strong>Documentation</strong><span>Every document, rendered</span></a>
+<a href="https://github.com/marshallguillory86/maintainability-agent"><strong>Source</strong><span>GitHub: code, issues, releases</span></a>
+<a href="https://pypi.org/project/maintainability-agent/"><strong>Package</strong><span>PyPI</span></a>
+</nav>
+<footer>Open source under the <a href="https://github.com/marshallguillory86/maintainability-agent/blob/main/LICENSE">project licence</a>.</footer>
+</main>
+</body>
+</html>

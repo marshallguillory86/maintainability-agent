@@ -111,7 +111,7 @@ jobs:
         # Supplied like the analyzer pool, not as a package dependency: the
         # two tools are independently releasable (secure-code-agent D3, ADR
         # 008). Pinned for the same reason the pool is.
-        run: python3 -m pip install 'secure-code-agent==0.12.11'
+        run: python3 -m pip install 'secure-code-agent==0.13.1'
       - name: Lint (ruff)
         run: ruff check src tests tools
       - name: Dependency CVE scan (pip-audit)

@@ -6,6 +6,7 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#512-2026-10-30">5.1.2 - 2026-10-30</a></li>
 <li><a href="#511-2026-10-30">5.1.1 - 2026-10-30</a></li>
 <li><a href="#510-2026-10-27">5.1.0 - 2026-10-27</a></li>
 <li><a href="#501-2026-10-27">5.0.1 - 2026-10-27</a></li>
@@ -555,7 +556,17 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="512-2026-10-30">5.1.2 - 2026-10-30</h2>
 <ul>
+<li><strong>An example report and the documentation, online.</strong> The README links a real
+  HTML report, this repository audited by itself at 5.1.2, and the rendered
+  documentation, both served by GitHub Pages at
+  maintainability-agent.techportfolio.monster. A test holds the link, the
+  version it names and the report's self-containment; regenerating the report
+  is a release step.</li>
+<li><strong>CI runs secure-code-agent 0.13.1.</strong> Its SARIF no longer marks a run as
+  failed when a scanner covers only part of the tree, so GitHub's code-scanning
+  page stops reporting a configuration error for the security upload.</li>
 <li><strong>An accessibility statement and a pull request template.</strong> <code>ACCESSIBILITY.md</code>
   says what each output offers assistive technology, what is known not to work
   well (the HTML trend charts have no accessible name and separate series by

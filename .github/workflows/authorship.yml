@@ -159,14 +159,14 @@ jobs:
         # change, fails here, before the merge.
         #
         # AI co-author trailers credit every tool that did the work (Claude,
-        # Codex). The check is on whole addresses only; which tool did what
-        # is a rule we follow, not something a diff can tell. A tool joins
-        # this list when it first signs a commit with a known address.
+        # Codex, Grok). The check is on whole addresses only; which tool did
+        # what is a rule we follow, not something a diff can tell.
         run: |
           set -euo pipefail
           allowed="152444602+marshallguillory86@users.noreply.github.com
           noreply@anthropic.com
-          noreply@openai.com"
+          noreply@openai.com
+          noreply@x.ai"
           allowed=$(printf '%s\n' "$allowed" | sed 's/^[[:space:]]*//')
           range="origin/${{ github.base_ref }}..HEAD"
           # Merges included, as in the signature step: a merge message is

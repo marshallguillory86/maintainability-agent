@@ -155,10 +155,19 @@ jobs:
         # still carry another address -- a `Co-authored-by:` trailer, most
         # often. Removing one after it reaches a protected branch takes a
         # history rewrite, so any address in a message other than the
-        # repository's commit identity fails here, before the merge.
+        # repository's commit identity, or the AI tools that worked on the
+        # change, fails here, before the merge.
+        #
+        # AI co-author trailers credit every tool that did the work (Claude,
+        # Codex). The check is on whole addresses only; which tool did what
+        # is a rule we follow, not something a diff can tell. A tool joins
+        # this list when it first signs a commit with a known address.
         run: |
           set -euo pipefail
-          allowed="152444602+marshallguillory86@users.noreply.github.com"
+          allowed="152444602+marshallguillory86@users.noreply.github.com
+          noreply@anthropic.com
+          noreply@openai.com"
+          allowed=$(printf '%s\n' "$allowed" | sed 's/^[[:space:]]*//')
           range="origin/${{ github.base_ref }}..HEAD"
           # Merges included, as in the signature step: a merge message is
           # typed like any other and can carry a trailer just the same.

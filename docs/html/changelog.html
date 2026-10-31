@@ -557,10 +557,20 @@ stands, read the <a href="readme.html">README</a>; if you want what is coming, t
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
 <ul>
-<li><strong>The security gate job runs secure-code-agent 0.13.1 too.</strong> 5.1.2 moved the
+<li><strong>Commit messages may credit the AI tools that worked on a change.</strong> The
+  authorship check now accepts <code>Co-Authored-By</code> trailers for Claude
+  (<code>noreply@anthropic.com</code>) and Codex (<code>noreply@openai.com</code>) beside the
+  repository's commit identity, matched on the whole address. Any other address
+  still fails.</li>
+<li>
+<p><strong>CI runs secure-code-agent 0.13.3</strong>, in every pin.</p>
+</li>
+<li>
+<p><strong>The security gate job runs secure-code-agent 0.13.1 too.</strong> 5.1.2 moved the
   plain pins and left the job that writes the code-scanning SARIF on 0.12.11,
   through its <code>[required-scanners]</code> install and the <code>install-floor</code> action's
-  SHA. A test now holds every CI pin of the tool, in each form, to one version.</li>
+  SHA. A test now holds every CI pin of the tool, in each form, to one version.</p>
+</li>
 </ul>
 <h2 id="512-2026-10-30">5.1.2 - 2026-10-30</h2>
 <ul>

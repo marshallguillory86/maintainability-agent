@@ -12,6 +12,13 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+- **Commit messages may credit the AI tools that worked on a change.** The
+  authorship check now accepts `Co-Authored-By` trailers for Claude
+  (`noreply@anthropic.com`) and Codex (`noreply@openai.com`) beside the
+  repository's commit identity, matched on the whole address. Any other address
+  still fails.
+- **CI runs secure-code-agent 0.13.3**, in every pin.
+
 - **The security gate job runs secure-code-agent 0.13.1 too.** 5.1.2 moved the
   plain pins and left the job that writes the code-scanning SARIF on 0.12.11,
   through its `[required-scanners]` install and the `install-floor` action's

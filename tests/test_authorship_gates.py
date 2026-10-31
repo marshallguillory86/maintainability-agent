@@ -18,6 +18,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "authorship.yml"
 COMMIT_IDENTITY = "152444602+marshallguillory86@users.noreply.github.com"
+CLAUDE_ADDRESS = "noreply@anthropic.com"
+CODEX_ADDRESS = "noreply@openai.com"
 
 
 def _git(repo: Path, *args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
@@ -374,6 +376,106 @@ def test_a_message_naming_only_the_commit_identity_passes(
     result = _run_gate(repo, "Commit messages name only the commit identity")
 
     assert result.returncode == 0, result.stdout
+
+
+@pytest.mark.parametrize(
+    "trailer",
+    [
+        f"Co-Authored-By: Claude Opus 5.5 <{CLAUDE_ADDRESS}>",
+        f"Co-authored-by: Claude <{CLAUDE_ADDRESS}>",
+    ],
+)
+def test_a_claude_trailer_passes_in_either_key_casing(
+    signed_repo: tuple[Path, Callable[..., str]],
+    trailer: str,
+) -> None:
+    repo, commit = signed_repo
+    commit(message=f"change\n\n{trailer}")
+
+    result = _run_gate(repo, "Commit messages name only the commit identity")
+
+    assert result.returncode == 0, result.stdout
+
+
+def test_a_codex_trailer_passes(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    repo, commit = signed_repo
+    commit(message=f"change\n\nCo-Authored-By: Codex <{CODEX_ADDRESS}>")
+
+    result = _run_gate(repo, "Commit messages name only the commit identity")
+
+    assert result.returncode == 0, result.stdout
+
+
+def test_claude_and_codex_trailers_together_pass(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    repo, commit = signed_repo
+    commit(
+        message=(
+            "change\n\n"
+            f"Co-Authored-By: Claude Opus 5.5 <{CLAUDE_ADDRESS}>\n"
+            f"Co-Authored-By: Codex <{CODEX_ADDRESS}>"
+        )
+    )
+
+    result = _run_gate(repo, "Commit messages name only the commit identity")
+
+    assert result.returncode == 0, result.stdout
+
+
+def test_an_ai_trailer_beside_an_unrelated_address_still_fails(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    """Covers existing behaviour: unrelated addresses remain disallowed."""
+    repo, commit = signed_repo
+    commit(
+        message=(
+            "change\n\n"
+            f"Co-Authored-By: Claude <{CLAUDE_ADDRESS}>\n"
+            "Co-Authored-By: Someone Else <someone@example.com>"
+        )
+    )
+
+    result = _run_gate(repo, "Commit messages name only the commit identity")
+
+    assert result.returncode == 1, result.stdout
+    assert "names an address other than the commit identity" in result.stdout
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "noreply@anthropic.com.evil.example",
+        "xnoreply@anthropic.com",
+        "noreply@openai.co",
+    ],
+)
+def test_an_ai_lookalike_address_fails(
+    signed_repo: tuple[Path, Callable[..., str]],
+    address: str,
+) -> None:
+    """Covers existing behaviour: the old check refused every outside address;
+    this keeps the AI allowlist matching whole addresses, never a prefix or
+    a suffix."""
+    repo, commit = signed_repo
+    commit(message=f"change\n\nCo-Authored-By: Tool <{address}>")
+
+    result = _run_gate(repo, "Commit messages name only the commit identity")
+
+    assert result.returncode == 1, result.stdout
+    assert "names an address other than the commit identity" in result.stdout
+
+
+def test_workflow_declares_each_allowed_ai_address_once() -> None:
+    """The workflow owns the allowlist; each canonical address is declared once."""
+    text = WORKFLOW.read_text(encoding="utf-8")
+    expected = {CLAUDE_ADDRESS, CODEX_ADDRESS}
+
+    assert {address for address in expected if address in text} == expected
+    for address in expected:
+        assert text.count(address) == 1, address
 
 
 def test_a_forbidden_term_in_a_message_fails_in_any_case(

@@ -12,6 +12,8 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 5.1.3 - 2026-10-31
+
 - **The falsifier prover no longer imports new tools from the original
   checkout (D237).** Its base run keeps dependencies while dropping every
   `PYTHONPATH` entry inside the original checkout, so a deleted tool cannot

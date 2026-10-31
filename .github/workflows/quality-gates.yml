@@ -279,7 +279,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -e ".[dev]"
-          python3 -m pip install 'secure-code-agent[required-scanners]==0.12.11'
+          python3 -m pip install 'secure-code-agent[required-scanners]==0.13.1'
       - name: Install the security scanner floor (main only)
         # Coverage is what decides whether the security pillar carries a
         # grade or only a posture of `unverified`. The pip extra above
@@ -294,7 +294,7 @@ jobs:
         # letter nobody reads on a feature branch. A PR still runs the gate;
         # it just reports partial coverage, which is the truth about what ran.
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
-        uses: marshallguillory86/secure-code-agent/.github/actions/install-floor@54855295f03a114dc91cabe640fcf1ce6cb13c7a # v0.12.11
+        uses: marshallguillory86/secure-code-agent/.github/actions/install-floor@2ef887161c596c5648c13df42dfdbf588bc55945 # v0.13.1
 
       - name: Install the pinned analyzer pool
         # The maintainability gate runs these analyzers in this job, so

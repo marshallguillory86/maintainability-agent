@@ -12,6 +12,11 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+- **The security gate job runs secure-code-agent 0.13.1 too.** 5.1.2 moved the
+  plain pins and left the job that writes the code-scanning SARIF on 0.12.11,
+  through its `[required-scanners]` install and the `install-floor` action's
+  SHA. A test now holds every CI pin of the tool, in each form, to one version.
+
 ## 5.1.2 - 2026-10-30
 
 - **An example report and the documentation, online.** The README links a real

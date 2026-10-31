@@ -22,6 +22,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from _workflow_text import workflow_steps
+
 ROOT = Path(__file__).resolve().parents[1]
 RELEASE = ROOT / "docs" / ".." / ".github" / "workflows" / "release.yml"
 REGISTER = ROOT / "docs" / "defect-register-chat-surface.md"
@@ -95,36 +97,8 @@ def test_the_register_carries_no_open_high_or_medium() -> None:
         f"is no open High and no open Medium: {blocking}"
     )
 
-def _build_steps() -> list[dict[str, str]]:
-    """The build job's steps, as name/if/run text.
-
-    Split by hand rather than with a YAML parser: `PyYAML` is
-    deliberately kept off the test extra — `test_declared_imports`
-    refuses it, because it would pull a catalog-regeneration parser into
-    every test install. A step here is the block from one `- name:` to
-    the next, which is all this file needs to know.
-    """
-    steps: list[dict[str, str]] = []
-    inside = False
-    for line in _release_workflow().splitlines():
-        stripped = line.strip()
-        if stripped.startswith("- name:") and line.startswith("      - name:"):
-            steps.append({"name": stripped[len("- name:"):].strip(), "if": "", "run": ""})
-            inside = True
-            continue
-        if not inside or not steps:
-            continue
-        if line and not line.startswith("       ") and not stripped.startswith("- "):
-            inside = False
-            continue
-        if stripped.startswith("if:"):
-            steps[-1]["if"] = stripped[3:].strip()
-        steps[-1]["run"] += line + "\n"
-    return steps
-
-
 def _ledger_steps() -> list[dict[str, str]]:
-    found = [s for s in _build_steps() if "defect-register-chat-surface.md" in s["run"]]
+    found = [s for s in workflow_steps(_release_workflow()) if "defect-register-chat-surface.md" in s["run"]]
     assert found, "no step in the release workflow reads the defect register"
     return found
 
@@ -154,7 +128,7 @@ def test_no_publishing_trigger_skips_the_ledger_check() -> None:
 
 def test_the_gate_runs_before_anything_is_built_or_published() -> None:
     """Order matters: refusing after the upload is not refusing."""
-    steps = _build_steps()
+    steps = workflow_steps(_release_workflow())
     names = [s["name"] for s in steps]
     ledger = next(
         i for i, s in enumerate(steps) if "defect-register-chat-surface.md" in s["run"]

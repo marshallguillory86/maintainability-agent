@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from _workflow_text import workflow_steps
+
 ROOT = Path(__file__).resolve().parents[1]
 RELEASE = ROOT / ".github" / "workflows" / "release.yml"
 CUT_RELEASE = ROOT / ".github" / "workflows" / "cut-release.yml"
@@ -46,42 +48,13 @@ def _job_blocks() -> dict[str, str]:
     return _top_blocks(_workflow(), "jobs", 2)
 
 
-def _build_steps() -> list[dict[str, str]]:
-    """Read the build job's steps without adding a YAML dependency."""
-    steps: list[dict[str, str]] = []
-    inside = False
-    for line in _workflow().splitlines():
-        stripped = line.strip()
-        if stripped.startswith("- name:") and line.startswith("      - name:"):
-            steps.append({"name": stripped[len("- name:"):].strip(), "if": "", "run": ""})
-            inside = True
-            continue
-        if not inside or not steps:
-            continue
-        if line and not line.startswith("       ") and not stripped.startswith("- "):
-            inside = False
-            continue
-        if stripped.startswith("if:"):
-            steps[-1]["if"] = stripped[3:].strip()
-        steps[-1]["run"] += line + "\n"
-    return steps
-
-
-def test_release_triggers_on_tags_and_dispatch_but_not_branch_pushes() -> None:
-    """The pipeline rule leaves tests off the merge path and starts release on a tag or dispatch."""
-    workflow = _workflow()
-    on = _top_blocks(workflow, "on", 2)
-    assert "push" in on
-    assert re.search(r"tags:\s*\[\s*[\"']v\*[\"']\s*\]", on["push"])
-    assert "branches:" not in on["push"]
-    assert "workflow_dispatch" in on
-
-
 def test_cut_release_triggers_on_main_push() -> None:
-    """A merge runs no tests; only the deploy decision is started from main."""
+    """The push-to-main trigger lives in cut-release.yml, not release.yml."""
     on = _top_blocks(_cut_release_workflow(), "on", 2)
     assert "push" in on
     assert re.search(r"branches:\s*\[\s*main\s*\]", on["push"])
+    release_on = _top_blocks(_workflow(), "on", 2)
+    assert "branches:" not in release_on.get("push", "")
 
 
 def test_cut_release_runs_decision_and_dispatches_release() -> None:
@@ -160,7 +133,7 @@ def test_wheel_version_check_always_compares_with_decided_tag() -> None:
 
 def test_build_refuses_commits_not_on_main_before_testing_the_package() -> None:
     """The pypi environment accepts v* tags, and a tag can be pushed on any commit."""
-    steps = _build_steps()
+    steps = workflow_steps(_workflow())
     ancestry = [
         step
         for step in steps

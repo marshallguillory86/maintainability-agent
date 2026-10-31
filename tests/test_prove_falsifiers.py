@@ -19,6 +19,7 @@ launder exactly the substitution it exists to catch.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -70,6 +71,31 @@ def test_only_entries_the_base_lacks_are_proven() -> None:
     after = prover._entries(
         "\n### D1 — Closed: a (Low)\n\nbody\n\n### D2 — Closed: b (Low)\n\nbody\n")
     assert set(after) - set(before) == {"D2"}
+
+
+def test_base_environment_uses_the_worktree_without_parent_checkout_paths(
+    tmp_path: Path,
+) -> None:
+    """Keep dependencies, but do not let the original checkout fake the proof.
+
+    PR #325's base run imported ``release_decision`` from the original
+    checkout's ``tools/`` directory after the worktree had deleted it, so
+    eight falsifiers passed at the base vacuously. This is the same class of
+    leak as the ``src`` shadowing defect described in this module's comment.
+    """
+    parent_root = tmp_path / "checkout"
+    tree = tmp_path / "worktree"
+    parent_tools = str(parent_root / "tools")
+    parent_src = str(parent_root / "src")
+    site_packages = str(tmp_path / "venv" / "site-packages")
+    tree_src = str(tree / "src")
+
+    environment = prover.base_environment(
+        tree, parent_root, [parent_tools, site_packages, parent_src, tree_src]
+    )
+
+    entries = environment["PYTHONPATH"].split(os.pathsep)
+    assert entries == [tree_src, site_packages]
 
 
 @pytest.mark.parametrize(

@@ -9102,12 +9102,12 @@ in the corpus files was changed.
 *Closing test:* `test_an_xcode_project_with_a_test_target_counts_its_tests`
 in `tests/test_swift_test_conventions.py`, which builds an Xcode-shaped project
 and reads the test file count from the report the score is taken from. Beside
-it, `test_a_swift_test_file_or_target_folder_is_a_test` holds seven names that
-must be tests, and `test_a_production_name_that_only_looks_similar_stays_production`
-holds eight look-alikes that must not.
+it, `test_a_swift_test_is_a_test_and_a_look_alike_is_not` holds seven names that
+must be tests and eight look-alikes that must not, in one test so the guard
+cannot pass without the fix.
 
-*Mutation:* with the Swift rule removed, seven of the sixteen failed, including
-the end-to-end case, which reported 0 test files.
+*Mutation:* with the Swift rule removed, both tests fail, and the end-to-end case
+reports 0 test files.
 
 ## Disposition
 

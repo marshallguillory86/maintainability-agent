@@ -7872,11 +7872,11 @@ in the corpus files was changed.</p>
 <p><em>Closing test:</em> <code>test_an_xcode_project_with_a_test_target_counts_its_tests</code>
 in <code>tests/test_swift_test_conventions.py</code>, which builds an Xcode-shaped project
 and reads the test file count from the report the score is taken from. Beside
-it, <code>test_a_swift_test_file_or_target_folder_is_a_test</code> holds seven names that
-must be tests, and <code>test_a_production_name_that_only_looks_similar_stays_production</code>
-holds eight look-alikes that must not.</p>
-<p><em>Mutation:</em> with the Swift rule removed, seven of the sixteen failed, including
-the end-to-end case, which reported 0 test files.</p>
+it, <code>test_a_swift_test_is_a_test_and_a_look_alike_is_not</code> holds seven names that
+must be tests and eight look-alikes that must not, in one test so the guard
+cannot pass without the fix.</p>
+<p><em>Mutation:</em> with the Swift rule removed, both tests fail, and the end-to-end case
+reports 0 test files.</p>
 <h2 id="disposition">Disposition</h2>
 <p>D238 closed on 2026-11-25: Swift test files (<code>FooTests.swift</code>, and files in a <code>FooTests/</code> Xcode target) were counted as production, so a tested iOS app scored 0.0 on test presence; <code>is_test_path</code> now reads both conventions on <code>.swift</code> files only, and pairing is left as it was. It moves Swift corpus readings, so it rides the next recalibration.</p>
 <p>D237 closed on 2026-10-31: the falsifier prover's base run could import a

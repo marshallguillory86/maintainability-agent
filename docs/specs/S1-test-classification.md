@@ -47,4 +47,4 @@ Pairing a Swift test to the production file it covers. `.swift` is deliberately 
 
 ## 8. Tests
 
-`tests/test_swift_test_conventions.py` (criteria 1, 2 and 4), `tests/test_behaviour_suites_are_tests.py` (criteria 1 to 3 for `acceptance` and `e2e`).
+`tests/test_swift_test_conventions.py` (criteria 1, 2 and 4; the names and the look-alikes are in one test, so the guard cannot pass without the fix), `tests/test_behaviour_suites_are_tests.py` (criteria 1 to 3 for `acceptance` and `e2e`).

@@ -16,15 +16,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from maintainability_audit._discovery import _is_test
 from maintainability_audit._metrics_types import is_test_path
 from maintainability_audit.config import load_config
 from maintainability_audit.report import build_report
 
-
-@pytest.mark.parametrize("path", [
+TESTS = [
     "Bible Reader/Bible ReaderTests/Services/StudyOwnershipTests.swift",   # the target folder, and the suffix
     "MaccyTests/ClipboardTests.swift",
     "FooUITests/LoginUITests.swift",
@@ -32,13 +29,8 @@ from maintainability_audit.report import build_report
     "Sources/Foo/OrderTest.swift",
     "Bible ReaderTests/Support/SourceFile.swift",                         # a helper inside the target folder
     "Tests/FooTests/BarTests.swift",                                      # SwiftPM, already read as tests
-])
-def test_a_swift_test_file_or_target_folder_is_a_test(path: str) -> None:
-    assert is_test_path(path)
-    assert _is_test(path)
-
-
-@pytest.mark.parametrize("path", [
+]
+LOOK_ALIKES = [
     "Sources/Contest.swift",            # ends in "test", lower case
     "Sources/Latest.swift",
     "Sources/Protest/Handler.swift",
@@ -47,10 +39,21 @@ def test_a_swift_test_file_or_target_folder_is_a_test(path: str) -> None:
     "Sources/Tests.swift",              # no name before the suffix
     "ApiTests/handler.py",              # the folder rule is for Swift files only
     "src/ContestTests.js",              # and the suffix rule too
-])
-def test_a_production_name_that_only_looks_similar_stays_production(path: str) -> None:
-    assert not is_test_path(path)
-    assert not _is_test(path)
+]
+
+
+def test_a_swift_test_is_a_test_and_a_look_alike_is_not() -> None:
+    """One test holds both halves, so the guard cannot pass on its own without the fix.
+
+    The look-alikes were production before this change and must stay so; asserted
+    beside the names that are now tests, the test fails when the rule is removed.
+    """
+    for path in TESTS:
+        assert is_test_path(path), f"{path} is a Swift test"
+        assert _is_test(path), f"{path} is a Swift test to discovery too"
+    for path in LOOK_ALIKES:
+        assert not is_test_path(path), f"{path} only looks like a test"
+        assert not _is_test(path), f"{path} only looks like a test to discovery"
 
 
 def test_an_xcode_project_with_a_test_target_counts_its_tests(tmp_path: Path) -> None:

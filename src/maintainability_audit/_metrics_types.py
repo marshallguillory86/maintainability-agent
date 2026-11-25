@@ -555,6 +555,8 @@ def is_test_path(rel: str) -> bool:
     parts = normalized.split("/")
     if any(segment in TEST_DIRECTORY_NAMES for segment in parts[:-1]):
         return True
+    if _is_swift_test_path(rel.replace("\\", "/")):
+        return True
     name = parts[-1]
     if name.startswith(("test_", "test.")):
         return True
@@ -564,6 +566,28 @@ def is_test_path(rel: str) -> bool:
         return True
     stem = name.rsplit(".", 1)[0]
     return stem.endswith(("_test", ".test", ".spec", "_spec"))
+
+
+def _is_swift_test_path(rel: str) -> bool:
+    """Xcode's and XCTest's conventions, which the lower-cased rules above cannot see.
+
+    A test target is a folder named for the app and ending in a capitalised `Tests` (`MaccyTests/`,
+    `Bible ReaderTests/`, `FooUITests/`), and a test file is `FooTests.swift` or `FooTest.swift`.
+    Both are matched on the original case and on `.swift` files only: `Contest.swift` and `Latest.swift`
+    end in a lower-case `test`, and a folder of Python files called `ApiTests/` is not an Xcode target.
+    Found when 138 test files of an iOS app were graded as production (2026-11-25).
+    """
+    parts = rel.split("/")
+    name = parts[-1]
+    if not name.endswith(".swift"):
+        return False
+    stem = name[: -len(".swift")]
+    if any(len(stem) > len(suffix) and stem.endswith(suffix) for suffix in _SWIFT_TEST_SUFFIXES):
+        return True
+    return any(len(segment) > len("Tests") and segment.endswith("Tests") for segment in parts[:-1])
+
+
+_SWIFT_TEST_SUFFIXES = ("Tests", "Test")
 
 
 # Every file extension this project recognises as source code, and the

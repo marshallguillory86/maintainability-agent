@@ -12,6 +12,16 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+- **Swift test files are read as tests (D238).** A file named `FooTests.swift` or
+  `FooTest.swift`, and any `.swift` file inside a folder ending in `Tests` (an
+  Xcode test target such as `MaccyTests/`), now counts as test code. Before this,
+  an iOS app with 138 test files scored 0.0 on test presence and was held at
+  grade C; the same tree scored 4.6 with the target under `Tests/`. Matching is on
+  the original case and on `.swift` only, so `Contest.swift` and a folder of
+  Python files called `ApiTests/` stay production. Pairing for Swift is not
+  extended. This moves Swift repositories with an Xcode test target, some of them
+  in the calibration corpus, so it is meant to ship with the next recalibration.
+
 ## 5.1.3 - 2026-10-31
 
 - **The falsifier prover no longer imports new tools from the original

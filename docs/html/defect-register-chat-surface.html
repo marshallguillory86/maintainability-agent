@@ -244,6 +244,7 @@
 <li><a href="#d235-closed-four-analyzers-left-a-temp-directory-behind-on-every-run-and-so-did-the-suite-high">D235 — Closed: four analyzers left a temp directory behind on every run, and so did the suite (High)</a></li>
 <li><a href="#d236-closed-a-directory-that-vanished-mid-walk-crashed-the-whole-audit-medium">D236 — Closed: a directory that vanished mid-walk crashed the whole audit (Medium)</a></li>
 <li><a href="#d237-closed-the-falsifier-prover-imported-new-tools-from-the-original-checkout-high">D237 — Closed: the falsifier prover imported new tools from the original checkout (High)</a></li>
+<li><a href="#d238-closed-swift-test-files-were-read-as-production-code-high">D238 — Closed: Swift test files were read as production code (High)</a></li>
 </ul>
 </li>
 <li><a href="#disposition">Disposition</a></li>
@@ -7841,7 +7842,43 @@ worktree's files.</p>
 in <code>tests/test_prove_falsifiers.py</code>.</p>
 <p><em>Mutation:</em> retaining the original checkout path let the test import HEAD's
 <code>release_decision</code> after the worktree deleted it, so it passed at the base.</p>
+<h3 id="d238-closed-swift-test-files-were-read-as-production-code-high">D238 — Closed: Swift test files were read as production code (High)</h3>
+<p>Found grading an iOS app, 2026-11-25. 138 files in an Xcode test target
+(<code>Bible ReaderTests/</code>), every one named <code>SomethingTests.swift</code> and importing
+<code>Testing</code>, were counted as production: test presence scored 0.0, testability
+2.0, and the verified grade was held at C while the suite ran 1,116 tests. The
+test-path rule knew <code>tests/</code>, <code>test_*</code> and <code>*_test</code>, the Python and JavaScript
+shapes, so Xcode's and XCTest's own convention was invisible and a tested
+repository was reported as untested. On a copy of the same tree with the target
+moved under <code>Tests/</code> (which was already recognised) the estimate went from 3.9
+to 4.6 and test presence from 0.0 to 5.0, with no other change.</p>
+<p><code>is_test_path</code> now also reads Swift's two conventions, on the original case and
+on <code>.swift</code> files only: a file named <code>FooTests.swift</code> or <code>FooTest.swift</code>, and a
+file inside a folder whose name ends in a capitalised <code>Tests</code> (<code>MaccyTests/</code>,
+<code>FooUITests/</code>). Anchoring is the point. <code>Contest.swift</code> and <code>Latest.swift</code> end
+in a lower-case <code>test</code>, <code>Tests.swift</code> has no name before the suffix, and a
+folder of Python files called <code>ApiTests/</code> is not an Xcode target; none matches.
+<code>_discovery._is_test</code> reads <code>is_test_path</code> first, so provenance and pairing
+still agree.</p>
+<p>Pairing is deliberately not extended: <code>.swift</code> stays out of <code>PAIRABLE</code>, because
+claiming a language there without teaching <code>subject_stem</code> its naming reports
+every production file as untested, which is the confident wrong finding this
+tool exists to prevent. That is a separate decision.</p>
+<p>This moves the reading of any Swift repository with an Xcode test target,
+including some in the calibration corpus (Maccy, MonitorControl, Rectangle and
+others), so it rides the next recalibration rather than shipping as a patch, as
+D137 and the 2026-09-27 decision on <code>testing/</code> and <code>playwright</code> require. Nothing
+in the corpus files was changed.</p>
+<p><em>Closing test:</em> <code>test_an_xcode_project_with_a_test_target_counts_its_tests</code>
+in <code>tests/test_swift_test_conventions.py</code>, which builds an Xcode-shaped project
+and reads the test file count from the report the score is taken from. Beside
+it, <code>test_a_swift_test_file_or_target_folder_is_a_test</code> holds seven names that
+must be tests, and <code>test_a_production_name_that_only_looks_similar_stays_production</code>
+holds eight look-alikes that must not.</p>
+<p><em>Mutation:</em> with the Swift rule removed, seven of the sixteen failed, including
+the end-to-end case, which reported 0 test files.</p>
 <h2 id="disposition">Disposition</h2>
+<p>D238 closed on 2026-11-25: Swift test files (<code>FooTests.swift</code>, and files in a <code>FooTests/</code> Xcode target) were counted as production, so a tested iOS app scored 0.0 on test presence; <code>is_test_path</code> now reads both conventions on <code>.swift</code> files only, and pairing is left as it was. It moves Swift corpus readings, so it rides the next recalibration.</p>
 <p>D237 closed on 2026-10-31: the falsifier prover's base run could import a
 new tool from the original checkout's <code>tools/</code>, so eight falsifiers passed
 without proving the change; <code>base_environment()</code> now drops every parent
